@@ -1,10 +1,15 @@
 package media.social.entity;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "follows")
 @IdClass(FollowId.class)
+@Setter
+@Getter
 public class Follow {
 
     @Id

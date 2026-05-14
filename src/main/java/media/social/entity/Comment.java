@@ -1,11 +1,16 @@
 package media.social.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "comments")
+@Getter
+@Setter
 public class Comment {
 
     @Id
@@ -20,12 +25,10 @@ public class Comment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // 👇 self reference (comment cha)
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
-    // 👇 danh sách reply con
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Comment> replies;
 

@@ -28,10 +28,8 @@ public class Post {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "post")
     private List<Comment> comments;
 
-    @OneToMany(mappedBy = "post")
     private List<Like> likes;
 
 }
