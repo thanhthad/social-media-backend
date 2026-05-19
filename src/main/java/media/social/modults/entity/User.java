@@ -1,8 +1,7 @@
-package media.social.entity;
+package media.social.modults.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,17 +10,14 @@ import java.util.List;
 @Table(name = "users")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-//    @Column(name = "oauth_id", unique = true, nullable = false)
-//    private String oauthId;
-//
-//    @Column(nullable = false)
-//    private String provider;
 
     private String username;
 
@@ -32,7 +28,6 @@ public class User {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    private List<Post> posts;
-
+    @OneToMany(mappedBy = "user")
     private List<Comment> comments;
 }

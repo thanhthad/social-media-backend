@@ -1,4 +1,4 @@
-package media.social.entity;
+package media.social.modults.entity;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -1,7 +1,6 @@
-package media.social.entity;
+package media.social.modults.entity;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,10 +9,14 @@ import java.util.List;
 @Table(name = "posts")
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "post_id")
     private Long id;
 
     @ManyToOne
@@ -28,8 +31,6 @@ public class Post {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @OneToMany(mappedBy = "comment_id")
     private List<Comment> comments;
-
-    private List<Like> likes;
-
 }

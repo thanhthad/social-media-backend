@@ -1,4 +1,4 @@
-package media.social.entity;
+package media.social.modults.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
