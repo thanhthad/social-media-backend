@@ -89,24 +89,39 @@ public class PostServiceImpl implements PostService {
                 actorUserId, id);
 
         Post post = postRepository.findById(id).orElseThrow(() -> {
-
             log.warn("POST_EVENT | action=UPDATE_POST | actorUserId={} | postId={} | status=FAIL | reason=NOT_FOUND",
                     actorUserId, id);
-
             return new PostNotFoundException("Post not found with id: " + id);
         });
-        if (post.getImagePublicId() != null && !post.getImagePublicId().isBlank()) {
-            try {
-                cloudinaryService.deleteImage(post.getImagePublicId());
-            } catch (Exception e) {
-                log.warn("Cannot delete old avatar | publicId={}", post.getImagePublicId());
-            }
+
+        UploadImageResponse uploadResponse = null;
+        String newPublicId = null;
+        String newImageUrl = null;
+
+        if (request.getFile() != null && !request.getFile().isEmpty()) {
+            uploadResponse = cloudinaryService.uploadImage(request.getFile(), "posts");
+            newPublicId = uploadResponse.getPublicId();
+            newImageUrl = uploadResponse.getImageUrl();
         }
-        UploadImageResponse response = cloudinaryService.uploadImage(request.getFile(),"posts");
 
         post.setContent(request.getContent());
-        post.setImageUrl(response.getImageUrl());
-        post.setImagePublicId(response.getPublicId());
+
+        if (uploadResponse != null) {
+
+            String oldPublicId = post.getImagePublicId();
+
+            post.setImageUrl(newImageUrl);
+            post.setImagePublicId(newPublicId);
+
+            // delete old image AFTER update success data in memory
+            if (oldPublicId != null && !oldPublicId.isBlank()) {
+                try {
+                    cloudinaryService.deleteImage(oldPublicId);
+                } catch (Exception e) {
+                    log.warn("POST_EVENT | action=DELETE_OLD_IMAGE_FAILED | publicId={}", oldPublicId, e);
+                }
+            }
+        }
 
         Post saved = postRepository.save(post);
 
