@@ -1,4 +1,4 @@
-package media.social.modults.user.dto.request;
+package media.social.modults.user.dto.request.self;
 
 import lombok.Getter;
 import lombok.Setter;

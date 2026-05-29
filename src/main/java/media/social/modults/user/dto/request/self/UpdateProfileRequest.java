@@ -1,4 +1,4 @@
-package media.social.modults.user.dto.request;
+package media.social.modults.user.dto.request.self;
 
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
