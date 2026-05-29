@@ -1,7 +1,6 @@
 package media.social.modults.repository;
 
-import media.social.modults.entity.RefreshToken;
-import media.social.modults.entity.User;
+import media.social.modults.user.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;

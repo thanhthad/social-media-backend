@@ -1,10 +1,8 @@
-package media.social.modults.security.userdetails;
+package media.social.modults.user.security.userdetails;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import media.social.modults.entity.User;
+import lombok.*;
+import media.social.modults.user.entity.User;
+import media.social.modults.user.Enum.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,7 +19,8 @@ public class CustomUserDetails implements UserDetails {
     private Long id;
     private String username;
     private String email;
-    private String role;
+    private Role role;
+
 
     private Collection<? extends GrantedAuthority> authorities;
 
@@ -36,12 +35,14 @@ public class CustomUserDetails implements UserDetails {
                 .build();
     }
 
-    private static List<SimpleGrantedAuthority> mapRole(String role) {
-        if (role == null || role.isBlank()) {
+    private static List<SimpleGrantedAuthority> mapRole(Role role) {
+        if (role == null) {
             return List.of();
         }
 
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        return List.of(
+                new SimpleGrantedAuthority("ROLE_" + role.name())
+        );
     }
 
     @Override
@@ -51,7 +52,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null;
+        return "";
     }
 
     @Override

@@ -9,20 +9,17 @@ import media.social.modults.dto.request.UserRequest;
 import media.social.modults.dto.response.LoginResponse;
 import media.social.modults.dto.response.UploadImageResponse;
 import media.social.modults.dto.response.UserResponse;
-import media.social.modults.entity.RefreshToken;
+import media.social.modults.user.entity.RefreshToken;
 import media.social.modults.entity.User;
-import media.social.modults.exception.user.UserAlreadyExistsException;
-import media.social.modults.exception.user.UserNotFoundException;
+import media.social.modults.user.exception.UserAlreadyExistsException;
+import media.social.modults.user.exception.UserNotFoundException;
 import media.social.modults.mapper.UserMapper;
 import media.social.modults.repository.UserRepository;
-import media.social.modults.security.userdetails.CustomUserDetails;
+import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.service.CloudinaryService;
-import media.social.modults.service.RefreshTokenService;
-import media.social.modults.service.UserService;
+import media.social.modults.user.service.RefreshTokenService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,15 +33,9 @@ public class UserServiceImpl implements UserService {
     private final RefreshTokenService refreshTokenService;
     private final CloudinaryService cloudinaryService;
 
-    private Long getUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated()
-                || auth.getPrincipal().equals("anonymousUser")) {
-            return null;
-        }
-
-        return ((CustomUserDetails) auth.getPrincipal()).getId();
+    private String actor() {
+        Long id = UserContextHolder.getUserId();
+        return id == null ? "SYSTEM" : String.valueOf(id);
     }
 
     // =========================================================
@@ -54,15 +45,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse create(UserRequest request) {
 
-        Long actorUserId = getUserId();
 
         log.info("USER_EVENT | action=CREATE_USER | actorUserId={} | email={} | status=START",
-                actorUserId, request.getEmail());
+                actor(), request.getEmail());
 
         if (userRepository.existsByEmail(request.getEmail())) {
 
             log.warn("USER_EVENT | action=CREATE_USER | actorUserId={} | email={} | status=FAIL | reason=EMAIL_ALREADY_EXISTS",
-                    actorUserId, request.getEmail());
+                    actor(), request.getEmail());
 
             throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
         }
@@ -71,7 +61,7 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         log.info("USER_EVENT | action=CREATE_USER | actorUserId={} | targetUserId={} | email={} | status=SUCCESS",
-                actorUserId, savedUser.getId(), savedUser.getEmail());
+                actor(), savedUser.getId(), savedUser.getEmail());
 
         return userMapper.toResponse(savedUser);
     }
@@ -83,15 +73,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse updateById(Long id, UserRequest request) {
 
-        Long actorUserId = getUserId();
 
         log.info("USER_EVENT | action=UPDATE_USER | actorUserId={} | targetUserId={} | status=START",
-                actorUserId, id);
+                actor(), id);
 
         User user = userRepository.findById(id).orElseThrow(() -> {
 
             log.warn("USER_EVENT | action=UPDATE_USER | actorUserId={} | targetUserId={} | status=FAIL | reason=NOT_FOUND",
-                    actorUserId, id);
+                    actor(), id);
 
             return new UserNotFoundException("User not found with id: " + id);
         });
@@ -101,7 +90,7 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         log.info("USER_EVENT | action=UPDATE_USER | actorUserId={} | targetUserId={} | status=SUCCESS",
-                actorUserId, id);
+                actor(), id);
 
         return userMapper.toResponse(savedUser);
     }
@@ -113,15 +102,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteById(Long id) {
 
-        Long actorUserId = getUserId();
-
         log.info("USER_EVENT | action=DELETE_USER | actorUserId={} | targetUserId={} | status=START",
-                actorUserId, id);
+                actor(), id);
 
         User user = userRepository.findById(id).orElseThrow(() -> {
 
             log.warn("USER_EVENT | action=DELETE_USER | actorUserId={} | targetUserId={} | status=FAIL | reason=NOT_FOUND",
-                    actorUserId, id);
+                    actor(), id);
 
             return new UserNotFoundException("User not found with id: " + id);
         });
@@ -135,13 +122,12 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
 
         log.info("USER_EVENT | action=DELETE_USER | actorUserId={} | targetUserId={} | status=SUCCESS",
-                actorUserId, id);
+                actor(), id);
     }
 
     @Override
     @Transactional
     public void deleteByEmail(String email) {
-        Long actorUserId = getUserId();
 
         User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new UserNotFoundException("User not found with email: " + email)
@@ -155,7 +141,7 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.delete(user);
         log.info("USER_EVENT | action=DELETE_USER | actorUserId={} | targetUserEmail={} | status=SUCCESS",
-                actorUserId, email);
+                actor(), email);
 
     }
 
@@ -165,15 +151,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<UserResponse> getByUsername(String username, Pageable pageable) {
 
-        Long actorUserId = getUserId();
-
         log.info("USER_EVENT | action=SEARCH_USER | actorUserId={} | keyword={} | page={} | size={}",
-                actorUserId, username, pageable.getPageNumber(), pageable.getPageSize());
+                actor(), username, pageable.getPageNumber(), pageable.getPageSize());
 
         Page<User> userPage = userRepository.findByUsernameContainingIgnoreCase(username, pageable);
 
         log.info("USER_EVENT | action=SEARCH_USER | actorUserId={} | status=SUCCESS | total={}",
-                actorUserId, userPage.getTotalElements());
+                actor(), userPage.getTotalElements());
 
         return userPage.map(userMapper::toResponse);
     }
@@ -185,11 +169,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse uploadAvatar(Long userId, MultipartFile file) {
 
-        Long actorUserId = getUserId();
-
         log.info(
                 "USER_EVENT | action=UPLOAD_AVATAR | actorUserId={} | targetUserId={} | status=START",
-                actorUserId,
+                actor(),
                 userId
         );
 
@@ -198,7 +180,7 @@ public class UserServiceImpl implements UserService {
 
                     log.warn(
                             "USER_EVENT | action=UPLOAD_AVATAR | actorUserId={} | targetUserId={} | status=FAIL | reason=NOT_FOUND",
-                            actorUserId,
+                            actor(),
                             userId
                     );
 
@@ -221,7 +203,7 @@ public class UserServiceImpl implements UserService {
 
         log.info(
                 "USER_EVENT | action=UPLOAD_AVATAR | actorUserId={} | targetUserId={} | status=SUCCESS | avatarUrl={}",
-                actorUserId,
+                actor(),
                 userId,
                 imageUrl.getImageUrl()
         );
@@ -235,15 +217,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getById(Long id) {
 
-        Long actorUserId = getUserId();
-
         log.info("USER_EVENT | action=GET_USER | actorUserId={} | targetUserId={} | status=START",
-                actorUserId, id);
+                actor(), id);
 
         User user = userRepository.findById(id).orElseThrow(() -> {
 
             log.warn("USER_EVENT | action=GET_USER | actorUserId={} | targetUserId={} | status=FAIL | reason=NOT_FOUND",
-                    actorUserId, id);
+                    actor(), id);
 
             return new UserNotFoundException("User not found with id: " + id);
         });
@@ -257,15 +237,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getByEmail(String email) {
 
-        Long actorUserId = getUserId();
-
         log.info("USER_EVENT | action=GET_USER_BY_EMAIL | actorUserId={} | email={} | status=START",
-                actorUserId, email);
+                actor(), email);
 
         User user = userRepository.findByEmail(email).orElseThrow(() -> {
 
             log.warn("USER_EVENT | action=GET_USER_BY_EMAIL | actorUserId={} | email={} | status=FAIL | reason=NOT_FOUND",
-                    actorUserId, email);
+                    actor(), email);
 
             return new UserNotFoundException("User not found with email: " + email);
         });
@@ -279,15 +257,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<UserResponse> getAll(Pageable pageable) {
 
-        Long actorUserId = getUserId();
-
         log.info("USER_EVENT | action=GET_ALL_USERS | actorUserId={} | page={} | size={}",
-                actorUserId, pageable.getPageNumber(), pageable.getPageSize());
+                actor(), pageable.getPageNumber(), pageable.getPageSize());
 
         Page<User> userPage = userRepository.findAll(pageable);
 
         log.info("USER_EVENT | action=GET_ALL_USERS | actorUserId={} | status=SUCCESS | total={}",
-                actorUserId, userPage.getTotalElements());
+                actor(), userPage.getTotalElements());
 
         return userPage.map(userMapper::toResponse);
     }

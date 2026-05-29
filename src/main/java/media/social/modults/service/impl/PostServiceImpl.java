@@ -13,16 +13,14 @@ import media.social.modults.exception.post.InvalidDateRangeException;
 import media.social.modults.exception.post.PostNotFoundException;
 import media.social.modults.mapper.PostMapper;
 import media.social.modults.repository.PostRepository;
-import media.social.modults.security.userdetails.CustomUserDetails;
+import media.social.modults.user.security.userdetails.CustomUserDetails;
 import media.social.modults.service.CloudinaryService;
 import media.social.modults.service.PostService;
-import media.social.modults.service.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 

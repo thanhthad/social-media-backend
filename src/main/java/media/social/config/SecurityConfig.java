@@ -1,7 +1,7 @@
 package media.social.config;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modults.security.jwt.JwtAuthenticationFilter;
+import media.social.modults.user.security.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

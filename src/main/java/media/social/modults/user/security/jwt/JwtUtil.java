@@ -1,9 +1,9 @@
-package media.social.modults.security.jwt;
+package media.social.modults.user.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import media.social.modults.entity.User;
-import media.social.modults.security.userdetails.CustomUserDetails;
+import media.social.modults.user.security.userdetails.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;

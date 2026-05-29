@@ -1,4 +1,4 @@
-package media.social.modults.entity;
+package media.social.modults.user.entity;
 
 
 import jakarta.persistence.*;

@@ -2,9 +2,8 @@ package media.social.modults.service.impl;
 
 import lombok.AllArgsConstructor;
 import media.social.modults.entity.User;
-import media.social.modults.exception.user.UserNotFoundException;
+import media.social.modults.user.exception.UserNotFoundException;
 import media.social.modults.repository.UserRepository;
-import media.social.modults.service.UserServiceDomain;
 import org.springframework.stereotype.Service;
 
 @AllArgsConstructor
