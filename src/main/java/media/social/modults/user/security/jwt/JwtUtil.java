@@ -2,7 +2,7 @@ package media.social.modults.user.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import media.social.modults.entity.User;
+import media.social.modults.user.Enum.Role;
 import media.social.modults.user.security.userdetails.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -30,13 +30,13 @@ public class JwtUtil {
     public String generateAccessToken(Long userId,
                                       String username,
                                       String email,
-                                      String role) {
+                                      Role role) {
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("username", username)
                 .claim("email", email)
-                .claim("role", role)
+                .claim("role", role.name())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

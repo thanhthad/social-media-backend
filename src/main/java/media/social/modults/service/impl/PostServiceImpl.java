@@ -8,7 +8,7 @@ import media.social.modults.dto.request.UpdatePostRequest;
 import media.social.modults.dto.response.PostResponse;
 import media.social.modults.dto.response.UploadImageResponse;
 import media.social.modults.entity.Post;
-import media.social.modults.entity.User;
+import media.social.modults.user.entity.User
 import media.social.modults.exception.post.InvalidDateRangeException;
 import media.social.modults.exception.post.PostNotFoundException;
 import media.social.modults.mapper.PostMapper;

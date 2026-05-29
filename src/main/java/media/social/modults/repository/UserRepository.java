@@ -1,6 +1,6 @@
 package media.social.modults.repository;
 
-import media.social.modults.entity.User;
+import media.social.modults.user.entity.User
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

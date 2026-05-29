@@ -2,7 +2,7 @@ package media.social.modults.service.impl;
 
 import lombok.AllArgsConstructor;
 import media.social.modults.entity.Post;
-import media.social.modults.entity.User;
+import media.social.modults.user.entity.User
 import media.social.modults.exception.post.PostNotFoundException;
 import media.social.modults.repository.PostRepository;
 import media.social.modults.service.PostServiceDomain;

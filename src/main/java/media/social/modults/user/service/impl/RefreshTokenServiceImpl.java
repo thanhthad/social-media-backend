@@ -4,13 +4,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import media.social.modults.user.entity.RefreshToken;
-import media.social.modults.entity.User;
+import media.social.modults.user.entity.User;
 import media.social.modults.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modults.exception.refreshtoken.RefreshTokenExpiredException;
 import media.social.modults.exception.refreshtoken.RefreshTokenRevokedException;
 import media.social.modults.repository.RefreshTokenRepository;
 import media.social.modults.user.security.jwt.JwtUtil;
 import media.social.modults.user.service.RefreshTokenService;
+import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

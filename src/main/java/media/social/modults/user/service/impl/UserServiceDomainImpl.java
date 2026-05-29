@@ -1,9 +1,11 @@
-package media.social.modults.service.impl;
+package media.social.modults.user.service.impl;
+
 
 import lombok.AllArgsConstructor;
-import media.social.modults.entity.User;
-import media.social.modults.user.exception.UserNotFoundException;
 import media.social.modults.repository.UserRepository;
+import media.social.modults.user.entity.User;
+import media.social.modults.user.exception.UserNotFoundException;
+import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.stereotype.Service;
 
 @AllArgsConstructor
@@ -11,10 +13,12 @@ import org.springframework.stereotype.Service;
 public class UserServiceDomainImpl  implements UserServiceDomain {
     private final UserRepository userRepository;
 
+    @Override
     public void validateUserExists(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException("User not found with id: " + userId);
         }
+
     }
 
     @Override

@@ -4,7 +4,7 @@ import media.social.modults.dto.request.LikeRequest;
 import media.social.modults.dto.response.LikeResponse;
 import media.social.modults.entity.Like;
 import media.social.modults.entity.Post;
-import media.social.modults.entity.User;
+import media.social.modults.user.entity.User
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")

@@ -9,7 +9,7 @@ import media.social.modults.dto.response.PostResponse;
 import media.social.modults.dto.response.UserResponse;
 import media.social.modults.entity.Like;
 import media.social.modults.entity.Post;
-import media.social.modults.entity.User;
+import media.social.modults.user.entity.User
 import media.social.modults.exception.like.LikeAlreadyExistsException;
 import media.social.modults.exception.like.LikeNotFoundException;
 import media.social.modults.mapper.LikeMapper;

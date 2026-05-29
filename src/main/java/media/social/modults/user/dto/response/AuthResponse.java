@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import media.social.modults.user.Enum.Role;
+import media.social.modults.user.entity.RefreshToken;
 
 @Getter
 @Builder
