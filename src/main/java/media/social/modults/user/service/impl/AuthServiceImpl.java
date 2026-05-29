@@ -3,7 +3,7 @@ package media.social.modults.user.service.impl;
 import lombok.AllArgsConstructor;
 import media.social.modults.user.entity.RefreshToken;
 import media.social.modults.user.exception.UserAlreadyExistsException;
-import media.social.modults.repository.UserRepository;
+import media.social.modults.others.repository.UserRepository;
 import media.social.modults.user.dto.request.LoginRequest;
 import media.social.modults.user.dto.request.RegisterRequest;
 import media.social.modults.user.dto.response.AuthResponse;

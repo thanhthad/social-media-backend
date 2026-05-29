@@ -3,21 +3,22 @@ package media.social.common.exception;
 import lombok.extern.slf4j.Slf4j;
 import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
-import media.social.modults.exception.cloudinary.CloudinaryDeleteException;
-import media.social.modults.exception.cloudinary.CloudinaryUploadException;
-import media.social.modults.exception.cloudinary.InvalidImageException;
-import media.social.modults.exception.like.LikeAlreadyExistsException;
-import media.social.modults.exception.like.LikeNotFoundException;
-import media.social.modults.exception.post.InvalidDateRangeException;
-import media.social.modults.exception.post.PostNotFoundException;
-import media.social.modults.exception.refreshtoken.InvalidRefreshTokenException;
-import media.social.modults.exception.refreshtoken.RefreshTokenExpiredException;
-import media.social.modults.exception.refreshtoken.RefreshTokenRevokedException;
+import media.social.modults.file.image.exception.CloudinaryDeleteException;
+import media.social.modults.file.image.exception.CloudinaryUploadException;
+import media.social.modults.file.image.exception.InvalidImageException;
+import media.social.modults.others.exception.like.LikeAlreadyExistsException;
+import media.social.modults.others.exception.like.LikeNotFoundException;
+import media.social.modults.others.exception.post.InvalidDateRangeException;
+import media.social.modults.others.exception.post.PostNotFoundException;
+import media.social.modults.others.exception.refreshtoken.InvalidRefreshTokenException;
+import media.social.modults.others.exception.refreshtoken.RefreshTokenExpiredException;
+import media.social.modults.others.exception.refreshtoken.RefreshTokenRevokedException;
 import media.social.modults.user.exception.UserAlreadyExistsException;
 import media.social.modults.user.exception.UserNotFoundException;
 import media.social.modults.user.security.userdetails.CustomUserDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -125,6 +126,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleRevokedRefreshToken(RefreshTokenRevokedException ex) {
         logError("REFRESH_TOKEN_REVOKED", ex);
         return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadCredentials(
+            BadCredentialsException ex
+    ) {
+
+        logError("INVALID_CREDENTIALS", ex);
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED
+        );
     }
 
     // ================= CLOUDINARY =================

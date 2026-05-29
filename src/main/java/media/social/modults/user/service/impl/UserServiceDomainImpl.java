@@ -2,7 +2,7 @@ package media.social.modults.user.service.impl;
 
 
 import lombok.AllArgsConstructor;
-import media.social.modults.repository.UserRepository;
+import media.social.modults.others.repository.UserRepository;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.UserNotFoundException;
 import media.social.modults.user.service.UserServiceDomain;

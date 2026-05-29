@@ -46,10 +46,8 @@ public class JwtAuthenticationFilter
 
             String token = authHeader.substring(7);
 
-            // validate token
             jwtUtil.validateToken(token);
 
-            // get user details
             CustomUserDetails userDetails =
                     jwtUtil.getUserDetails(token);
 
