@@ -3,7 +3,7 @@ package media.social.modults.others.service;
 import media.social.modults.others.dto.request.LikeRequest;
 import media.social.modults.others.dto.response.LikeResponse;
 import media.social.modults.others.dto.response.PostResponse;
-import media.social.modults.others.dto.response.UserResponse;
+import media.social.modults.user.dto.response.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

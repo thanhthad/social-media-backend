@@ -11,7 +11,7 @@ public interface PostMapper {
     // Entity → Response (map nested User → flat response)
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "user.username", target = "username")
-    @Mapping(source = "user.avatarUrl", target = "avatarUrl")
+    @Mapping(source = "user.profile.avatarUrl", target = "avatarUrl")
     PostResponse toResponse(Post post);
 
     // Request → Entity (user set ở service)

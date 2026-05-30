@@ -10,7 +10,6 @@ import media.social.modults.user.dto.request.auth.LoginRequest;
 import media.social.modults.user.dto.request.auth.RegisterRequest;
 import media.social.modults.user.dto.response.AuthResponse;
 import media.social.modults.user.service.AuthService;
-import media.social.modults.user.service.RefreshTokenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authentication", description = "Auth APIs")
 public class AuthController {
 
-    private final RefreshTokenService refreshTokenService;
     private final AuthService authService;
 
     // ================= LOGIN =================

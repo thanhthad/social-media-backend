@@ -8,7 +8,7 @@ import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
-import media.social.modults.others.repository.RefreshTokenRepository;
+import media.social.modults.user.repository.RefreshTokenRepository;
 import media.social.modults.user.security.jwt.JwtUtil;
 import media.social.modults.user.service.RefreshTokenService;
 import media.social.modults.user.service.UserServiceDomain;

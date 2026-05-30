@@ -2,6 +2,7 @@ package media.social.modults.others.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import media.social.modults.user.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.List;

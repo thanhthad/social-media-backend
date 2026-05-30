@@ -37,7 +37,7 @@ public class SecurityConfig {
 
                         // PUBLIC APIs
                         .requestMatchers(
-                                "/auth/**"
+                                "/api/auth/**"
                         ).permitAll()
 
                         // SWAGGER

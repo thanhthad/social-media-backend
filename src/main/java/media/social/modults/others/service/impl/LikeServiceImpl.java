@@ -6,10 +6,10 @@ import lombok.extern.log4j.Log4j2;
 import media.social.modults.others.dto.request.LikeRequest;
 import media.social.modults.others.dto.response.LikeResponse;
 import media.social.modults.others.dto.response.PostResponse;
-import media.social.modults.others.dto.response.UserResponse;
 import media.social.modults.others.entity.Like;
 import media.social.modults.others.entity.Post;
-import media.social.modults.user.entity.User
+import media.social.modults.user.dto.response.UserResponse;
+import media.social.modults.user.entity.User;
 import media.social.modults.others.exception.like.LikeAlreadyExistsException;
 import media.social.modults.others.exception.like.LikeNotFoundException;
 import media.social.modults.others.mapper.LikeMapper;
@@ -17,6 +17,7 @@ import media.social.modults.others.repository.LikeRepository;
 import media.social.modults.user.security.userdetails.CustomUserDetails;
 import media.social.modults.others.service.LikeService;
 import media.social.modults.others.service.PostServiceDomain;
+import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -163,7 +164,7 @@ public class LikeServiceImpl implements LikeService {
                         .id(user.getId())
                         .username(user.getUsername())
                         .email(user.getEmail())
-                        .avatarUrl(user.getAvatarUrl())
+                        .avatarUrl(user.getProfile().getAvatarUrl())
                         .build());
 
         log.info("LIKE_EVENT | action=GET_LIKERS | actorUserId={} | postId={} | status=SUCCESS | total={}",
@@ -198,7 +199,7 @@ public class LikeServiceImpl implements LikeService {
                             .createdAt(post.getCreatedAt())
                             .userId(user.getId())
                             .username(user.getUsername())
-                            .avatarUrl(user.getAvatarUrl())
+                            .avatarUrl(user.getProfile().getAvatarUrl())
                             .build();
                 });
 

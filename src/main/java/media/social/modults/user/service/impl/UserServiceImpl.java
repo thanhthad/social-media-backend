@@ -38,99 +38,37 @@ public class UserServiceImpl implements UserService {
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public UserProfileResponse getMe() {
-        Long userId = UserContextHolder.getUserId();
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found with id: "+userId)
-        );
-        Profile profile = profileRepository.findByUserId(userId).orElseThrow(
-                () -> new ProfileNotFoundException("Profile not found with userId: " + userId)
-        );
-        UserProfileResponse userProfileResponse = userMapper.toUserProfileResponse(user,profile);
-
-        return userProfileResponse;
-    }
-
-    @Override
-    @Transactional
-    public UserProfileResponse updateMe(UpdateProfileRequest request) {
-        Long userId = UserContextHolder.getUserId();
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found with id: "+userId)
-        );
-        Profile profile = profileRepository.findByUserId(userId).orElseThrow(
-                () -> new ProfileNotFoundException("Profile not found with userId: " + userId)
-        );
-
-        profileMapper.updateProfileFromRequest(request,profile);
-        profileRepository.save(profile);
-
-        UserProfileResponse userProfileResponse = userMapper.toUserProfileResponse(user,profile);
-
-        return userProfileResponse;
-    }
-
-    @Override
-    public UserProfileResponse updateAvatar(UpdateAvatarRequest request) {
+    private User getCurrentUser() {
         Long userId = UserContextHolder.getUserId();
 
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found with id: "+userId)
-        );
-
-        Profile profile = profileRepository.findByUserId(userId).orElseThrow(
-                () -> new ProfileNotFoundException("Profile not found with userId: " + userId)
-        );
-        cloudinaryService.validateImage(request.getFile());
-
-        UploadImageResponse uploadImageResponse = cloudinaryService.uploadImage(request.getFile(),"avatars");
-
-        if(profile.getAvatarUrl() != null){
-            cloudinaryService.deleteImage(profile.getAvatarPublicId());
-        }
-
-        profile.setAvatarPublicId(uploadImageResponse.getPublicId());
-
-        profile.setAvatarUrl(uploadImageResponse.getImageUrl());
-
-        profileRepository.save(profile);
-
-        UserProfileResponse userProfileResponse = userMapper.toUserProfileResponse(user,profile);
-        return userProfileResponse;
+        return userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + userId
+                        )
+                );
     }
 
-    @Override
-    public void updatePassword(ChangePasswordRequest request) {
-        Long userId = UserContextHolder.getUserId();
-
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found with id: "+userId)
-        );
-
-        if(!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())){
-            throw new BadCredentialsException("Invalid password");
-        }
-
-        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+    private Profile getCurrentProfile(Long userId) {
+        return profileRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ProfileNotFoundException(
+                                "Profile not found with userId: " + userId
+                        )
+                );
     }
 
-    @Override
-    public PublicUserProfileResponse getUserById(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found with id: "+userId)
-        );
-        Profile profile = profileRepository.findByUserId(userId).orElseThrow(
-                () -> new ProfileNotFoundException("Profile not found with userId: " + userId)
-        );
+    private PublicUserProfileResponse buildPublicProfileResponse(
+            User user,
+            Profile profile
+    ) {
 
         return PublicUserProfileResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .fullName(profile.getFullName())
                 .avatarUrl(profile.getAvatarUrl())
                 .bio(profile.getBio())
-                .fullName(profile.getFullName())
                 .dateOfBirth(profile.getDateOfBirth())
                 .gender(profile.getGender())
                 .location(profile.getLocation())
@@ -140,13 +78,107 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserProfileResponse getMe() {
+
+        User user = getCurrentUser();
+        Profile profile = getCurrentProfile(user.getId());
+
+        return userMapper.toUserProfileResponse(user, profile);
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponse updateMe(UpdateProfileRequest request) {
+
+        User user = getCurrentUser();
+        Profile profile = getCurrentProfile(user.getId());
+
+        profileMapper.updateProfileFromRequest(request, profile);
+
+        profileRepository.save(profile);
+
+        return userMapper.toUserProfileResponse(user, profile);
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponse updateAvatar(UpdateAvatarRequest request) {
+
+        User user = getCurrentUser();
+        Profile profile = getCurrentProfile(user.getId());
+
+        cloudinaryService.validateImage(request.getFile());
+
+        UploadImageResponse upload =
+                cloudinaryService.uploadImage(
+                        request.getFile(),
+                        "avatars"
+                );
+
+        if (profile.getAvatarPublicId() != null) {
+            cloudinaryService.deleteImage(
+                    profile.getAvatarPublicId()
+            );
+        }
+
+        profile.setAvatarUrl(upload.getImageUrl());
+        profile.setAvatarPublicId(upload.getPublicId());
+
+        profileRepository.save(profile);
+
+        return userMapper.toUserProfileResponse(user, profile);
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(ChangePasswordRequest request) {
+
+        User user = getCurrentUser();
+
+        if (!passwordEncoder.matches(
+                request.getOldPassword(),
+                user.getPasswordHash()
+        )) {
+            throw new BadCredentialsException(
+                    "Invalid password"
+            );
+        }
+
+        user.setPasswordHash(
+                passwordEncoder.encode(
+                        request.getNewPassword()
+                )
+        );
+
+        userRepository.save(user);
+    }
+
+    @Override
+    public PublicUserProfileResponse getUserById(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id: " + userId
+                        )
+                );
+
+        Profile profile = getCurrentProfile(userId);
+
+        return buildPublicProfileResponse(
+                user,
+                profile
+        );
+    }
+
+    @Override
     public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable) {
-        Page<User> userPage = userRepository.searchUsers(
+        Page<UserSearchResponse> userPage = userRepository.searchUsers(
                 username,
                 Status.ACTIVE,
                 pageable
         );
 
-        return userPage.map(userMapper::toUserResponse);
+        return userPage;
     }
 }

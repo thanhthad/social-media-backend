@@ -24,7 +24,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
 
     @Query("""
-SELECT new media.social.modults.user.dto.response.UserSearchResponse(
+SELECT new media.social.modults.user.dto.response.pub.UserSearchResponse(
     u.id,
     u.username,
     p.fullName,

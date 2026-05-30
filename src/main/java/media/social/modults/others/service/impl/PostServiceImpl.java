@@ -8,7 +8,7 @@ import media.social.modults.others.dto.request.UpdatePostRequest;
 import media.social.modults.others.dto.response.PostResponse;
 import media.social.modults.file.image.dto.response.UploadImageResponse;
 import media.social.modults.others.entity.Post;
-import media.social.modults.user.entity.User
+import media.social.modults.user.entity.User;
 import media.social.modults.others.exception.post.InvalidDateRangeException;
 import media.social.modults.others.exception.post.PostNotFoundException;
 import media.social.modults.others.mapper.PostMapper;
@@ -16,6 +16,7 @@ import media.social.modults.others.repository.PostRepository;
 import media.social.modults.user.security.userdetails.CustomUserDetails;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.others.service.PostService;
+import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;

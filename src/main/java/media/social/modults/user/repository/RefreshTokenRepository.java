@@ -1,4 +1,4 @@
-package media.social.modults.others.repository;
+package media.social.modults.user.repository;
 
 import media.social.modults.user.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
