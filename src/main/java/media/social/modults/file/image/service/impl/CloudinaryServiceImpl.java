@@ -4,7 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import media.social.modults.others.dto.response.UploadImageResponse;
+import media.social.modults.file.image.dto.response.UploadImageResponse;
 import media.social.modults.file.image.exception.CloudinaryDeleteException;
 import media.social.modults.file.image.exception.CloudinaryUploadException;
 import media.social.modults.file.image.exception.InvalidImageException;
@@ -40,9 +40,6 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             MultipartFile file,
             String folder
     ) {
-
-        validateImage(file);
-
         try {
 
             Map<String, Object> uploadResult =
@@ -122,7 +119,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     // =========================================================
     // VALIDATE IMAGE
     // =========================================================
-    private void validateImage(MultipartFile file) {
+    public void validateImage(MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
             throw new InvalidImageException(

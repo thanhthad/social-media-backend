@@ -6,7 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import media.social.modults.others.dto.request.CreatePostRequest;
 import media.social.modults.others.dto.request.UpdatePostRequest;
 import media.social.modults.others.dto.response.PostResponse;
-import media.social.modults.others.dto.response.UploadImageResponse;
+import media.social.modults.file.image.dto.response.UploadImageResponse;
 import media.social.modults.others.entity.Post;
 import media.social.modults.user.entity.User
 import media.social.modults.others.exception.post.InvalidDateRangeException;

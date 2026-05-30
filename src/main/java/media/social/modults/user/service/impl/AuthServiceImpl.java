@@ -1,14 +1,16 @@
 package media.social.modults.user.service.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modults.user.entity.Profile;
 import media.social.modults.user.entity.RefreshToken;
-import media.social.modults.user.exception.UserAlreadyExistsException;
+import media.social.modults.user.exception.user.UserAlreadyExistsException;
 import media.social.modults.others.repository.UserRepository;
 import media.social.modults.user.dto.request.auth.LoginRequest;
 import media.social.modults.user.dto.request.auth.RegisterRequest;
 import media.social.modults.user.dto.response.AuthResponse;
 import media.social.modults.user.entity.User;
-import media.social.modults.user.exception.UserNotFoundException;
+import media.social.modults.user.exception.user.UserNotFoundException;
+import media.social.modults.user.repository.ProfileRepository;
 import media.social.modults.user.security.jwt.JwtUtil;
 import media.social.modults.user.service.AuthService;
 import media.social.modults.user.service.RefreshTokenService;
@@ -25,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
+    private final ProfileRepository profileRepository;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -38,6 +41,11 @@ public class AuthServiceImpl implements AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .build();
         userRepository.save(user);
+
+        Profile profile = Profile.builder()
+                .user(user)
+                .build();
+        profileRepository.save(profile);
 
         String refreshToken = refreshTokenService.create(user.getId()).getToken();
         String accessToken = jwtUtil.generateAccessToken(

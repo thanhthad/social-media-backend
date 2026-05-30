@@ -1,4 +1,4 @@
-package media.social.modults.others.exception.refreshtoken;
+package media.social.modults.user.exception.refreshtoken;
 
 public class InvalidRefreshTokenException extends RuntimeException {
     public InvalidRefreshTokenException(String message) {

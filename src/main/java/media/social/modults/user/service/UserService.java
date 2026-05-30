@@ -5,7 +5,6 @@ import media.social.modults.user.dto.request.self.ChangePasswordRequest;
 import media.social.modults.user.dto.request.self.UpdateProfileRequest;
 import media.social.modults.user.dto.response.UserResponse;
 import media.social.modults.user.dto.response.pub.PublicUserProfileResponse;
-import media.social.modults.user.dto.response.self.ProfileResponse;
 import media.social.modults.user.dto.response.self.UserProfileResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +16,7 @@ public interface UserService {
 
     public UserProfileResponse updateMe(UpdateProfileRequest request);
 
-    public ProfileResponse updateAvatar(UpdateAvatarRequest request);
+    public UserProfileResponse updateAvatar(UpdateAvatarRequest request);
 
     public void updatePassword(ChangePasswordRequest request);
 

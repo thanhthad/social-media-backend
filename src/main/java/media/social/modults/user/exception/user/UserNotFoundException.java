@@ -1,4 +1,4 @@
-package media.social.modults.user.exception;
+package media.social.modults.user.exception.user;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String message) {
