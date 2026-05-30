@@ -38,6 +38,9 @@ public class User {
     @Column(nullable = false)
     private Status status ;
 
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Profile profile;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

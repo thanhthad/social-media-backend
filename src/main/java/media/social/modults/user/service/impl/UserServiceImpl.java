@@ -4,12 +4,12 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import media.social.modults.file.image.dto.response.UploadImageResponse;
 import media.social.modults.file.image.service.CloudinaryService;
+import media.social.modults.user.Enum.Status;
 import media.social.modults.user.dto.request.self.ChangePasswordRequest;
 import media.social.modults.user.dto.request.self.UpdateAvatarRequest;
 import media.social.modults.user.dto.request.self.UpdateProfileRequest;
-import media.social.modults.user.dto.response.UserResponse;
 import media.social.modults.user.dto.response.pub.PublicUserProfileResponse;
-import media.social.modults.user.dto.response.self.ProfileResponse;
+import media.social.modults.user.dto.response.pub.UserSearchResponse;
 import media.social.modults.user.dto.response.self.UserProfileResponse;
 import media.social.modults.user.entity.Profile;
 import media.social.modults.user.entity.User;
@@ -117,12 +117,36 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PublicUserProfileResponse getUserById(Long id) {
-        
+    public PublicUserProfileResponse getUserById(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new UserNotFoundException("User not found with id: "+userId)
+        );
+        Profile profile = profileRepository.findByUserId(userId).orElseThrow(
+                () -> new ProfileNotFoundException("Profile not found with userId: " + userId)
+        );
+
+        return PublicUserProfileResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .avatarUrl(profile.getAvatarUrl())
+                .bio(profile.getBio())
+                .fullName(profile.getFullName())
+                .dateOfBirth(profile.getDateOfBirth())
+                .gender(profile.getGender())
+                .location(profile.getLocation())
+                .createdAt(user.getCreatedAt())
+                .lastLoginAt(user.getLastLoginAt())
+                .build();
     }
 
     @Override
-    public Page<UserResponse> findUsersByName(String username, Pageable pageable) {
-        return null;
+    public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable) {
+        Page<User> userPage = userRepository.searchUsers(
+                username,
+                Status.ACTIVE,
+                pageable
+        );
+
+        return userPage.map(userMapper::toUserResponse);
     }
 }

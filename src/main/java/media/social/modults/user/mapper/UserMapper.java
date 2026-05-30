@@ -1,5 +1,6 @@
 package media.social.modults.user.mapper;
 
+import media.social.modults.user.dto.response.pub.UserSearchResponse;
 import media.social.modults.user.dto.response.self.ProfileResponse;
 import media.social.modults.user.dto.response.self.UserProfileResponse;
 import media.social.modults.user.entity.Profile;
@@ -38,6 +39,18 @@ public class UserMapper {
                 .role(user.getRole())
                 .status(user.getStatus())
                 .profile(profileResponse)
+                .build();
+    }
+
+    public UserSearchResponse toUserSearchResponse(User user) {
+
+        Profile profile = user.getProfile();
+
+        return UserSearchResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullName(profile != null ? profile.getFullName() : null)
+                .avatarUrl(profile != null ? profile.getAvatarUrl() : null)
                 .build();
     }
 }

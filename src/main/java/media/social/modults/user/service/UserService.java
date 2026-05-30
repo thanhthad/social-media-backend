@@ -3,8 +3,8 @@ package media.social.modults.user.service;
 import media.social.modults.user.dto.request.self.UpdateAvatarRequest;
 import media.social.modults.user.dto.request.self.ChangePasswordRequest;
 import media.social.modults.user.dto.request.self.UpdateProfileRequest;
-import media.social.modults.user.dto.response.UserResponse;
 import media.social.modults.user.dto.response.pub.PublicUserProfileResponse;
+import media.social.modults.user.dto.response.pub.UserSearchResponse;
 import media.social.modults.user.dto.response.self.UserProfileResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +23,7 @@ public interface UserService {
     // PUBLIC USER APIs
     public PublicUserProfileResponse getUserById(Long id);
 
-    public Page<UserResponse> findUsersByName(String username, Pageable pageable);
+    public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable);
 
     //ADMIN APIs
 }
