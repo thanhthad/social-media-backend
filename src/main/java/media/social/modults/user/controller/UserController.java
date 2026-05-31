@@ -15,6 +15,7 @@ import media.social.modults.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,25 +61,11 @@ public class UserController {
         );
     }
 
-    @PutMapping("/me/avatar")
-    @Operation(summary = "Update avatar")
+    @PostMapping(value = "me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateAvatar(
-            @RequestParam("file") MultipartFile file
+            @Valid @ModelAttribute UpdateAvatarRequest request
     ) {
-
-        UpdateAvatarRequest request =
-                new UpdateAvatarRequest();
-
-        request.setFile(file);
-
-        UserProfileResponse response =
-                userService.updateAvatar(request);
-
-        return ResponseData.success(
-                response,
-                "Update avatar successfully",
-                HttpStatus.OK
-        );
+        return ResponseEntity.ok(userService.updateAvatar(request));
     }
 
     @PutMapping("/me/password")

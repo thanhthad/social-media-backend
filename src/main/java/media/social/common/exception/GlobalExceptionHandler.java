@@ -13,6 +13,7 @@ import media.social.modults.others.exception.post.PostNotFoundException;
 import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
+import media.social.modults.user.exception.user.UnauthorizedException;
 import media.social.modults.user.exception.user.UserAlreadyExistsException;
 import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.security.userdetails.CustomUserDetails;
@@ -127,17 +128,20 @@ public class GlobalExceptionHandler {
         logError("REFRESH_TOKEN_REVOKED", ex);
         return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
+
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleBadCredentials(
-            BadCredentialsException ex
-    ) {
+    public ResponseEntity<ApiResponse<Object>> handleBadCredentials(BadCredentialsException ex) {
 
-        logError("INVALID_CREDENTIALS", ex);
+        log.warn("INVALID_CREDENTIALS | message={}", ex.getMessage());
 
-        return ResponseData.fail(
-                ex.getMessage(),
-                HttpStatus.UNAUTHORIZED
-        );
+        ApiResponse<Object> response = new ApiResponse<>();
+        response.setSuccess(false);
+        response.setMessage("Invalid username or password");
+        response.setData(null);
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
     }
 
     // ================= CLOUDINARY =================
@@ -157,6 +161,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleDelete(CloudinaryDeleteException ex) {
         logError("CLOUDINARY_DELETE_FAILED", ex);
         return ResponseData.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorized(
+            UnauthorizedException ex
+    ) {
+
+        logError("UNAUTHORIZED", ex);
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED
+        );
     }
 
     // ================= VALIDATION =================
@@ -187,7 +204,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
 
-        logError("VALIDATION_ERROR", ex);
+        log.warn("VALIDATION_ERROR | {}", ex.getBindingResult().getFieldErrors());
 
         Map<String, String> errors = new HashMap<>();
 
@@ -202,6 +219,7 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
 
     // ================= FALLBACK =================
     @ExceptionHandler(Exception.class)

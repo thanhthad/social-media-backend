@@ -34,7 +34,6 @@ public class JwtAuthenticationFilter
         String authHeader =
                 request.getHeader("Authorization");
 
-        // no token
         if (authHeader == null
                 || !authHeader.startsWith("Bearer ")) {
 

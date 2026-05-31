@@ -44,13 +44,12 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/api/**"
-                        ).permitAll()
-                                .anyRequest().permitAll()
+                                "/swagger-ui.html"
+                        )
+                        .permitAll()
+//                                .anyRequest().permitAll()
 
-                        // ANY OTHER REQUEST
-//                        .anyRequest().authenticated()
+                        .anyRequest().authenticated()
                 )
 
                 // ================= SESSION STATELESS =================
