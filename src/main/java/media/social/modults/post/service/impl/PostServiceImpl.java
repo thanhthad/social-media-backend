@@ -18,15 +18,12 @@ import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.post.mapper.PostMapper;
 import media.social.modults.post.repository.PostRepository;
 import media.social.modults.user.security.context.UserContextHolder;
-import media.social.modults.user.security.userdetails.CustomUserDetails;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.post.service.PostService;
 import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -83,7 +80,7 @@ public class PostServiceImpl implements PostService {
         return postMapper.toResponse(savedPost);
     }
 
-    public Page<PostResponse> getAllPostMe(Long userId, Pageable pageable) {
+    public Page<PostResponse> getAllPost(Long userId, Pageable pageable) {
 
         Page<PostFlatResponse> flatPage =
                 postRepository.findAllPostMe(userId, pageable);

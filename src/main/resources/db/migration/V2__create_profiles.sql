@@ -14,4 +14,5 @@ CREATE TABLE profiles (
 
                           CONSTRAINT fk_profiles_user
                               FOREIGN KEY (user_id) REFERENCES users(user_id)
+                                  ON DELETE CASCADE
 );

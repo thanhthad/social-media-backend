@@ -8,4 +8,5 @@ CREATE TABLE refresh_tokens (
 
                                 CONSTRAINT fk_refresh_tokens_user
                                     FOREIGN KEY (user_id) REFERENCES users(user_id)
+                                        ON DELETE CASCADE
 );

@@ -13,7 +13,7 @@ public interface PostService {
 
     PostResponse createPost(CreatePostRequest request);
 
-    public Page<PostResponse> getAllPostMe(Long userId, Pageable pageable);
+    public Page<PostResponse> getAllPost(Long userId, Pageable pageable);
 
 
     PostResponse updatePost(Long id, UpdatePostRequest request);

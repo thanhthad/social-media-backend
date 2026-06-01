@@ -7,11 +7,13 @@ CREATE TABLE comments (
                           created_at DATETIME2,
 
                           CONSTRAINT fk_comments_post
-                              FOREIGN KEY (post_id) REFERENCES posts(post_id),
+                              FOREIGN KEY (post_id) REFERENCES posts(post_id)
+                                  ON DELETE CASCADE,
 
                           CONSTRAINT fk_comments_user
                               FOREIGN KEY (user_id) REFERENCES users(user_id),
 
                           CONSTRAINT fk_comments_parent
                               FOREIGN KEY (parent_id) REFERENCES comments(comment_id)
+                                  ON DELETE NO ACTION
 );
