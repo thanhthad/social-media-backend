@@ -13,11 +13,14 @@ public interface PostService {
 
     PostResponse createPost(CreatePostRequest request);
 
+    public Page<PostResponse> getAllPostMe(Long userId, Pageable pageable);
+
+
     PostResponse updatePost(Long id, UpdatePostRequest request);
 
     void deleteByPostId(Long id);
 
-    PostResponse getPostById(Long id);
+    PostResponse getByPostId(Long id);
 
     Page<PostResponse> getAllPosts(Pageable pageable);
 

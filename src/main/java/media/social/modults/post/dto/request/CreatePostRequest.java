@@ -9,19 +9,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreatePostRequest {
 
-    @NotNull(message = "UserId is required")
-    private Long userId;
+//    @NotNull(message = "UserId is required")
+//    private Long userId;
 
     @NotBlank(message = "Content is required")
     @Size(min = 1, max = 1000, message = "Content max 1000 characters")
     private String content;
 
-    private MultipartFile file;
+    private List<MultipartFile> files;
 
 }

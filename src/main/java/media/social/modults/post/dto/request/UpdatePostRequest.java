@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,6 +20,6 @@ public class UpdatePostRequest {
     @Size(min = 1, max = 1000, message = "Content max 1000 characters")
     private String content;
 
-    private MultipartFile file;
+    private List<MultipartFile> files;
 
 }

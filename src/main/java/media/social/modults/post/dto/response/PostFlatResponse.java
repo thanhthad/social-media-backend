@@ -1,23 +1,20 @@
 package media.social.modults.post.dto.response;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Setter
-@Builder
-public class PostResponse {
+@AllArgsConstructor
+public class PostFlatResponse {
 
     private Long id;
     private String content;
-    private List<String> imageUrl;
+    private String imageUrl;
     private LocalDateTime createdAt;
 
     private Long userId;
     private String username;
     private String avatarUrl;
-
 }

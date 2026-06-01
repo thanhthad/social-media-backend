@@ -3,27 +3,37 @@ package media.social.modults.post.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import media.social.modults.post.Enum.MediaType;
 import media.social.modults.post.dto.request.CreatePostRequest;
 import media.social.modults.post.dto.request.UpdatePostRequest;
+import media.social.modults.post.dto.response.PostFlatResponse;
 import media.social.modults.post.dto.response.PostResponse;
 import media.social.modults.file.image.dto.response.UploadImageResponse;
 import media.social.modults.post.entity.Post;
+import media.social.modults.post.entity.PostMedia;
+import media.social.modults.post.repository.PostMediaRepository;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.post.InvalidDateRangeException;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.post.mapper.PostMapper;
 import media.social.modults.post.repository.PostRepository;
+import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.security.userdetails.CustomUserDetails;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.post.service.PostService;
 import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -33,20 +43,11 @@ import java.time.LocalDateTime;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
+    private final PostMediaRepository postMediaRepository;
     private final UserServiceDomain userServiceDomain;
     private final PostMapper postMapper;
     private final CloudinaryService cloudinaryService;
 
-    private Long getUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated()
-                || auth.getPrincipal().equals("anonymousUser")) {
-            return null;
-        }
-
-        return ((CustomUserDetails) auth.getPrincipal()).getId();
-    }
 
     // =========================================================
     // 1. CREATE POST
@@ -54,27 +55,69 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse createPost(CreatePostRequest request) {
 
-        Long actorUserId = getUserId();
+        Long UserId = UserContextHolder.getUserId();
 
-        log.info("POST_EVENT | action=CREATE_POST | actorUserId={} | targetUserId={} | status=START",
-                actorUserId, request.getUserId());
-
-        User user = userServiceDomain.getByUserId(request.getUserId());
-        UploadImageResponse response = cloudinaryService.uploadImage(request.getFile(), "posts");
+        User user = userServiceDomain.getByUserId(UserId);
         Post post = Post.builder()
                 .user(user)
                 .content(request.getContent())
-                .imageUrl(response.getImageUrl())
-                .imagePublicId(response.getPublicId())
                 .build();
 
         Post savedPost = postRepository.save(post);
 
-        log.info("POST_EVENT | action=CREATE_POST | actorUserId={} | targetUserId={} | postId={} | status=SUCCESS",
-                actorUserId, request.getUserId(), savedPost.getId());
+        for(int i = 0 ; i < request.getFiles().size() ; i++){
+            cloudinaryService.validateImage(request.getFiles().get(i));
+            UploadImageResponse uploadImageResponse = cloudinaryService.uploadImage(request.getFiles().get(i),"posts");
+            PostMedia postMedia = PostMedia.builder()
+                    .post(savedPost)
+                    .mediaType(MediaType.IMAGE)
+                    .url(uploadImageResponse.getImageUrl())
+                    .publicId(uploadImageResponse.getPublicId())
+                    .build();
+            postMediaRepository.save(postMedia);
+        }
+
+        log.info("POST_EVENT | action=CREATE_POST | UserId={} |  postId={} | status=SUCCESS",
+                UserId,  savedPost.getId());
 
         return postMapper.toResponse(savedPost);
     }
+
+    public Page<PostResponse> getAllPostMe(Long userId, Pageable pageable) {
+
+        Page<PostFlatResponse> flatPage =
+                postRepository.findAllPostMe(userId, pageable);
+
+        Map<Long, PostResponse> map = new LinkedHashMap<>();
+
+        for (PostFlatResponse row : flatPage.getContent()) {
+
+            PostResponse post = map.computeIfAbsent(row.getId(), id ->
+                    PostResponse.builder()
+                            .id(row.getId())
+                            .content(row.getContent())
+                            .createdAt(row.getCreatedAt())
+                            .userId(row.getUserId())
+                            .username(row.getUsername())
+                            .avatarUrl(row.getAvatarUrl())
+                            .imageUrl(new ArrayList<>())
+                            .build()
+            );
+
+            if (row.getImageUrl() != null) {
+                post.getImageUrl().add(row.getImageUrl());
+            }
+        }
+
+        List<PostResponse> result = new ArrayList<>(map.values());
+
+        return new PageImpl<>(
+                result,
+                pageable,
+                flatPage.getTotalElements()
+        );
+    }
+
 
     // =========================================================
     // 2. UPDATE POST
@@ -153,6 +196,11 @@ public class PostServiceImpl implements PostService {
 
         log.info("POST_EVENT | action=DELETE_POST | actorUserId={} | postId={} | status=SUCCESS",
                 actorUserId, id);
+    }
+
+    @Override
+    public PostResponse getByPostId(Long id) {
+        return null;
     }
 
     // =========================================================
