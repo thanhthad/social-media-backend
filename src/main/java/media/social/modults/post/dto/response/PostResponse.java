@@ -1,7 +1,9 @@
 package media.social.modults.post.dto.response;
+
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -13,11 +15,11 @@ public class PostResponse {
 
     private Long id;
     private String content;
-    private List<PostMediaResponse> imageUrl;
+    private List<PostMediaResponse> postMediaResponses = new ArrayList<>();
+
     private LocalDateTime createdAt;
 
     private Long userId;
     private String username;
     private String avatarUrl;
-
 }

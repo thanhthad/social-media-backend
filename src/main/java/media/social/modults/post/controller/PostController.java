@@ -25,8 +25,9 @@ public class PostController {
     public ResponseEntity<?> createPost(
             @ModelAttribute @Valid CreatePostRequest request
     ) {
+        postService.createPost(request);
         return ResponseData.success(
-                postService.createPost(request),
+                null,
                 "Create post successfully",
                 HttpStatus.CREATED
         );

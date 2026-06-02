@@ -18,7 +18,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 SELECT new media.social.modults.post.dto.response.PostFlatResponse(
     p.id,
     p.content,
-    pm.url,
     p.createdAt,
     u.id,
     u.username,
@@ -27,7 +26,6 @@ SELECT new media.social.modults.post.dto.response.PostFlatResponse(
 FROM Post p
 JOIN p.user u
 LEFT JOIN Profile pr ON pr.user.id = u.id
-LEFT JOIN PostMedia pm ON pm.post.id = p.id
 WHERE u.id = :userId
 ORDER BY p.createdAt DESC
 """)

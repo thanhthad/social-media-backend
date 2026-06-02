@@ -10,6 +10,8 @@ public interface PostMediaRepository extends JpaRepository<PostMedia, Long> {
 
     Optional<PostMedia> findByPublicId(String publicId);
 
+    List<PostMedia> findByPostIdIn(List<Long> postIds);
+
     List<PostMedia> findByPostId(Long postId);
 
 }

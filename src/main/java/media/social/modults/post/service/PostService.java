@@ -11,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface PostService {
 
-    PostResponse createPost(CreatePostRequest request);
+    public void createPost(CreatePostRequest request);
 
     public Page<PostResponse> getAllPostMe(Pageable pageable);
 

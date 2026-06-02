@@ -12,12 +12,6 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface PostMapper {
 
-    @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.username", target = "username")
-    @Mapping(source = "user.profile.avatarUrl", target = "avatarUrl")
-    @Mapping(target = "imageUrl", expression = "java(mapImages(post))")
-    PostResponse toResponse(Post post);
-
     default List<String> mapImages(Post post) {
         if (post.getMedia() == null) return new ArrayList<>();
 

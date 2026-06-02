@@ -31,10 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
@@ -51,7 +48,8 @@ public class PostServiceImpl implements PostService {
 
 
     @Override
-    public PostResponse createPost(CreatePostRequest request) {
+    @Transactional
+    public void createPost(CreatePostRequest request) {
 
         Long userId = UserContextHolder.getUserId();
         User user = userServiceDomain.getByUserId(userId);
@@ -64,11 +62,12 @@ public class PostServiceImpl implements PostService {
         Post savedPost = postRepository.save(post);
 
         List<PostMedia> mediaList = new ArrayList<>();
-        List<PostMediaResponse> mediaResponseList = new ArrayList<>();
+
+        for(MultipartFile check : request.getFiles()){
+            cloudinaryService.validateImage(check);
+        }
 
         for (MultipartFile file : request.getFiles()) {
-
-            cloudinaryService.validateImage(file);
 
             UploadImageResponse upload =
                     cloudinaryService.uploadImage(file, "posts");
@@ -81,30 +80,15 @@ public class PostServiceImpl implements PostService {
                     .build();
 
             mediaList.add(media);
-
-            mediaResponseList.add(PostMediaResponse.builder()
-                    .url(upload.getImageUrl())
-                    .publicId(upload.getPublicId())
-                    .type(MediaType.IMAGE.name())
-                    .build());
         }
 
-        postMediaRepository.saveAll(mediaList);
-
-        savedPost.setMedia(mediaList);
+        if (!mediaList.isEmpty()) {
+            postMediaRepository.saveAll(mediaList);
+        }
 
         log.info("POST_EVENT | action=CREATE_POST | userId={} | postId={}",
                 userId, savedPost.getId());
 
-        return PostResponse.builder()
-                .id(savedPost.getId())
-                .content(savedPost.getContent())
-                .createdAt(savedPost.getCreatedAt())
-                .userId(user.getId())
-                .username(user.getUsername())
-                .avatarUrl(user.getProfile().getAvatarUrl())
-                .imageUrl(mediaResponseList)
-                .build();
     }
 
     @Override
@@ -115,7 +99,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Page<PostResponse> getAllPostByUserId(Long userId, Pageable pageable) {
-        return getAllPost(userId,pageable);
+        return getAllPost(userId, pageable);
     }
 
     private Page<PostResponse> getAllPost(Long userId, Pageable pageable) {
@@ -123,28 +107,42 @@ public class PostServiceImpl implements PostService {
         Page<PostFlatResponse> flatPage =
                 postRepository.findAllPostMe(userId, pageable);
 
-        Map<Long, PostResponse> map = new LinkedHashMap<>();
+        List<Long> postIds = flatPage.getContent()
+                .stream()
+                .map(PostFlatResponse::getId)
+                .toList();
 
-        for (PostFlatResponse row : flatPage.getContent()) {
+        List<PostMedia> mediaList =
+                postMediaRepository.findByPostIdIn(postIds);
 
-            PostResponse post = map.computeIfAbsent(row.getId(), id ->
-                    PostResponse.builder()
-                            .id(row.getId())
-                            .content(row.getContent())
-                            .createdAt(row.getCreatedAt())
-                            .userId(row.getUserId())
-                            .username(row.getUsername())
-                            .avatarUrl(row.getAvatarUrl())
-                            .imageUrl(new ArrayList<>())
+        Map<Long, List<PostMediaResponse>> mediaMap = new HashMap<>();
+
+        for (PostMedia m : mediaList) {
+            mediaMap
+                    .computeIfAbsent(m.getPost().getId(), k -> new ArrayList<>())
+                    .add(PostMediaResponse.builder()
+                            .url(m.getUrl())
+                            .publicId(m.getPublicId())
+                            .type(m.getMediaType().name())
                             .build()
-            );
-
-            if (row.getImageUrl() != null) {
-                post.getImageUrl().add(row.getImageUrl());
-            }
+                    );
         }
 
-        List<PostResponse> result = new ArrayList<>(map.values());
+        List<PostResponse> result = flatPage.getContent()
+                .stream()
+                .map(row -> PostResponse.builder()
+                        .id(row.getId())
+                        .content(row.getContent())
+                        .createdAt(row.getCreatedAt())
+                        .userId(row.getUserId())
+                        .username(row.getUsername())
+                        .avatarUrl(row.getAvatarUrl())
+                        .postMediaResponses(
+                                mediaMap.getOrDefault(row.getId(), new ArrayList<>())
+                        )
+                        .build()
+                )
+                .toList();
 
         return new PageImpl<>(
                 result,
@@ -155,10 +153,15 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePostMedia(String publicId) {
-        PostMedia postMedia = postMediaRepository.findByPublicId(publicId).orElseThrow(
-                () -> new MediaNotFoundException("Media not found with publicId: " + publicId)
-        );
-        postMediaRepository.delete(postMedia);
+
+        PostMedia media = postMediaRepository.findByPublicId(publicId)
+                .orElseThrow(() ->
+                        new MediaNotFoundException("Media not found: " + publicId)
+                );
+
+        cloudinaryService.deleteImage(publicId);
+
+        postMediaRepository.delete(media);
     }
 
     @Override

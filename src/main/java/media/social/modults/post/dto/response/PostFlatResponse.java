@@ -11,7 +11,6 @@ public class PostFlatResponse {
 
     private Long id;
     private String content;
-    private String imageUrl;
     private LocalDateTime createdAt;
 
     private Long userId;
