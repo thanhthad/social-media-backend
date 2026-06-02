@@ -1,5 +1,6 @@
 package media.social.modults.user.service.impl;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import media.social.modults.user.entity.Profile;
 import media.social.modults.user.entity.RefreshToken;
@@ -86,6 +87,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AuthResponse generateAccessToken(String refreshToken) {
 
         String accessToken = refreshTokenService.generateAccessToken(refreshToken);

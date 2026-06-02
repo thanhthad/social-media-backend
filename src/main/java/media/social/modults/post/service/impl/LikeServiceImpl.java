@@ -173,41 +173,41 @@ public class LikeServiceImpl implements LikeService {
         return result;
     }
 
-    // =========================================================
-    // 6. POSTS LIKED BY USER
-    // =========================================================
-    @Override
-    public Page<PostResponse> getPostsLikedByUser(Long userId, Pageable pageable) {
-
-        Long actorUserId = getUserId();
-
-        log.info("LIKE_EVENT | action=GET_USER_LIKES | actorUserId={} | targetUserId={} | page={} | size={}",
-                actorUserId, userId, pageable.getPageNumber(), pageable.getPageSize());
-
-        userServiceDomain.validateUserExists(userId);
-
-        Page<PostResponse> result = likeRepository.findByUserId(userId, pageable)
-                .map(like -> {
-
-                    Post post = like.getPost();
-                    User user = post.getUser();
-
-                    return PostResponse.builder()
-                            .id(post.getId())
-                            .content(post.getContent())
-                            .imageUrl(post.getImageUrl())
-                            .createdAt(post.getCreatedAt())
-                            .userId(user.getId())
-                            .username(user.getUsername())
-                            .avatarUrl(user.getProfile().getAvatarUrl())
-                            .build();
-                });
-
-        log.info("LIKE_EVENT | action=GET_USER_LIKES | actorUserId={} | targetUserId={} | status=SUCCESS | total={}",
-                actorUserId, userId, result.getTotalElements());
-
-        return result;
-    }
+//    // =========================================================
+//    // 6. POSTS LIKED BY USER
+//    // =========================================================
+//    @Override
+//    public Page<PostResponse> getPostsLikedByUser(Long userId, Pageable pageable) {
+//
+//        Long actorUserId = getUserId();
+//
+//        log.info("LIKE_EVENT | action=GET_USER_LIKES | actorUserId={} | targetUserId={} | page={} | size={}",
+//                actorUserId, userId, pageable.getPageNumber(), pageable.getPageSize());
+//
+//        userServiceDomain.validateUserExists(userId);
+//
+//        Page<PostResponse> result = likeRepository.findByUserId(userId, pageable)
+//                .map(like -> {
+//
+//                    Post post = like.getPost();
+//                    User user = post.getUser();
+//
+//                    return PostResponse.builder()
+//                            .id(post.getId())
+//                            .content(post.getContent())
+//                            .imageUrl(post.getImageUrl())
+//                            .createdAt(post.getCreatedAt())
+//                            .userId(user.getId())
+//                            .username(user.getUsername())
+//                            .avatarUrl(user.getProfile().getAvatarUrl())
+//                            .build();
+//                });
+//
+//        log.info("LIKE_EVENT | action=GET_USER_LIKES | actorUserId={} | targetUserId={} | status=SUCCESS | total={}",
+//                actorUserId, userId, result.getTotalElements());
+//
+//        return result;
+//    }
 
     // =========================================================
     // 7. TOP LIKED POSTS

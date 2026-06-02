@@ -24,10 +24,10 @@ public class PostMedia {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private String url;
 
-    @Column(name = "public_id")
+    @Column(name = "public_id",nullable = false)
     private String publicId;
 
     @Enumerated(EnumType.STRING)

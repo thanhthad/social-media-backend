@@ -121,19 +121,19 @@ public class LikeController {
      6. POSTS LIKED BY USER
      =========================================================
      */
-    @GetMapping("/user/{userId}/posts")
-    @Operation(summary = "Get posts liked by user")
-    public ResponseEntity<?> getPostsLikedByUser(@PathVariable Long userId,
-                                                 Pageable pageable) {
-
-        Page<PostResponse> page = likeService.getPostsLikedByUser(userId, pageable);
-
-        return ResponseData.successPaginate(
-                page,
-                "Get posts liked by user successfully",
-                HttpStatus.OK
-        );
-    }
+//    @GetMapping("/user/{userId}/posts")
+//    @Operation(summary = "Get posts liked by user")
+//    public ResponseEntity<?> getPostsLikedByUser(@PathVariable Long userId,
+//                                                 Pageable pageable) {
+//
+//        Page<PostResponse> page = likeService.getPostsLikedByUser(userId, pageable);
+//
+//        return ResponseData.successPaginate(
+//                page,
+//                "Get posts liked by user successfully",
+//                HttpStatus.OK
+//        );
+//    }
 
     /*
      =========================================================

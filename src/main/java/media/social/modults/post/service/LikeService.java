@@ -19,7 +19,7 @@ public interface LikeService {
 
     Page<UserResponse> getUsersWhoLikedPost(Long postId, Pageable pageable);
 
-    Page<PostResponse> getPostsLikedByUser(Long userId, Pageable pageable);
+//    Page<PostResponse> getPostsLikedByUser(Long userId, Pageable pageable);
 
     Page<Object[]> getTopLikedPosts(Pageable pageable);
 }

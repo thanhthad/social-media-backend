@@ -2,8 +2,8 @@ CREATE TABLE post_media (
                             media_id BIGINT IDENTITY PRIMARY KEY,
                             post_id BIGINT NOT NULL,
 
-                            url NVARCHAR(255) NOT NULL,
-                            public_id NVARCHAR(255),
+                            url NVARCHAR(255) NOT NULL UNIQUE,
+                            public_id NVARCHAR(255) NOT NULL,
 
                             media_type NVARCHAR(20) NOT NULL, -- IMAGE / VIDEO
 

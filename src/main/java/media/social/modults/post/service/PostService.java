@@ -2,34 +2,27 @@ package media.social.modults.post.service;
 
 
 import media.social.modults.post.dto.request.CreatePostRequest;
-import media.social.modults.post.dto.request.UpdatePostRequest;
+import media.social.modults.post.dto.request.UpdatePostContent;
+import media.social.modults.post.dto.request.UpdatePostMedia;
 import media.social.modults.post.dto.response.PostResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
 
 public interface PostService {
 
     PostResponse createPost(CreatePostRequest request);
 
-    public Page<PostResponse> getAllPost(Long userId, Pageable pageable);
+    public Page<PostResponse> getAllPostMe(Pageable pageable);
 
+    public Page<PostResponse> getAllPostByUserId(Long userId, Pageable pageable);
 
-    PostResponse updatePost(Long id, UpdatePostRequest request);
+    public void deletePostMedia(String publicId);
+
+    public void updatePostContent(Long postId,UpdatePostContent content);
+
+    public void updatePostMedia(Long postId, UpdatePostMedia media);
 
     void deleteByPostId(Long id);
-
-    PostResponse getByPostId(Long id);
-
-    Page<PostResponse> getAllPosts(Pageable pageable);
-
-    Page<PostResponse> getAllPostsByUserId(Long userId, Pageable pageable);
-
-    void deleteByUserId ( Long id );
-
-    Page<PostResponse> getByContent(String keyword , Pageable pageable);
-
-    Page<PostResponse> getByCreatedAtBetween(LocalDateTime start, LocalDateTime end,Pageable pageable);
 
 }

@@ -135,6 +135,11 @@ public class UserServiceImpl implements UserService {
 
         User user = getCurrentUser();
 
+        if(request.getNewPassword().equals(request.getOldPassword())){
+            throw new BadCredentialsException(
+                    "New password must be different with Old password"
+            );
+        }
         if (!passwordEncoder.matches(
                 request.getOldPassword(),
                 user.getPasswordHash()
