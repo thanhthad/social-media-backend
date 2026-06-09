@@ -99,4 +99,17 @@ public class PostController {
                 HttpStatus.OK
         );
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getPostsByUserId(
+            @PathVariable Long userId,
+            Pageable pageable
+    ) {
+
+        return ResponseData.success(
+                postService.getAllPostByUserId(userId, pageable),
+                "Get user posts successfully",
+                HttpStatus.OK
+        );
+    }
 }
