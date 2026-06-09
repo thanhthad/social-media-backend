@@ -1,7 +1,8 @@
 package media.social.modults.user.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modults.user.dto.response.FollowUserResponse;
+import media.social.modults.user.dto.response.common.FollowCountResponse;
+import media.social.modults.user.dto.response.common.FollowUserResponse;
 import media.social.modults.user.entity.Follow;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.follow.FollowAlreadyExists;
@@ -60,10 +61,14 @@ public class FollowServiceImpl implements FollowService {
 
         Long currentUserId = UserContextHolder.getUserId();
 
-        followRepository.deleteByFollower_IdAndFollowing_Id(
+        long deleted = followRepository.deleteByFollower_IdAndFollowing_Id(
                 currentUserId,
                 targetUserId
         );
+
+        if (deleted == 0) {
+            throw new FollowNotFoundException("You are not following this user");
+        }
     }
 
     @Override
@@ -76,6 +81,33 @@ public class FollowServiceImpl implements FollowService {
                 currentUserId,
                 targetUserId
         );
+    }
+
+    @Override
+    public FollowCountResponse getProfile(Long userId) {
+        userServiceDomain.validateUserExists(userId);
+
+        Long total_following = followRepository.countByFollowing_Id(userId);
+
+        Long total_follower = followRepository.countByFollower_Id(userId);
+
+        return FollowCountResponse.builder()
+                .total_following(total_following)
+                .total_follower(total_follower)
+                .build();
+    }
+
+    @Override
+    public FollowCountResponse geMytProfile() {
+        Long userId = UserContextHolder.getUserId();
+
+        Long total_following = followRepository.countByFollowing_Id(userId);
+
+        Long total_follower = followRepository.countByFollower_Id(userId);
+        return FollowCountResponse.builder()
+                .total_following(total_following)
+                .total_follower(total_follower)
+                .build();
     }
 
     @Override

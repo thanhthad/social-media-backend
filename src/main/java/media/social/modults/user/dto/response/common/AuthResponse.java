@@ -1,11 +1,10 @@
-package media.social.modults.user.dto.response;
+package media.social.modults.user.dto.response.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import media.social.modults.user.Enum.Role;
-import media.social.modults.user.entity.RefreshToken;
 
 @Getter
 @Builder

@@ -1,6 +1,7 @@
 package media.social.modults.user.service;
 
-import media.social.modults.user.dto.response.FollowUserResponse;
+import media.social.modults.user.dto.response.common.FollowCountResponse;
+import media.social.modults.user.dto.response.common.FollowUserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,6 +12,11 @@ public interface FollowService {
     void unfollowUser(Long targetUserId);
 
     boolean isFollowing(Long targetUserId);
+
+    FollowCountResponse getProfile(Long userId);
+
+    FollowCountResponse geMytProfile();
+
 
     //-> see user follower (not inlucde me)
     Page<FollowUserResponse> getFollowers(Long userId, Pageable pageable);

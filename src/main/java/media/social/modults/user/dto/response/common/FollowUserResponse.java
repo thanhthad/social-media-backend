@@ -1,4 +1,4 @@
-package media.social.modults.user.dto.response;
+package media.social.modults.user.dto.response.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

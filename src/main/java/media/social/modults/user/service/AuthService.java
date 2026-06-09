@@ -2,7 +2,7 @@ package media.social.modults.user.service;
 
 import media.social.modults.user.dto.request.auth.LoginRequest;
 import media.social.modults.user.dto.request.auth.RegisterRequest;
-import media.social.modults.user.dto.response.AuthResponse;
+import media.social.modults.user.dto.response.common.AuthResponse;
 
 public interface AuthService {
 

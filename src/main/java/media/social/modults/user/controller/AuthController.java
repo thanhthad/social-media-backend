@@ -8,7 +8,7 @@ import media.social.common.response.ResponseData;
 import media.social.modults.user.dto.request.auth.RefreshTokenRequest;
 import media.social.modults.user.dto.request.auth.LoginRequest;
 import media.social.modults.user.dto.request.auth.RegisterRequest;
-import media.social.modults.user.dto.response.AuthResponse;
+import media.social.modults.user.dto.response.common.AuthResponse;
 import media.social.modults.user.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

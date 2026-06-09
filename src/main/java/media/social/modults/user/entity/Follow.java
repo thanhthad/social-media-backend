@@ -1,4 +1,5 @@
 package media.social.modults.user.entity;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -6,21 +7,34 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "follows")
-@IdClass(FollowId.class)
-@Setter
+@Table(
+        name = "follows",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"follower_id", "following_id"})
+        }
+)
 @Getter
+@Setter
 public class Follow {
 
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "follower_id")
+    @EmbeddedId
+    private FollowId id = new FollowId();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("followerId")
+    @JoinColumn(name = "follower_id", nullable = false)
     private User follower;
 
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "following_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("followingId")
+    @JoinColumn(name = "following_id", nullable = false)
     private User following;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
