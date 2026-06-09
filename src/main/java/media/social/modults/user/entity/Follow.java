@@ -1,8 +1,7 @@
-package media.social.modults.post.entity;
+package media.social.modults.user.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import media.social.modults.user.entity.User;
 
 import java.time.LocalDateTime;
 
