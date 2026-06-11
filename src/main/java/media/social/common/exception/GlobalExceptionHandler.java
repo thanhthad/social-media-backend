@@ -174,6 +174,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgument(IllegalArgumentException ex) {
+
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", ex.getMessage());
+
+        ApiResponse<Object> response = new ApiResponse<>();
+        response.setSuccess(false);
+        response.setMessage("Invalid argument");
+        response.setData(errors);
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     // ================= FALLBACK (ONLY IMPORTANT LOG) =================
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {

@@ -1,5 +1,6 @@
 package media.social.modults.post.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import media.social.common.response.ResponseData;
@@ -22,6 +23,7 @@ public class PostController {
 
     // ================= CREATE POST =================
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create new post with media")
     public ResponseEntity<?> createPost(
             @ModelAttribute @Valid CreatePostRequest request
     ) {
@@ -35,11 +37,13 @@ public class PostController {
 
     // ================= UPDATE CONTENT =================
     @PatchMapping("/{postId}")
+    @Operation(summary = "Update post content")
     public ResponseEntity<?> updateContent(
             @PathVariable Long postId,
             @RequestBody @Valid UpdatePostContent request
     ) {
         postService.updatePostContent(postId, request);
+
         return ResponseData.success(
                 null,
                 "Update post content successfully",
@@ -52,11 +56,13 @@ public class PostController {
             value = "/{postId}/media",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @Operation(summary = "Add media to post")
     public ResponseEntity<?> addMedia(
             @PathVariable Long postId,
             @ModelAttribute @Valid UpdatePostMedia request
     ) {
         postService.updatePostMedia(postId, request);
+
         return ResponseData.success(
                 null,
                 "Add media successfully",
@@ -66,10 +72,12 @@ public class PostController {
 
     // ================= DELETE POST =================
     @DeleteMapping("/{postId}")
+    @Operation(summary = "Delete post by id")
     public ResponseEntity<?> deletePost(
             @PathVariable Long postId
     ) {
         postService.deleteByPostId(postId);
+
         return ResponseData.success(
                 null,
                 "Delete post successfully",
@@ -77,12 +85,14 @@ public class PostController {
         );
     }
 
-    // ================= DELETE MEDIA =================
-    @DeleteMapping("/media/{publicId}")
+    // ================= DELETE MEDIA (FIXED) =================
+    @DeleteMapping("/media")
+    @Operation(summary = "Delete media by publicId")
     public ResponseEntity<?> deleteMedia(
-            @PathVariable String publicId
+            @RequestParam String publicId
     ) {
         postService.deletePostMedia(publicId);
+
         return ResponseData.success(
                 null,
                 "Delete media successfully",
@@ -92,7 +102,9 @@ public class PostController {
 
     // ================= GET FEED =================
     @GetMapping
+    @Operation(summary = "Get feed posts (current user)")
     public ResponseEntity<?> getAll(Pageable pageable) {
+
         return ResponseData.success(
                 postService.getAllPostMe(pageable),
                 "Get posts successfully",
@@ -100,7 +112,9 @@ public class PostController {
         );
     }
 
+    // ================= GET USER POSTS =================
     @GetMapping("/user/{userId}")
+    @Operation(summary = "Get posts by userId")
     public ResponseEntity<?> getPostsByUserId(
             @PathVariable Long userId,
             Pageable pageable

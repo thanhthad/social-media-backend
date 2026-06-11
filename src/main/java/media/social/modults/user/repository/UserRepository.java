@@ -27,8 +27,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 SELECT new media.social.modults.user.dto.response.pub.UserSearchResponse(
     u.id,
     u.username,
-    p.fullName,
-    p.avatarUrl
+    p.avatarUrl,
+    p.fullName
 )
 FROM User u
 JOIN u.profile p
