@@ -7,8 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
+
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
+    /*
+     * ROOT COMMENTS
+     */
     @Query("""
         SELECT new media.social.modults.post.dto.response.CommentResponse(
             c.id,
@@ -30,6 +35,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     Page<CommentResponse> findRootComments(Long postId, Pageable pageable);
 
 
+    /*
+     * REPLIES
+     */
     @Query("""
         SELECT new media.social.modults.post.dto.response.CommentResponse(
             c.id,
@@ -49,11 +57,21 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     """)
     Page<CommentResponse> findReplies(Long parentId, Pageable pageable);
 
-    @Query("""
-    SELECT COUNT(c)
-    FROM Comment c
-    WHERE c.post.id = :postId
-""")
-    long countAllComments(Long postId);
 
+    /*
+     * COUNT ALL COMMENTS (post)
+     */
+    long countByPost_Id(Long postId);
+
+
+    /*
+     * FIND BY ID + OWNER (BEST PRACTICE)
+     */
+    Optional<Comment> findByIdAndUser_Id(Long commentId, Long userId);
+
+
+    /*
+     * COUNT DIRECT REPLIES
+     */
+    long countByParent_Id(Long parentId);
 }

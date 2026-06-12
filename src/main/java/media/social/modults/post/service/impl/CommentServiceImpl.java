@@ -27,26 +27,41 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentResponse createComment(CommentRequest request) {
+
         long userId = UserContextHolder.getUserId();
 
-        Comment comment = null;
         Post post = postServiceDomain.getByPostId(request.getPostId());
         User user = userServiceDomain.getByUserId(userId);
 
-        Comment saved =  commentRepository.save(Comment.builder()
-                        .parent(comment)
+        Comment parent = null;
+
+        if (request.getParentId() != null) {
+            parent = commentRepository.findById(request.getParentId())
+                    .orElseThrow(() ->
+                            new CommentNotFoundException("Parent comment not found")
+                    );
+        }
+
+        Comment saved = commentRepository.save(
+                Comment.builder()
                         .post(post)
                         .user(user)
+                        .parent(parent)
                         .content(request.getContent())
-                .build());
+                        .build()
+        );
+
         return CommentResponse.builder()
                 .commentId(saved.getId())
-                .userId(userId)
+                .userId(user.getId())
                 .username(user.getUsername())
-                .avatarUrl(user.getProfile().getAvatarUrl())
-                .parentId(null)
-                .content(request.getContent())
+                .avatarUrl(user.getProfile() != null
+                        ? user.getProfile().getAvatarUrl()
+                        : null)
+                .parentId(parent != null ? parent.getId() : null)
+                .content(saved.getContent())
                 .createdAt(saved.getCreatedAt())
+                .totalReplies(0L)
                 .build();
     }
 
@@ -55,58 +70,92 @@ public class CommentServiceImpl implements CommentService {
 
         long userId = UserContextHolder.getUserId();
 
-        Comment comment = null;
         Post post = postServiceDomain.getByPostId(request.getPostId());
         User user = userServiceDomain.getByUserId(userId);
 
-        if (request.getParentId() != null) comment = commentRepository.findById(request.getParentId()).orElseThrow(
-                () -> new CommentNotFoundException("Comment not found with parentId: " + request.getParentId())
+        Comment parent = commentRepository.findById(request.getParentId())
+                .orElseThrow(() ->
+                        new CommentNotFoundException("Parent comment not found")
+                );
+
+        Comment saved = commentRepository.save(
+                Comment.builder()
+                        .post(post)
+                        .user(user)
+                        .parent(parent)
+                        .content(request.getContent())
+                        .build()
         );
 
-        Comment saved =  commentRepository.save(Comment.builder()
-                .parent(comment)
-                .post(post)
-                .user(user)
-                .content(request.getContent())
-                .build());
         return CommentResponse.builder()
                 .commentId(saved.getId())
-                .userId(userId)
+                .userId(user.getId())
                 .username(user.getUsername())
-                .avatarUrl(user.getProfile().getAvatarUrl())
-                .parentId(null)
-                .content(request.getContent())
+                .avatarUrl(user.getProfile() != null
+                        ? user.getProfile().getAvatarUrl()
+                        : null)
+                .parentId(parent.getId())
+                .content(saved.getContent())
                 .createdAt(saved.getCreatedAt())
+                .totalReplies(0L)
                 .build();
     }
 
     @Override
     public CommentResponse updateComment(Long commentId, UpdateCommentContent request) {
-        return null;
+
+        long userId = UserContextHolder.getUserId();
+
+        Comment comment = commentRepository.findByIdAndUser_Id(commentId, userId)
+                .orElseThrow(() ->
+                        new CommentNotFoundException("Not found or not allowed")
+                );
+
+        comment.setContent(request.getContent());
+
+        commentRepository.save(comment);
+
+        return CommentResponse.builder()
+                .commentId(comment.getId())
+                .userId(userId)
+                .username(comment.getUser().getUsername())
+                .avatarUrl(comment.getUser().getProfile() != null
+                        ? comment.getUser().getProfile().getAvatarUrl()
+                        : null)
+                .parentId(comment.getParent() != null
+                        ? comment.getParent().getId()
+                        : null)
+                .content(comment.getContent())
+                .createdAt(comment.getCreatedAt())
+                .totalReplies(commentRepository.countByParent_Id(comment.getId()))
+                .build();
     }
 
     @Override
     public void deleteComment(Long commentId) {
 
+        long userId = UserContextHolder.getUserId();
+
+        Comment comment = commentRepository.findByIdAndUser_Id(commentId, userId)
+                .orElseThrow(() ->
+                        new CommentNotFoundException("Not found or not allowed")
+                );
+
+        commentRepository.delete(comment);
     }
 
     @Override
     public Page<CommentResponse> getRootComments(Long postId, Pageable pageable) {
-        return null;
+        return commentRepository.findRootComments(postId, pageable);
     }
 
     @Override
     public Page<CommentResponse> getReplies(Long parentId, Pageable pageable) {
-        return null;
-    }
-
-    @Override
-    public Page<CommentResponse> getCommentsByPost(Long postId, Pageable pageable) {
-        return null;
+        return commentRepository.findReplies(parentId, pageable);
     }
 
     @Override
     public long countCommentsByPost(Long postId) {
-        return 0;
+        return commentRepository.countByPost_Id(postId);
     }
 }

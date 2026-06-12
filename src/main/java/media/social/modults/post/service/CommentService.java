@@ -26,11 +26,6 @@ public interface CommentService {
             Pageable pageable
     );
 
-    Page<CommentResponse> getCommentsByPost(
-            Long postId,
-            Pageable pageable
-    );
-
     long countCommentsByPost(Long postId);
 
 }
