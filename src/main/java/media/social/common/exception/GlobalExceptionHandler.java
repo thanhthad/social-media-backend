@@ -6,11 +6,13 @@ import media.social.common.response.ResponseData;
 import media.social.modults.file.image.exception.CloudinaryDeleteException;
 import media.social.modults.file.image.exception.CloudinaryUploadException;
 import media.social.modults.file.image.exception.InvalidImageException;
+import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
+import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.exception.like.LikeAlreadyExistsException;
 import media.social.modults.post.exception.like.LikeNotFoundException;
 import media.social.modults.post.exception.post.InvalidDateRangeException;
 import media.social.modults.post.exception.post.PostNotFoundException;
-import media.social.modults.user.exception.follow.FollowAlreadyExists;
+import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
 import media.social.modults.user.exception.follow.FollowNotFoundException;
 import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
@@ -28,7 +30,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 @RestControllerAdvice
@@ -93,14 +94,25 @@ public class GlobalExceptionHandler {
     }
 
     // ================= FOLLOW =================
-    @ExceptionHandler(FollowAlreadyExists.class)
-    public ResponseEntity<ApiResponse<Object>> handleFollowAlreadyExists(FollowAlreadyExists ex) {
+    @ExceptionHandler(FollowAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleFollowAlreadyExists(FollowAlreadyExistsException ex) {
         return ResponseData.fail("Already following this user", HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(FollowNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleFollowNotFound(FollowNotFoundException ex) {
         return ResponseData.fail("Follow relationship not found", HttpStatus.NOT_FOUND);
+    }
+
+    // ================= COMMENT =================
+    @ExceptionHandler(CommentAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCommentAlreadyExists(CommentAlreadyExistsException ex) {
+        return ResponseData.fail("Already comment this user", HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCommentNotFound(CommentNotFoundException ex) {
+        return ResponseData.fail("comment  not found", HttpStatus.NOT_FOUND);
     }
 
     // ================= REFRESH TOKEN =================

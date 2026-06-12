@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommentRequest {
+public class CreateCommentRequest {
 
     @NotNull(message = "Post id không được để trống")
     private Long postId;

@@ -5,7 +5,7 @@ import media.social.modults.user.dto.response.common.FollowCountResponse;
 import media.social.modults.user.dto.response.common.FollowUserResponse;
 import media.social.modults.user.entity.Follow;
 import media.social.modults.user.entity.User;
-import media.social.modults.user.exception.follow.FollowAlreadyExists;
+import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
 import media.social.modults.user.exception.follow.FollowNotFoundException;
 import media.social.modults.user.repository.FollowRepository;
 import media.social.modults.user.repository.UserRepository;
@@ -38,7 +38,7 @@ public class FollowServiceImpl implements FollowService {
         }
 
         if (followRepository.existsByFollower_IdAndFollowing_Id(currentUserId, targetUserId)) {
-            throw new FollowAlreadyExists("You already follow this user with id:"+targetUserId);
+            throw new FollowAlreadyExistsException("You already follow this user with id:"+targetUserId);
         }
 
         User follower = userRepository.findById(currentUserId)

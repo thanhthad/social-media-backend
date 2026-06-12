@@ -1,6 +1,7 @@
 package media.social.modults.post.service;
 
-import media.social.modults.post.dto.request.CommentRequest;
+import media.social.modults.post.dto.request.CreateCommentRequest;
+import media.social.modults.post.dto.request.ReplyCommentRequest;
 import media.social.modults.post.dto.request.UpdateCommentContent;
 import media.social.modults.post.dto.response.CommentResponse;
 import org.springframework.data.domain.Page;
@@ -8,9 +9,9 @@ import org.springframework.data.domain.Pageable;
 
 public interface CommentService {
 
-    CommentResponse createComment(CommentRequest request);
+    CommentResponse createComment(CreateCommentRequest request);
 
-    CommentResponse replyComment(CommentRequest request);
+    CommentResponse replyComment(ReplyCommentRequest request);
 
     CommentResponse updateComment(Long commentId, UpdateCommentContent request);
 

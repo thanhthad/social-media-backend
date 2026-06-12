@@ -4,7 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import media.social.common.response.ResponseData;
-import media.social.modults.post.dto.request.CommentRequest;
+import media.social.modults.post.dto.request.CreateCommentRequest;
+import media.social.modults.post.dto.request.ReplyCommentRequest;
 import media.social.modults.post.dto.request.UpdateCommentContent;
 import media.social.modults.post.service.CommentService;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,7 @@ public class CommentController {
     @PostMapping
     @Operation(summary = "Create comment (root or reply)")
     public ResponseEntity<?> createComment(
-            @RequestBody @Valid CommentRequest request
+            @RequestBody @Valid CreateCommentRequest request
     ) {
         return ResponseData.success(
                 commentService.createComment(request),
@@ -36,7 +37,7 @@ public class CommentController {
     @PostMapping("/reply")
     @Operation(summary = "Reply to a comment")
     public ResponseEntity<?> replyComment(
-            @RequestBody @Valid CommentRequest request
+            @RequestBody @Valid ReplyCommentRequest request
     ) {
         return ResponseData.success(
                 commentService.replyComment(request),

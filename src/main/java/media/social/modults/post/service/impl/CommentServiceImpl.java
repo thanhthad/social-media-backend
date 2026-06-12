@@ -1,7 +1,8 @@
 package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
-import media.social.modults.post.dto.request.CommentRequest;
+import media.social.modults.post.dto.request.CreateCommentRequest;
+import media.social.modults.post.dto.request.ReplyCommentRequest;
 import media.social.modults.post.dto.request.UpdateCommentContent;
 import media.social.modults.post.dto.response.CommentResponse;
 import media.social.modults.post.entity.Comment;
@@ -26,7 +27,7 @@ public class CommentServiceImpl implements CommentService {
     private final UserServiceDomain userServiceDomain;
 
     @Override
-    public CommentResponse createComment(CommentRequest request) {
+    public CommentResponse createComment(CreateCommentRequest request) {
 
         long userId = UserContextHolder.getUserId();
 
@@ -66,17 +67,16 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentResponse replyComment(CommentRequest request) {
+    public CommentResponse replyComment(ReplyCommentRequest request) {
 
         long userId = UserContextHolder.getUserId();
-
-        Post post = postServiceDomain.getByPostId(request.getPostId());
         User user = userServiceDomain.getByUserId(userId);
 
         Comment parent = commentRepository.findById(request.getParentId())
                 .orElseThrow(() ->
                         new CommentNotFoundException("Parent comment not found")
                 );
+        Post post = postServiceDomain.getByPostId(parent.getPost().getId());
 
         Comment saved = commentRepository.save(
                 Comment.builder()
