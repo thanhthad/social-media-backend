@@ -63,13 +63,12 @@ public class LikeController {
 
     @GetMapping("/check")
     @Operation(summary = "Check if user liked post")
-    public ResponseEntity<?> isLiked(@RequestParam Long userId,
-                                     @RequestParam Long postId) {
+    public ResponseEntity<?> isLiked(@RequestParam Long postId) {
 
-        boolean result = likeService.isPostLiked(userId, postId);
+        boolean check =  likeService.isPostLiked(postId);
 
         return ResponseData.success(
-                result,
+                check,
                 "Check like status successfully",
                 HttpStatus.OK
         );

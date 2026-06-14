@@ -80,8 +80,10 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public boolean isPostLiked(Long userId, Long postId) {
-        return likeRepository.existsByUserIdAndPostId(userId, postId);
+    public boolean isPostLiked(Long postId) {
+        Long userId = UserContextHolder.getUserId();
+
+        return likeRepository.existsByUserIdAndPostId(userId,postId);
     }
 
     @Override

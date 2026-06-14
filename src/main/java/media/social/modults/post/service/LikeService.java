@@ -14,7 +14,7 @@ public interface LikeService {
 
     long countLikesByPost(Long postId);
 
-    boolean isPostLiked(Long userId, Long postId);
+    boolean isPostLiked( Long postId);
 
     Page<UserResponse> getUsersWhoLikedPost(Long postId, Pageable pageable);
 
