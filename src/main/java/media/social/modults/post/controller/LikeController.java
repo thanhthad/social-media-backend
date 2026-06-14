@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import media.social.common.response.ResponseData;
 import media.social.modults.post.dto.request.LikeRequest;
-import media.social.modults.post.dto.response.LikeResponse;
 import media.social.modults.post.service.LikeService;
 import media.social.modults.user.dto.response.common.UserResponse;
 import org.springframework.data.domain.Page;
@@ -22,29 +21,19 @@ public class LikeController {
 
     private final LikeService likeService;
 
-    /*
-     =========================================================
-     1. LIKE POST
-     =========================================================
-     */
     @PostMapping
     @Operation(summary = "Like a post")
     public ResponseEntity<?> likePost(@RequestBody LikeRequest request) {
 
-        LikeResponse response = likeService.likePost(request);
+        likeService.likePost(request);
 
         return ResponseData.success(
-                response,
+                null,
                 "Like post successfully",
                 HttpStatus.CREATED
         );
     }
 
-    /*
-     =========================================================
-     2. UNLIKE POST
-     =========================================================
-     */
     @DeleteMapping
     @Operation(summary = "Unlike a post")
     public ResponseEntity<?> unlikePost(@RequestParam Long userId,
@@ -59,11 +48,6 @@ public class LikeController {
         );
     }
 
-    /*
-     =========================================================
-     3. COUNT LIKES
-     =========================================================
-     */
     @GetMapping("/count")
     @Operation(summary = "Count likes of a post")
     public ResponseEntity<?> countLikes(@RequestParam Long postId) {
@@ -77,11 +61,6 @@ public class LikeController {
         );
     }
 
-    /*
-     =========================================================
-     4. CHECK USER LIKED POST
-     =========================================================
-     */
     @GetMapping("/check")
     @Operation(summary = "Check if user liked post")
     public ResponseEntity<?> isLiked(@RequestParam Long userId,
@@ -96,12 +75,7 @@ public class LikeController {
         );
     }
 
-    /*
-     =========================================================
-     5. USERS WHO LIKED POST
-     =========================================================
-     */
-    @GetMapping("/post/{postId}/users")
+    @GetMapping("/posts/{postId}/users")
     @Operation(summary = "Get users who liked a post")
     public ResponseEntity<?> getUsersWhoLikedPost(@PathVariable Long postId,
                                                   Pageable pageable) {
@@ -111,43 +85,6 @@ public class LikeController {
         return ResponseData.successPaginate(
                 page,
                 "Get users who liked post successfully",
-                HttpStatus.OK
-        );
-    }
-
-    /*
-     =========================================================
-     6. POSTS LIKED BY USER
-     =========================================================
-     */
-//    @GetMapping("/user/{userId}/posts")
-//    @Operation(summary = "Get posts liked by user")
-//    public ResponseEntity<?> getPostsLikedByUser(@PathVariable Long userId,
-//                                                 Pageable pageable) {
-//
-//        Page<PostResponse> page = likeService.getPostsLikedByUser(userId, pageable);
-//
-//        return ResponseData.successPaginate(
-//                page,
-//                "Get posts liked by user successfully",
-//                HttpStatus.OK
-//        );
-//    }
-
-    /*
-     =========================================================
-     7. TOP LIKED POSTS
-     =========================================================
-     */
-    @GetMapping("/top-posts")
-    @Operation(summary = "Get top liked posts")
-    public ResponseEntity<?> getTopLikedPosts(Pageable pageable) {
-
-        Page<Object[]> page = likeService.getTopLikedPosts(pageable);
-
-        return ResponseData.successPaginate(
-                page,
-                "Get top liked posts successfully",
                 HttpStatus.OK
         );
     }

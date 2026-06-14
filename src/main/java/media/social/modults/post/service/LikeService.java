@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface LikeService {
 
-    LikeResponse likePost(LikeRequest request);
+    void likePost(LikeRequest request);
 
     void unlikePost(Long userId, Long postId);
 
@@ -18,7 +18,4 @@ public interface LikeService {
 
     Page<UserResponse> getUsersWhoLikedPost(Long postId, Pageable pageable);
 
-//    Page<PostResponse> getPostsLikedByUser(Long userId, Pageable pageable);
-
-    Page<Object[]> getTopLikedPosts(Pageable pageable);
 }

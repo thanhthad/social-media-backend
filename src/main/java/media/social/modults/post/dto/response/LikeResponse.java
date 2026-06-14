@@ -11,9 +11,8 @@ import java.time.LocalDateTime;
 @Builder
 public class LikeResponse {
 
-    private Long id;
-
     private Long userId;
+
     private String username;
 
     private Long postId;

@@ -10,9 +10,6 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface LikeMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-    Like toEntity(LikeRequest request, User user, Post post);
 
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "user.username", target = "username")

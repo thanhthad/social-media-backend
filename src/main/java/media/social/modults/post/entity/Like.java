@@ -1,6 +1,7 @@
 package media.social.modults.post.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import media.social.modults.user.entity.User;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "post_id"}))
 @Getter
 @Setter
+@Builder
 public class Like {
 
     @Id
@@ -26,6 +28,7 @@ public class Like {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
 }

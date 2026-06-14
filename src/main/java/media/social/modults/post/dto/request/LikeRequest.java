@@ -8,9 +8,6 @@ import lombok.Setter;
 @Setter
 public class LikeRequest {
 
-    @NotNull(message = "UserId is required")
-    private Long userId;
-
     @NotNull(message = "PostId is required")
     private Long postId;
 }
