@@ -7,6 +7,7 @@ import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.repository.UserRepository;
 import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @AllArgsConstructor
 @Service
@@ -22,6 +23,7 @@ public class UserServiceDomainImpl  implements UserServiceDomain {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User getByUserId(Long userId) {
         return userRepository.findById(userId).orElseThrow(
                 () -> new UserNotFoundException("User not exists with id: "+ userId)

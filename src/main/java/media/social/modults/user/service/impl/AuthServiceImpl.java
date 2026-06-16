@@ -1,6 +1,5 @@
 package media.social.modults.user.service.impl;
 
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import media.social.modults.user.entity.Profile;
 import media.social.modults.user.entity.RefreshToken;
@@ -18,6 +17,7 @@ import media.social.modults.user.service.RefreshTokenService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -31,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final ProfileRepository profileRepository;
 
     @Override
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if(userRepository.existsByEmail(request.getEmail())){
             throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
@@ -66,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(
                 () -> new UserNotFoundException("User not found with email : " + request.getEmail())
@@ -87,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public AuthResponse generateAccessToken(String refreshToken) {
 
         String accessToken = refreshTokenService.generateAccessToken(refreshToken);

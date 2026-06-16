@@ -1,6 +1,5 @@
 package media.social.modults.user.service.impl;
-
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import media.social.modults.file.image.dto.response.UploadImageResponse;
 import media.social.modults.file.image.service.CloudinaryService;
@@ -78,6 +77,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserProfileResponse getMe() {
 
         User user = getCurrentUser();
@@ -158,6 +158,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public PublicUserProfileResponse getUserById(Long userId) {
 
@@ -176,6 +177,7 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable) {
         Page<UserSearchResponse> userPage = userRepository.searchUsers(

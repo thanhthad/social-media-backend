@@ -1,6 +1,7 @@
 package media.social.modults.user.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 )
 @Getter
 @Setter
+@Builder
 public class Follow {
 
     @EmbeddedId

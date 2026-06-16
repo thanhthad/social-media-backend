@@ -17,6 +17,7 @@ import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -27,6 +28,7 @@ public class CommentServiceImpl implements CommentService {
     private final UserServiceDomain userServiceDomain;
 
     @Override
+    @Transactional
     public CommentResponse createComment(CreateCommentRequest request) {
 
         long userId = UserContextHolder.getUserId();
@@ -67,6 +69,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentResponse replyComment(ReplyCommentRequest request) {
 
         long userId = UserContextHolder.getUserId();
@@ -102,6 +105,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentResponse updateComment(Long commentId, UpdateCommentContent request) {
 
         long userId = UserContextHolder.getUserId();
@@ -132,6 +136,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteComment(Long commentId) {
 
         long userId = UserContextHolder.getUserId();
@@ -145,16 +150,19 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CommentResponse> getRootComments(Long postId, Pageable pageable) {
         return commentRepository.findRootComments(postId, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CommentResponse> getReplies(Long parentId, Pageable pageable) {
         return commentRepository.findReplies(parentId, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countCommentsByPost(Long postId) {
         return commentRepository.countByPost_Id(postId);
     }

@@ -47,9 +47,10 @@ public class FollowServiceImpl implements FollowService {
         User following = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new FollowNotFoundException("Target user not found"));
 
-        Follow follow = new Follow();
-        follow.setFollower(follower);
-        follow.setFollowing(following);
+        Follow follow = Follow.builder()
+                .follower(follower)
+                .following(following)
+                .build();
 
         followRepository.save(follow);
     }
@@ -72,6 +73,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isFollowing(Long targetUserId) {
         userServiceDomain.validateUserExists(targetUserId);
 
@@ -84,6 +86,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FollowCountResponse getProfile(Long userId) {
         userServiceDomain.validateUserExists(userId);
 
@@ -98,6 +101,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FollowCountResponse geMytProfile() {
         Long userId = UserContextHolder.getUserId();
 
@@ -111,24 +115,28 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<FollowUserResponse> getFollowers(Long userId, Pageable pageable) {
         userServiceDomain.validateUserExists(userId);
         return followRepository.getFollowers(userId, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<FollowUserResponse> getFollowing(Long userId, Pageable pageable) {
         userServiceDomain.validateUserExists(userId);
         return followRepository.getFollowing(userId, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<FollowUserResponse> getMyFollowers(Pageable pageable) {
         Long currentUserId = UserContextHolder.getUserId();
         return followRepository.getFollowers(currentUserId, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<FollowUserResponse> getMyFollowing(Pageable pageable) {
         Long currentUserId = UserContextHolder.getUserId();
         return followRepository.getFollowing(currentUserId, pageable);

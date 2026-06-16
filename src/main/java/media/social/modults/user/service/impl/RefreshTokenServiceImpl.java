@@ -73,6 +73,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     // ================= FIND VALID TOKEN =================
+    @Transactional
     public RefreshToken findValidByUser(Long userId) {
 
         return refreshTokenRepository
@@ -91,7 +92,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     // ================= GENERATE NEW ACCESS TOKEN =================
-    @Transactional
     public String generateAccessToken(String refreshToken) {
 
         RefreshToken token = verify(refreshToken);
@@ -111,6 +111,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     // ================= REVOKE =================
+    @Transactional
     public void revoke(String refreshToken) {
 
         RefreshToken token = verify(refreshToken);

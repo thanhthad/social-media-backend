@@ -1,10 +1,9 @@
 package media.social.modults.post.service.impl;
 
-import jakarta.transaction.Transactional;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import media.social.modults.post.dto.request.LikeRequest;
-import media.social.modults.post.dto.response.LikeResponse;
 import media.social.modults.post.entity.Like;
 import media.social.modults.post.entity.Post;
 import media.social.modults.user.dto.response.common.UserResponse;
@@ -14,15 +13,13 @@ import media.social.modults.post.exception.like.LikeNotFoundException;
 import media.social.modults.post.mapper.LikeMapper;
 import media.social.modults.post.repository.LikeRepository;
 import media.social.modults.user.security.context.UserContextHolder;
-import media.social.modults.user.security.userdetails.CustomUserDetails;
 import media.social.modults.post.service.LikeService;
 import media.social.modults.post.service.PostServiceDomain;
 import media.social.modults.user.service.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -72,6 +69,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countLikesByPost(Long postId) {
 
         postServiceDomain.validatePostExists(postId);
@@ -80,6 +78,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isPostLiked(Long postId) {
         Long userId = UserContextHolder.getUserId();
 
@@ -87,6 +86,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UserResponse> getUsersWhoLikedPost(Long postId, Pageable pageable) {
 
         postServiceDomain.validatePostExists(postId);

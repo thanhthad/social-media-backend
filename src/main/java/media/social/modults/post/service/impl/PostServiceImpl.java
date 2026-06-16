@@ -1,6 +1,5 @@
 package media.social.modults.post.service.impl;
 
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import media.social.modults.post.Enum.MediaType;
@@ -28,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -36,7 +36,6 @@ import java.util.*;
 
 @Service
 @AllArgsConstructor
-@Transactional
 @Log4j2
 public class PostServiceImpl implements PostService {
 
@@ -92,16 +91,19 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PostResponse> getAllPostMe(Pageable pageable) {
         Long userId = UserContextHolder.getUserId();
         return getAllPost(userId,pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PostResponse> getAllPostByUserId(Long userId, Pageable pageable) {
         return getAllPost(userId, pageable);
     }
 
+    @Transactional(readOnly = true)
     private Page<PostResponse> getAllPost(Long userId, Pageable pageable) {
 
         Page<PostFlatResponse> flatPage =
@@ -152,6 +154,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public void deletePostMedia(String publicId) {
 
         PostMedia media = postMediaRepository.findByPublicId(publicId)
@@ -201,6 +204,7 @@ public class PostServiceImpl implements PostService {
 
     }
 
+    @Transactional
     @Override
     public void deleteByPostId(Long postId) {
         Long userId = UserContextHolder.getUserId();
