@@ -1,12 +1,12 @@
 CREATE TABLE users (
-                       user_id BIGINT IDENTITY PRIMARY KEY,
-                       username NVARCHAR(255) NOT NULL,
-                       email NVARCHAR(255) NOT NULL UNIQUE,
-                       password_hash NVARCHAR(255) NOT NULL,
-                       role NVARCHAR(50) NOT NULL,
-                       status NVARCHAR(50) NOT NULL,
-                       created_at DATETIME2,
-                       updated_at DATETIME2,
-                       last_login_at DATETIME2,
-                       last_active_at DATETIME2
+                       user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                       username VARCHAR(255) NOT NULL,
+                       email VARCHAR(255) NOT NULL UNIQUE,
+                       password_hash VARCHAR(255) NOT NULL,
+                       role VARCHAR(50) NOT NULL,
+                       status VARCHAR(50) NOT NULL,
+                       created_at TIMESTAMP,
+                       updated_at TIMESTAMP,
+                       last_login_at TIMESTAMP,
+                       last_active_at TIMESTAMP
 );

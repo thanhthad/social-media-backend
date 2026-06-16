@@ -25,5 +25,4 @@ public interface UserService {
 
     public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable);
 
-    //ADMIN APIs
 }

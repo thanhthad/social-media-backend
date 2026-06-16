@@ -1,18 +1,19 @@
 CREATE TABLE profiles (
-                          id BIGINT IDENTITY PRIMARY KEY,
+                          id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                           user_id BIGINT NOT NULL UNIQUE,
-                          full_name NVARCHAR(100),
-                          avatar_url NVARCHAR(255),
-                          avatar_public_id NVARCHAR(255),
-                          bio NVARCHAR(255),
-                          phone NVARCHAR(20),
+                          full_name VARCHAR(100),
+                          avatar_url VARCHAR(255),
+                          avatar_public_id VARCHAR(255),
+                          bio VARCHAR(255),
+                          phone VARCHAR(20),
                           date_of_birth DATE,
-                          gender NVARCHAR(20),
-                          location NVARCHAR(255),
-                          created_at DATETIME2,
-                          updated_at DATETIME2,
+                          gender VARCHAR(20),
+                          location VARCHAR(255),
+                          created_at TIMESTAMP,
+                          updated_at TIMESTAMP,
 
                           CONSTRAINT fk_profiles_user
-                              FOREIGN KEY (user_id) REFERENCES users(user_id)
+                              FOREIGN KEY (user_id)
+                                  REFERENCES users(user_id)
                                   ON DELETE CASCADE
 );
