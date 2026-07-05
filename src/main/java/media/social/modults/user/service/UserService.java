@@ -1,11 +1,11 @@
 package media.social.modults.user.service;
 
-import media.social.modults.user.dto.request.self.UpdateAvatarRequest;
-import media.social.modults.user.dto.request.self.ChangePasswordRequest;
-import media.social.modults.user.dto.request.self.UpdateProfileRequest;
-import media.social.modults.user.dto.response.pub.PublicUserProfileResponse;
-import media.social.modults.user.dto.response.pub.UserSearchResponse;
-import media.social.modults.user.dto.response.self.UserProfileResponse;
+import media.social.modults.user.dto.request.user.UpdateAvatarRequest;
+import media.social.modults.user.dto.request.user.ChangePasswordRequest;
+import media.social.modults.user.dto.request.user.UpdateProfileRequest;
+import media.social.modults.user.dto.response.user.PublicUserProfileResponse;
+import media.social.modults.user.dto.response.user.UserSearchResponse;
+import media.social.modults.user.dto.response.user.UserProfileResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

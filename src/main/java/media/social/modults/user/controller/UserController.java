@@ -5,12 +5,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import media.social.common.response.ResponseData;
-import media.social.modults.user.dto.request.self.ChangePasswordRequest;
-import media.social.modults.user.dto.request.self.UpdateAvatarRequest;
-import media.social.modults.user.dto.request.self.UpdateProfileRequest;
-import media.social.modults.user.dto.response.pub.PublicUserProfileResponse;
-import media.social.modults.user.dto.response.pub.UserSearchResponse;
-import media.social.modults.user.dto.response.self.UserProfileResponse;
+import media.social.modults.user.dto.request.user.ChangePasswordRequest;
+import media.social.modults.user.dto.request.user.UpdateAvatarRequest;
+import media.social.modults.user.dto.request.user.UpdateProfileRequest;
+import media.social.modults.user.dto.response.user.PublicUserProfileResponse;
+import media.social.modults.user.dto.response.user.UserSearchResponse;
+import media.social.modults.user.dto.response.user.UserProfileResponse;
 import media.social.modults.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users")

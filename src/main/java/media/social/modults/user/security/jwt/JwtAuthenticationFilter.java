@@ -31,13 +31,17 @@ public class JwtAuthenticationFilter
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authHeader =
-                request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null
-                || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || authHeader.isBlank()) {
 
-            filterChain.doFilter(request, response);
+            sendErrorResponse(response, "Token is required");
+            return;
+        }
+
+        if (!authHeader.startsWith("Bearer ")) {
+
+            sendErrorResponse(response, "Authorization header must start with Bearer");
             return;
         }
 

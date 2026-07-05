@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import media.social.common.response.ResponseData;
 import media.social.modults.post.dto.request.LikeRequest;
 import media.social.modults.post.service.LikeService;
-import media.social.modults.user.dto.response.common.UserResponse;
+import media.social.modults.user.dto.response.user.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;

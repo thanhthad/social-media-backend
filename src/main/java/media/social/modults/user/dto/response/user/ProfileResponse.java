@@ -1,26 +1,24 @@
-package media.social.modults.user.dto.response.pub;
+package media.social.modults.user.dto.response.user;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @Builder
-public class PublicUserProfileResponse {
+public class ProfileResponse {
 
     private Long id;
 
-    private String username;
+    private String fullName;
 
     private String avatarUrl;
 
     private String bio;
 
-    private String fullName;
+    private String phone;
 
     private LocalDate dateOfBirth;
 
@@ -30,6 +28,5 @@ public class PublicUserProfileResponse {
 
     private LocalDateTime createdAt;
 
-    private LocalDateTime lastLoginAt;
-
+    private LocalDateTime updatedAt;
 }

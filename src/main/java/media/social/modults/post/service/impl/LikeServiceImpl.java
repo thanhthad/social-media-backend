@@ -6,7 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import media.social.modults.post.dto.request.LikeRequest;
 import media.social.modults.post.entity.Like;
 import media.social.modults.post.entity.Post;
-import media.social.modults.user.dto.response.common.UserResponse;
+import media.social.modults.user.dto.response.user.UserResponse;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.like.LikeAlreadyExistsException;
 import media.social.modults.post.exception.like.LikeNotFoundException;

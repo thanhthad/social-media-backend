@@ -6,7 +6,7 @@ import media.social.modults.user.entity.RefreshToken;
 import media.social.modults.user.exception.user.UserAlreadyExistsException;
 import media.social.modults.user.dto.request.auth.LoginRequest;
 import media.social.modults.user.dto.request.auth.RegisterRequest;
-import media.social.modults.user.dto.response.common.AuthResponse;
+import media.social.modults.user.dto.response.auth.AuthResponse;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.repository.ProfileRepository;

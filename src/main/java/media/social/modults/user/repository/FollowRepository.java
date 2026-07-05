@@ -1,6 +1,6 @@
 package media.social.modults.user.repository;
 
-import media.social.modults.user.dto.response.common.FollowUserResponse;
+import media.social.modults.user.dto.response.user.FollowUserResponse;
 import media.social.modults.user.entity.Follow;
 import media.social.modults.user.entity.FollowId;
 import org.springframework.data.domain.Page;

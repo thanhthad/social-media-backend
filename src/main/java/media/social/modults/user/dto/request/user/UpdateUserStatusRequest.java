@@ -1,4 +1,4 @@
-package media.social.modults.user.dto.request;
+package media.social.modults.user.dto.request.user;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

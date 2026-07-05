@@ -1,7 +1,7 @@
 package media.social.modults.user.service;
 
-import media.social.modults.user.dto.response.common.FollowCountResponse;
-import media.social.modults.user.dto.response.common.FollowUserResponse;
+import media.social.modults.user.dto.response.user.FollowCountResponse;
+import media.social.modults.user.dto.response.user.FollowUserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

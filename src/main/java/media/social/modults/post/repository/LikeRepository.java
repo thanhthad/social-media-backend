@@ -1,8 +1,7 @@
 package media.social.modults.post.repository;
 
 import media.social.modults.post.entity.Like;
-import media.social.modults.user.dto.response.common.UserResponse;
-import media.social.modults.user.entity.User;
+import media.social.modults.user.dto.response.user.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

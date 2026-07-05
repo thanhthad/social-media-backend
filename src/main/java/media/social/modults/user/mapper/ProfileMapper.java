@@ -1,7 +1,7 @@
 package media.social.modults.user.mapper;
 
-import media.social.modults.user.dto.request.self.UpdateProfileRequest;
-import media.social.modults.user.dto.response.self.ProfileResponse;
+import media.social.modults.user.dto.request.user.UpdateProfileRequest;
+import media.social.modults.user.dto.response.user.ProfileResponse;
 import media.social.modults.user.entity.Profile;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;

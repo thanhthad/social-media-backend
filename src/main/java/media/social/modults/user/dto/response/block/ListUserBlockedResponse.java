@@ -1,0 +1,12 @@
+package media.social.modults.user.dto.response.block;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class ListUserBlockedResponse {
+    private Long id;
+    private String username;
+}

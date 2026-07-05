@@ -1,4 +1,4 @@
-package media.social.modults.user.dto.request.self;
+package media.social.modults.user.dto.request.user;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

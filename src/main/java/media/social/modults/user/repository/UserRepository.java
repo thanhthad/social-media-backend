@@ -1,7 +1,7 @@
 package media.social.modults.user.repository;
 
 import media.social.modults.user.Enum.Status;
-import media.social.modults.user.dto.response.pub.UserSearchResponse;
+import media.social.modults.user.dto.response.user.UserSearchResponse;
 import media.social.modults.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

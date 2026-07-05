@@ -1,8 +1,8 @@
 package media.social.modults.user.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modults.user.dto.response.common.FollowCountResponse;
-import media.social.modults.user.dto.response.common.FollowUserResponse;
+import media.social.modults.user.dto.response.user.FollowCountResponse;
+import media.social.modults.user.dto.response.user.FollowUserResponse;
 import media.social.modults.user.entity.Follow;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
