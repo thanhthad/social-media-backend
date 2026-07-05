@@ -20,17 +20,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     @Query("""
-SELECT new media.social.modults.user.dto.response.pub.UserSearchResponse(
-    u.id,
-    u.username,
-    p.avatarUrl,
-    p.fullName
-)
-FROM User u
-JOIN u.profile p
-WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))
-AND u.status = :status
-""")
+    SELECT new media.social.modults.user.dto.response.pub.UserSearchResponse(
+        u.id,
+        u.username,
+        p.avatarUrl,
+        p.fullName
+    )
+    FROM User u
+    JOIN u.profile p
+    WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))
+    AND u.status = :status
+    """)
     Page<UserSearchResponse> searchUsers(
             @Param("username") String username,
             @Param("status") Status status,

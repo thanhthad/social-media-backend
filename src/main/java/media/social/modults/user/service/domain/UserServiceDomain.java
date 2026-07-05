@@ -1,4 +1,4 @@
-package media.social.modults.user.service;
+package media.social.modults.user.service.domain;
 
 import media.social.modults.user.entity.User;
 

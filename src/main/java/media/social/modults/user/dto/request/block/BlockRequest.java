@@ -1,12 +1,12 @@
 package media.social.modults.user.dto.request.block;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class BlockRequest {
-    @Positive(message = "BlockId must be positive")
+    @NotNull(message = "Target user id cannot be null")
+    @Positive(message = "Target user id must be positive")
     private Long blockedId;
 }

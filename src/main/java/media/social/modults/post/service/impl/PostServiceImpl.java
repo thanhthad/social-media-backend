@@ -15,14 +15,13 @@ import media.social.modults.post.entity.PostMedia;
 import media.social.modults.post.exception.post_media.MediaNotFoundException;
 import media.social.modults.post.repository.PostMediaRepository;
 import media.social.modults.user.entity.User;
-import media.social.modults.post.exception.post.InvalidDateRangeException;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.post.mapper.PostMapper;
 import media.social.modults.post.repository.PostRepository;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.post.service.PostService;
-import media.social.modults.user.service.UserServiceDomain;
+import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 

@@ -15,7 +15,7 @@ import media.social.modults.post.repository.LikeRepository;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.post.service.LikeService;
 import media.social.modults.post.service.PostServiceDomain;
-import media.social.modults.user.service.UserServiceDomain;
+import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

@@ -11,7 +11,7 @@ import media.social.modults.user.repository.FollowRepository;
 import media.social.modults.user.repository.UserRepository;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.FollowService;
-import media.social.modults.user.service.UserServiceDomain;
+import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

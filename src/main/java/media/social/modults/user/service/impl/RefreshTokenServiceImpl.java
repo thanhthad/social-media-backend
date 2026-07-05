@@ -11,7 +11,7 @@ import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedExcep
 import media.social.modults.user.repository.RefreshTokenRepository;
 import media.social.modults.user.security.jwt.JwtUtil;
 import media.social.modults.user.service.RefreshTokenService;
-import media.social.modults.user.service.UserServiceDomain;
+import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

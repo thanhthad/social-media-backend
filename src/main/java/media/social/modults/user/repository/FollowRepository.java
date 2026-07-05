@@ -27,7 +27,7 @@ public interface FollowRepository extends JpaRepository<Follow, FollowId> {
     long countByFollowing_Id(Long userId);
 
     @Query("""
-        SELECT new media.social.modults.user.dto.response.common.FollowUserResponse(
+        SELECT new media.social.modults.user.dto.response.user.FollowUserResponse(
             u.id,
             u.username,
             u.profile.avatarUrl
@@ -43,7 +43,7 @@ public interface FollowRepository extends JpaRepository<Follow, FollowId> {
     );
 
     @Query("""
-        SELECT new media.social.modults.user.dto.response.common.FollowUserResponse(
+        SELECT new media.social.modults.user.dto.response.user.FollowUserResponse(
             u.id,
             u.username,
             u.profile.avatarUrl

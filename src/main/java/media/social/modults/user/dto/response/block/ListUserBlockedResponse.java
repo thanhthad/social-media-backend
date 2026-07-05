@@ -8,5 +8,10 @@ import lombok.Data;
 @AllArgsConstructor
 public class ListUserBlockedResponse {
     private Long id;
+
     private String username;
+
+    private String fullName;
+
+    private String avatarUrl;
 }

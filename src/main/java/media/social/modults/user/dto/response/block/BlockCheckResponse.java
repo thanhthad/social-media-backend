@@ -1,10 +1,9 @@
 package media.social.modults.user.dto.response.block;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
-@Data
-@AllArgsConstructor
+import lombok.Builder;
+
+@Builder
 public class BlockCheckResponse {
     private boolean blocked;
 }

@@ -1,11 +1,11 @@
-package media.social.modults.user.service.impl;
+package media.social.modults.user.service.domain.impl;
 
 
 import lombok.AllArgsConstructor;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.repository.UserRepository;
-import media.social.modults.user.service.UserServiceDomain;
+import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
