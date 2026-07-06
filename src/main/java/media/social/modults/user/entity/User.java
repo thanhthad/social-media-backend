@@ -12,9 +12,9 @@ import java.util.Set;
 @Table(name = "users")
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User {
 
     @Id
@@ -22,13 +22,12 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
+    @OneToMany(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
     )
-    private Set<Role> roles = new HashSet<>();
+    private Set<UserRole> userRoles = new HashSet<>();
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;
@@ -46,7 +45,7 @@ public class User {
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Profile profile;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
@@ -59,7 +58,7 @@ public class User {
     private LocalDateTime lastActiveAt;
 
     @PrePersist
-    public void prePersist() {
+    void prePersist() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
 
@@ -69,7 +68,7 @@ public class User {
     }
 
     @PreUpdate
-    public void preUpdate() {
+    void preUpdate() {
         updatedAt = LocalDateTime.now();
     }
 }

@@ -1,0 +1,101 @@
+package media.social.modults.user.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import media.social.common.response.ResponseData;
+import media.social.modults.user.Enum.RoleName;
+import media.social.modults.user.dto.response.role.RoleResponse;
+import media.social.modults.user.service.UserRoleService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin/user-roles")
+@RequiredArgsConstructor
+@Tag(name = "User Role Controller", description = "User Role Management APIs")
+public class UserRoleController {
+
+    private final UserRoleService userRoleService;
+
+    @PostMapping("/{userId}/{roleName}")
+    @Operation(summary = "Assign role to user")
+    public ResponseEntity<?> assignRole(
+            @PathVariable Long userId,
+            @PathVariable RoleName roleName
+    ) {
+
+        userRoleService.assignRole(userId, roleName);
+
+        return ResponseData.success(
+                null,
+                "Assign role successfully",
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/{userId}/{roleName}")
+    @Operation(summary = "Remove role from user")
+    public ResponseEntity<?> removeRole(
+            @PathVariable Long userId,
+            @PathVariable RoleName roleName
+    ) {
+
+        userRoleService.removeRole(userId, roleName);
+
+        return ResponseData.success(
+                null,
+                "Remove role successfully",
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/{userId}")
+    @Operation(summary = "Get roles of user")
+    public ResponseEntity<?> getUserRoles(
+            @PathVariable Long userId
+    ) {
+
+        List<RoleResponse> response =
+                userRoleService.getUserRoles(userId);
+
+        return ResponseData.success(
+                response,
+                "Get user roles successfully",
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user roles")
+    public ResponseEntity<?> getMyRoles() {
+
+        List<RoleResponse> response =
+                userRoleService.getMyRoles();
+
+        return ResponseData.success(
+                response,
+                "Get my roles successfully",
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/check/{userId}/{roleName}")
+    @Operation(summary = "Check if user has role")
+    public ResponseEntity<?> hasRole(
+            @PathVariable Long userId,
+            @PathVariable RoleName roleName
+    ) {
+
+        boolean result = userRoleService.hasRole(userId, roleName);
+
+        return ResponseData.success(
+                result,
+                "Check role successfully",
+                HttpStatus.OK
+        );
+    }
+}

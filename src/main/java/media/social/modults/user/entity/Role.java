@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
-
 @Entity
 @Table(name = "roles")
 @Getter
@@ -26,6 +25,10 @@ public class Role {
     @Column(length = 255)
     private String description;
 
-    @ManyToMany(mappedBy = "roles")
-    private Set<User> users = new HashSet<>();
+    @OneToMany(
+            mappedBy = "role",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private Set<UserRole> userRoles = new HashSet<>();
 }

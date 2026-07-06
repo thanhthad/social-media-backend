@@ -1,6 +1,9 @@
 package media.social.modults.user.Enum;
 
-public enum Role {
+public enum RoleName {
+
+    ADMIN,
     USER,
-    ADMIN
+    MODERATOR
+
 }
