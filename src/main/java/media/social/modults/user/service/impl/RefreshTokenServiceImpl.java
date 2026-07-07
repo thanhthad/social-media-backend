@@ -4,7 +4,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import media.social.modults.user.entity.RefreshToken;
+import media.social.modults.user.entity.Role;
 import media.social.modults.user.entity.User;
+import media.social.modults.user.entity.UserRole;
 import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
@@ -13,9 +15,12 @@ import media.social.modults.user.security.jwt.JwtUtil;
 import media.social.modults.user.service.RefreshTokenService;
 import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -29,14 +34,19 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpirationMs;
+
+
+
     // ================= CREATE =================
+    @Override
     public RefreshToken create(Long userId) {
+
         User user = userServiceDomain.getByUserId(userId);
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(UUID.randomUUID().toString())
                 .user(user)
-                .expiredAt(LocalDateTime.now().plusDays(refreshExpirationMs))
+                .expiredAt(LocalDateTime.now().plus(Duration.ofMillis(refreshExpirationMs)))
                 .revoked(false)
                 .build();
 
@@ -49,6 +59,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     // ================= VERIFY =================
+    @Override
     public RefreshToken verify(String token) {
 
         if (token == null || token.isBlank()) {
@@ -73,6 +84,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     // ================= FIND VALID TOKEN =================
+    @Override
     @Transactional
     public RefreshToken findValidByUser(Long userId) {
 
@@ -91,33 +103,41 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 });
     }
 
-    // ================= GENERATE NEW ACCESS TOKEN =================
-    public String generateAccessToken(String refreshToken) {
+    // ================= GENERATE ACCESS TOKEN =================
+    @Override
+    public String generateAccessToken(String refreshTokenValue) {
 
-        RefreshToken token = verify(refreshToken);
-        User user = token.getUser();
+        RefreshToken refreshToken = verify(refreshTokenValue);
+        User user = refreshToken.getUser();
+
+        List<SimpleGrantedAuthority> authorities =
+                user.getUserRoles()
+                        .stream()
+                        .map(UserRole::getRole)
+                        .map(Role::getName)
+                        .map(roleName -> new SimpleGrantedAuthority("ROLE_" + roleName))
+                        .toList();
 
         String accessToken = jwtUtil.generateAccessToken(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getRole()
+                authorities
         );
 
         log.info("AUTH_EVENT | action=ACCESS_TOKEN_REFRESH | userId={} | tokenId={}",
-                user.getId(), token.getId());
+                user.getId(), refreshToken.getId());
 
         return accessToken;
     }
 
     // ================= REVOKE =================
     @Transactional
+    @Override
     public void revoke(String refreshToken) {
 
         RefreshToken token = verify(refreshToken);
         token.setRevoked(true);
-
-        refreshTokenRepository.save(token);
 
         log.info("AUTH_EVENT | action=REFRESH_TOKEN_REVOKED | userId={} | tokenId={}",
                 token.getUser().getId(), token.getId());

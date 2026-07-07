@@ -6,7 +6,7 @@ import media.social.modults.user.dto.response.auth.AuthResponse;
 
 public interface AuthService {
 
-    AuthResponse register(RegisterRequest request);
+    void register(RegisterRequest request);
 
     AuthResponse login(LoginRequest request);
 

@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import media.social.modults.user.Enum.Role;
 
 @Getter
 @Builder
@@ -20,5 +19,4 @@ public class AuthResponse {
 
     private String username;
 
-    private Role role;
 }

@@ -42,12 +42,10 @@ public class AuthController {
     public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest request
     ) {
-
-        AuthResponse response = authService.register(request);
-
+        authService.register(request);
         return ResponseData.success(
-                response,
-                "Login successfully",
+                null,
+                "Register successfully",
                 HttpStatus.OK
         );
     }

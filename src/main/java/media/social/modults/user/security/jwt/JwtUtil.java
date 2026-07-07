@@ -2,13 +2,12 @@ package media.social.modults.user.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import media.social.modults.user.Enum.Role;
-import media.social.modults.user.security.userdetails.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -21,40 +20,29 @@ public class JwtUtil {
     @Value("${jwt.access-expiration}")
     private long ACCESS_TOKEN_EXPIRE;
 
-
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    // ===== GENERATE ACCESS TOKEN =====
     public String generateAccessToken(Long userId,
                                       String username,
                                       String email,
-                                      Role role) {
+                                      Collection<? extends GrantedAuthority> authorities) {
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("username", username)
                 .claim("email", email)
-                .claim("role", role.name())
+                .claim("roles", authorities.stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .toList())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
-    // ===== VALIDATE TOKEN =====
-    public void validateToken(String token) {
-
-        Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token);
-    }
-
-    // ===== EXTRACT CLAIMS =====
     public Claims extractClaims(String token) {
-
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
@@ -62,52 +50,30 @@ public class JwtUtil {
                 .getBody();
     }
 
-    // ===== GET USER DETAILS =====
-    public CustomUserDetails getUserDetails(String token) {
-
-        Claims claims = extractClaims(token);
-
-        Long userId =
-                Long.parseLong(claims.getSubject());
-
-        String username =
-                claims.get("username", String.class);
-
-        String email =
-                claims.get("email", String.class);
-
-        String role =
-                claims.get("role", String.class);
-
-        List<SimpleGrantedAuthority> authorities =
-                List.of(
-                        new SimpleGrantedAuthority(
-                                "ROLE_" + role
-                        )
-                );
-
-        return CustomUserDetails.builder()
-                .id(userId)
-                .username(username)
-                .email(email)
-                .authorities(authorities)
-                .build();
+    public boolean isValid(String token) {
+        try {
+            extractClaims(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
     }
 
-    // ===== HELPER METHODS =====
     public Long getUserId(String token) {
-        return Long.parseLong(
-                extractClaims(token).getSubject()
-        );
+        return Long.parseLong(extractClaims(token).getSubject());
     }
+
+    public String getEmail(String token) {
+        return extractClaims(token).get("email", String.class);
+    }
+
 
     public String getUsername(String token) {
-        return extractClaims(token)
-                .get("username", String.class);
+        return extractClaims(token).get("username", String.class);
     }
 
-    public String getRole(String token) {
-        return extractClaims(token)
-                .get("role", String.class);
+    @SuppressWarnings("unchecked")
+    public List<String> getRoles(String token) {
+        return extractClaims(token).get("roles", List.class);
     }
 }

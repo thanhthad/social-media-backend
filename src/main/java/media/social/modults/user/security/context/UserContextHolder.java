@@ -5,33 +5,34 @@ import media.social.modults.user.security.userdetails.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+
 public class UserContextHolder {
 
-    public static Long getUserId() {
+    public static CustomUserDetails getCurrentUser() {
 
-        Authentication auth =
+        Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        if (auth == null ||
-                !auth.isAuthenticated() ||
-                "anonymousUser".equals(auth.getPrincipal()) ||
-                !(auth.getPrincipal() instanceof CustomUserDetails)) {
-
-            throw new UnauthorizedException(
-                    "Please login first"
-            );
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("Please login first");
         }
 
-        return ((CustomUserDetails) auth.getPrincipal()).getId();
+        if (!(authentication.getPrincipal() instanceof CustomUserDetails user)) {
+            throw new UnauthorizedException("Please login first");
+        }
+
+        return user;
     }
 
-    public static boolean isAuthenticated() {
+    public static Long getUserId() {
+        return getCurrentUser().getId();
+    }
 
-        Authentication auth =
-                SecurityContextHolder.getContext().getAuthentication();
+    public static String getEmail() {
+        return getCurrentUser().getEmail();
+    }
 
-        return auth != null
-                && auth.isAuthenticated()
-                && auth.getPrincipal() instanceof CustomUserDetails;
+    public static String getUsername() {
+        return getCurrentUser().getUsername();
     }
 }

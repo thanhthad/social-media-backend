@@ -33,6 +33,11 @@ public class RefreshToken {
     @Column(nullable = false)
     private boolean revoked;
 
-    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

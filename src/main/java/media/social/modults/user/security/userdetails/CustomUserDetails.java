@@ -2,14 +2,13 @@ package media.social.modults.user.security.userdetails;
 
 import lombok.*;
 import media.social.modults.user.entity.User;
-import media.social.modults.user.Enum.Role;
+import media.social.modults.user.entity.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
-
 @Getter
 @Builder
 @NoArgsConstructor
@@ -19,8 +18,7 @@ public class CustomUserDetails implements UserDetails {
     private Long id;
     private String username;
     private String email;
-    private Role role;
-
+    private String password;
 
     private Collection<? extends GrantedAuthority> authorities;
 
@@ -30,29 +28,22 @@ public class CustomUserDetails implements UserDetails {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole())
-                .authorities(mapRole(user.getRole()))
+                .password(user.getPasswordHash())
+                .authorities(mapAuthorities(user))
                 .build();
     }
 
-    private static List<SimpleGrantedAuthority> mapRole(Role role) {
-        if (role == null) {
-            return List.of();
-        }
-
-        return List.of(
-                new SimpleGrantedAuthority("ROLE_" + role.name())
-        );
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+    private static List<SimpleGrantedAuthority> mapAuthorities(User user) {
+        return user.getUserRoles()
+                .stream()
+                .map(UserRole::getRole)
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .toList();
     }
 
     @Override
     public String getPassword() {
-        return "";
+        return password;
     }
 
     @Override
@@ -61,22 +52,19 @@ public class CustomUserDetails implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
     }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
+
+    @Override
+    public boolean isEnabled() { return true; }
 }

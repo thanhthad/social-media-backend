@@ -1,20 +1,24 @@
 package media.social.modults.user.service.impl;
 
 import lombok.AllArgsConstructor;
-import media.social.modults.user.entity.Profile;
-import media.social.modults.user.entity.RefreshToken;
+import media.social.modults.user.Enum.RoleName;
+import media.social.modults.user.entity.*;
+import media.social.modults.user.exception.role.RoleNotFoundException;
 import media.social.modults.user.exception.user.UserAlreadyExistsException;
 import media.social.modults.user.dto.request.auth.LoginRequest;
 import media.social.modults.user.dto.request.auth.RegisterRequest;
 import media.social.modults.user.dto.response.auth.AuthResponse;
-import media.social.modults.user.entity.User;
-import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.repository.ProfileRepository;
+import media.social.modults.user.repository.RoleRepository;
 import media.social.modults.user.repository.UserRepository;
+import media.social.modults.user.repository.UserRoleRepository;
 import media.social.modults.user.security.jwt.JwtUtil;
+import media.social.modults.user.security.userdetails.CustomUserDetails;
 import media.social.modults.user.service.AuthService;
 import media.social.modults.user.service.RefreshTokenService;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,15 +28,55 @@ import java.time.LocalDateTime;
 @Service
 @AllArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
     private final ProfileRepository profileRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final RoleRepository roleRepository;
+
+
+    @Override
+    public AuthResponse login(LoginRequest request) {
+
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                request.getEmail(),
+                                request.getPassword()
+                        )
+                );
+
+        CustomUserDetails user =
+                (CustomUserDetails) authentication.getPrincipal();
+
+        String accessToken = jwtUtil.generateAccessToken(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAuthorities()
+        );
+
+        String refreshToken = refreshTokenService.create(user.getId()).getToken();
+
+        return AuthResponse.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
 
     @Override
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public void register(RegisterRequest request) {
+        if(userRepository.existsByUsername(request.getUsername())){
+            throw new UserAlreadyExistsException("User already exists with username");
+        }
         if(userRepository.existsByEmail(request.getEmail())){
             throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
         }
@@ -42,65 +86,43 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .build();
-        userRepository.save(user);
+        User saved = userRepository.save(user);
 
         Profile profile = Profile.builder()
                 .user(user)
+                .createdAt(LocalDateTime.now())
                 .build();
         profileRepository.save(profile);
 
-        String refreshToken = refreshTokenService.create(user.getId()).getToken();
-        String accessToken = jwtUtil.generateAccessToken(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getRole()
+        Role role = roleRepository.findByName(RoleName.USER.name()).orElseThrow(
+                () -> new RoleNotFoundException("Role not found")
         );
 
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .role(user.getRole())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
+        UserRole userRole =UserRole.builder()
+                .id(new UserRoleId(user.getId(),role.getId()))
+                .role(role)
+                .user(user)
+                .assignedAt(LocalDateTime.now())
+                .assignedBy(null)
                 .build();
+        userRoleRepository.save(userRole);
+
     }
 
-    @Override
-    @Transactional
-    public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(
-                () -> new UserNotFoundException("User not found with email : " + request.getEmail())
-        );
-        if(!passwordEncoder.matches(request.getPassword(),user.getPasswordHash())){
-            throw new BadCredentialsException("Invalid password");
-        }
-        user.setLastLoginAt(LocalDateTime.now());
-        userRepository.save(user);
-        String refreshToken = refreshTokenService.create(user.getId()).getToken();
-        String accessToken = jwtUtil.generateAccessToken(user.getId(),user.getUsername(), user.getEmail(),user.getRole());
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .role(user.getRole())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-    }
 
     @Override
     @Transactional(readOnly = true)
     public AuthResponse generateAccessToken(String refreshToken) {
 
+        RefreshToken token = refreshTokenService.verify(refreshToken);
+
         String accessToken = refreshTokenService.generateAccessToken(refreshToken);
 
-        RefreshToken token = refreshTokenService.verify(refreshToken);
         User user = token.getUser();
 
         return AuthResponse.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
-                .role(user.getRole())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
