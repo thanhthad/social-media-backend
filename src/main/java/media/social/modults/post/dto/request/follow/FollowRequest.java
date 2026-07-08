@@ -1,4 +1,4 @@
-package media.social.modults.post.dto.request;
+package media.social.modults.post.dto.request.follow;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

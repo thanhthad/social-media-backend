@@ -1,7 +1,5 @@
 package media.social.modults.post.mapper;
 
-import media.social.modults.post.dto.request.UpdatePostContent;
-import media.social.modults.post.dto.response.PostResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.entity.PostMedia;
 import org.mapstruct.*;

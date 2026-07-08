@@ -1,6 +1,7 @@
-package media.social.modults.post.dto.request;
+package media.social.modults.post.dto.request.comment;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -9,7 +10,10 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReplyCommentRequest {
+public class CreateCommentRequest {
+
+    @NotNull(message = "Post id không được để trống")
+    private Long postId;
 
     private Long parentId;
 
@@ -20,4 +24,5 @@ public class ReplyCommentRequest {
             message = "Nội dung comment phải từ 1 đến 1000 ký tự"
     )
     private String content;
+
 }

@@ -1,6 +1,6 @@
 package media.social.modults.post.repository;
 
-import media.social.modults.post.dto.response.PostFlatResponse;
+import media.social.modults.post.dto.response.post.PostFlatResponse;
 import media.social.modults.post.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

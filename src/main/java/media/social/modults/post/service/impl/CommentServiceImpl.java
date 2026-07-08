@@ -1,10 +1,10 @@
 package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
-import media.social.modults.post.dto.request.CreateCommentRequest;
-import media.social.modults.post.dto.request.ReplyCommentRequest;
-import media.social.modults.post.dto.request.UpdateCommentContent;
-import media.social.modults.post.dto.response.CommentResponse;
+import media.social.modults.post.dto.request.comment.CreateCommentRequest;
+import media.social.modults.post.dto.request.comment.ReplyCommentRequest;
+import media.social.modults.post.dto.request.comment.UpdateCommentContent;
+import media.social.modults.post.dto.response.comment.CommentResponse;
 import media.social.modults.post.entity.Comment;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.exception.comment.CommentNotFoundException;

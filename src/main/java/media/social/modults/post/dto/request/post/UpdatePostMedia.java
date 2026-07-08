@@ -1,4 +1,4 @@
-package media.social.modults.post.dto.request;
+package media.social.modults.post.dto.request.post;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

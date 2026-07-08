@@ -2,7 +2,7 @@ package media.social.modults.post.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import media.social.modults.post.Enum.MediaType;
+import media.social.modults.post.enums.MediaType;
 
 import java.time.LocalDateTime;
 

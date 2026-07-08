@@ -19,12 +19,10 @@ import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredExcep
 import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
 import media.social.modults.user.exception.user.UserAlreadyExistsException;
 import media.social.modults.user.exception.user.UserNotFoundException;
-import media.social.modults.user.security.userdetails.CustomUserDetails;
+import media.social.modults.user.security.context.UserContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -36,28 +34,8 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    // ================= USER ID (optional trace only) =================
-    private Long getUserId() {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-            if (auth == null || !auth.isAuthenticated()
-                    || auth.getPrincipal() == null
-                    || "anonymousUser".equals(auth.getPrincipal())) {
-                return null;
-            }
-
-            Object principal = auth.getPrincipal();
-
-            if (principal instanceof CustomUserDetails userDetails) {
-                return userDetails.getId();
-            }
-
-            return null;
-
-        } catch (Exception e) {
-            return null;
-        }
+    private Long getUserId(){
+        return UserContextHolder.getUserId();
     }
 
     // ================= USER =================

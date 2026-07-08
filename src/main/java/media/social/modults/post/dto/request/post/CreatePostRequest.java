@@ -1,4 +1,4 @@
-package media.social.modults.post.dto.request;
+package media.social.modults.post.dto.request.post;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -14,11 +14,15 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdatePostContent {
+public class CreatePostRequest {
+
+//    @NotNull(message = "UserId is required")
+//    private Long userId;
 
     @NotBlank(message = "Content is required")
     @Size(min = 1, max = 1000, message = "Content max 1000 characters")
     private String content;
 
+    private List<MultipartFile> files;
 
 }

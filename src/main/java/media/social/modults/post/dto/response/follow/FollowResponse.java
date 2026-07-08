@@ -1,4 +1,4 @@
-package media.social.modults.post.dto.response;
+package media.social.modults.post.dto.response.follow;
 
 import lombok.Builder;
 import lombok.Data;

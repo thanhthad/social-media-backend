@@ -1,10 +1,10 @@
 package media.social.modults.post.service;
 
 
-import media.social.modults.post.dto.request.CreatePostRequest;
-import media.social.modults.post.dto.request.UpdatePostContent;
-import media.social.modults.post.dto.request.UpdatePostMedia;
-import media.social.modults.post.dto.response.PostResponse;
+import media.social.modults.post.dto.request.post.CreatePostRequest;
+import media.social.modults.post.dto.request.post.UpdatePostContent;
+import media.social.modults.post.dto.request.post.UpdatePostMedia;
+import media.social.modults.post.dto.response.post.PostResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

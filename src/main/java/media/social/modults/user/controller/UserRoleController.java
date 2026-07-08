@@ -9,6 +9,7 @@ import media.social.modults.user.dto.response.role.RoleResponse;
 import media.social.modults.user.service.UserRoleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class UserRoleController {
 
     @PostMapping("/{userId}/{roleName}")
     @Operation(summary = "Assign role to user")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> assignRole(
             @PathVariable Long userId,
             @PathVariable RoleName roleName
@@ -37,6 +39,7 @@ public class UserRoleController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{userId}/{roleName}")
     @Operation(summary = "Remove role from user")
     public ResponseEntity<?> removeRole(
@@ -53,6 +56,7 @@ public class UserRoleController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{userId}")
     @Operation(summary = "Get roles of user")
     public ResponseEntity<?> getUserRoles(
@@ -83,6 +87,7 @@ public class UserRoleController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/check/{userId}/{roleName}")
     @Operation(summary = "Check if user has role")
     public ResponseEntity<?> hasRole(

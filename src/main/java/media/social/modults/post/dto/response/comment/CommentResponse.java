@@ -1,9 +1,8 @@
-package media.social.modults.post.dto.response;
+package media.social.modults.post.dto.response.comment;
 
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
