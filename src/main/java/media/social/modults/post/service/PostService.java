@@ -17,6 +17,8 @@ public interface PostService {
 
     Page<PostResponse> getAllPostByUserId(Long userId, Pageable pageable);
 
+    PostResponse getPostById(Long postId);
+
     void deletePostMedia(String publicId);
 
     void updatePostContent(Long postId,UpdatePostContent content);
@@ -24,5 +26,7 @@ public interface PostService {
     void updatePostMedia(Long postId, UpdatePostMedia media);
 
     void deleteByPostId(Long id);
+
+
 
 }

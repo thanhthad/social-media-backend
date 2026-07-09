@@ -18,6 +18,7 @@ import media.social.modults.post.repository.HashtagRepository;
 import media.social.modults.post.repository.PostHashtagRepository;
 import media.social.modults.post.repository.PostMediaRepository;
 import media.social.modults.post.service.PostServiceDomain;
+import media.social.modults.user.entity.Profile;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.post.repository.PostRepository;
@@ -73,6 +74,7 @@ public class PostServiceImpl implements PostService {
         }
 
         Long userId = UserContextHolder.getUserId();
+
         User user = userServiceDomain.getByUserId(userId);
 
         Post post = Post.builder()
@@ -81,35 +83,15 @@ public class PostServiceImpl implements PostService {
                 .visibility(request.getVisibility())
                 .build();
 
-        Post savedPost = postRepository.save(post);
+        postRepository.save(post);
 
-        if (request.getFiles() != null && !request.getFiles().isEmpty()) {
+        savePostMedia(post, request.getFiles());
 
-            for (MultipartFile file : request.getFiles()) {
-                cloudinaryService.validateImage(file);
-            }
-
-            List<PostMedia> mediaList = new ArrayList<>();
-
-            for (MultipartFile file : request.getFiles()) {
-
-                UploadImageResponse upload =
-                        cloudinaryService.uploadImage(file, "posts");
-
-                mediaList.add(PostMedia.builder()
-                        .post(savedPost)
-                        .mediaType(MediaType.IMAGE)
-                        .url(upload.getImageUrl())
-                        .publicId(upload.getPublicId())
-                        .build());
-            }
-
-            postMediaRepository.saveAll(mediaList);
-        }
-
-        log.info("POST_EVENT | action=CREATE_POST | userId={} | postId={}",
-                userId, savedPost.getId());
-
+        log.info(
+                "POST_EVENT | action=CREATE_POST | userId={} | postId={}",
+                userId,
+                post.getId()
+        );
     }
 
     @Override
@@ -148,6 +130,35 @@ public class PostServiceImpl implements PostService {
 
         return getAllPost(targetUserId, visibilities, pageable);
     }
+
+    @Override
+    public PostResponse getPostById(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(
+                () -> new PostNotFoundException("Post not found")
+        );
+        User user = userServiceDomain.getByUserId(UserContextHolder.getUserId());
+        Profile profile = profileRepo.
+        List<PostMedia> postMedias = postMediaRepository.findByPostId(postId);
+        List<PostMediaResponse> postMediaResponses = new ArrayList<>();
+        for(PostMedia postMedia : postMedias){
+            PostMediaResponse postMediaResponse = PostMediaResponse.builder()
+                    .url(postMedia.getUrl())
+                    .publicId(postMedia.getPublicId())
+                    .type(postMedia.getMediaType())
+            .build();
+            postMediaResponses.add(postMediaResponse);
+        }
+        return PostResponse.builder()
+                .id(postId)
+                .content(post.getContent())
+                .visibility(post.getVisibility())
+                .createdAt(post.getCreatedAt())
+                .userId(user.getId())
+                .username(user.getUsername())
+                .avatarUrl()
+                .build();
+    }
+
     @Transactional(readOnly = true)
     private Page<PostResponse> getAllPost(Long userId,List<Visibility> visibilities, Pageable pageable) {
 
@@ -291,36 +302,23 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void updatePostMedia(Long postId, UpdatePostMedia request) {
+
         if (request.getFiles() == null || request.getFiles().isEmpty()) {
             throw new IllegalArgumentException("No media uploaded.");
         }
-        Post post = postRepository.findById(postId).orElseThrow(
-                () -> new PostNotFoundException("Post not found with id: " + postId)
-        );
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() ->
+                        new PostNotFoundException(
+                                "Post not found with id: " + postId
+                        )
+                );
+
         postServiceDomain.checkOwner(post);
 
-        List<PostMedia> mediaList = new ArrayList<>();
-
-        for (MultipartFile file : request.getFiles()) {
-            cloudinaryService.validateImage(file);
-        }
-
-        for (MultipartFile file : request.getFiles()) {
-
-            UploadImageResponse upload =
-                    cloudinaryService.uploadImage(file, "posts");
-
-            mediaList.add(PostMedia.builder()
-                    .post(post)
-                    .mediaType(MediaType.IMAGE)
-                    .url(upload.getImageUrl())
-                    .publicId(upload.getPublicId())
-                    .build());
-        }
-
-        postMediaRepository.saveAll(mediaList);
-
+        savePostMedia(post, request.getFiles());
     }
+
 
     @Transactional
     @Override
@@ -340,5 +338,31 @@ public class PostServiceImpl implements PostService {
 
         log.info("POST_EVENT | action=DELETE_POST | UserId={} | postId={} | status=SUCCESS",
                 userId, postId);
+    }
+
+    private void savePostMedia(Post post, List<MultipartFile> files) {
+
+        if (files == null || files.isEmpty()) {
+            return;
+        }
+
+        files.forEach(cloudinaryService::validateImage);
+
+        List<PostMedia> mediaList = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+
+            UploadImageResponse upload =
+                    cloudinaryService.uploadImage(file, "posts");
+
+            mediaList.add(PostMedia.builder()
+                    .post(post)
+                    .mediaType(MediaType.IMAGE)
+                    .url(upload.getImageUrl())
+                    .publicId(upload.getPublicId())
+                    .build());
+        }
+
+        postMediaRepository.saveAll(mediaList);
     }
 }
