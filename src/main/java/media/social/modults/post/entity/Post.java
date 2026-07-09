@@ -32,7 +32,8 @@ public class Post {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private Visibility visibility;
+    @Builder.Default
+    private Visibility visibility = Visibility.PUBLIC;
 
     @Builder.Default
     @OneToMany(

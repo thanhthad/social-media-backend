@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import media.social.modults.post.enums.Visibility;
 
 @Getter
 @Setter
@@ -16,6 +17,8 @@ public class UpdatePostContent {
     @NotBlank(message = "Content is required")
     @Size(min = 1, max = 1000, message = "Content max 1000 characters")
     private String content;
+
+    private Visibility visibility;
 
 
 }

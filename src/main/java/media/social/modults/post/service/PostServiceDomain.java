@@ -7,4 +7,5 @@ public interface PostServiceDomain {
 
     Post getByPostId(Long postId);
 
+    void checkOwner(Post post);
 }

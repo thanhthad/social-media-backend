@@ -12,16 +12,21 @@ import media.social.modults.post.dto.response.post.PostResponse;
 import media.social.modults.file.image.dto.response.UploadImageResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.entity.PostMedia;
+import media.social.modults.post.enums.Visibility;
 import media.social.modults.post.exception.post_media.MediaNotFoundException;
 import media.social.modults.post.repository.HashtagRepository;
 import media.social.modults.post.repository.PostHashtagRepository;
 import media.social.modults.post.repository.PostMediaRepository;
+import media.social.modults.post.service.PostServiceDomain;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.post.repository.PostRepository;
+import media.social.modults.user.exception.block.UserBlockedException;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.post.service.PostService;
+import media.social.modults.user.service.FollowService;
+import media.social.modults.user.service.domain.BlockPolicyService;
 import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -44,11 +49,28 @@ public class PostServiceImpl implements PostService {
     private final CloudinaryService cloudinaryService;
     private final HashtagRepository hashtagRepository;
     private final PostHashtagRepository postHashtagRepository;
+    private final BlockPolicyService blockPolicyService;
+    private final FollowService followService;
+    private final PostServiceDomain postServiceDomain;
 
 
     @Override
     @Transactional
     public void createPost(CreatePostRequest request) {
+
+        boolean emptyContent =
+                request.getContent() == null ||
+                        request.getContent().isBlank();
+
+        boolean emptyFiles =
+                request.getFiles() == null ||
+                        request.getFiles().isEmpty();
+
+        if (emptyContent && emptyFiles) {
+            throw new IllegalArgumentException(
+                    "Post must contain content or at least one media."
+            );
+        }
 
         Long userId = UserContextHolder.getUserId();
         User user = userServiceDomain.getByUserId(userId);
@@ -61,28 +83,27 @@ public class PostServiceImpl implements PostService {
 
         Post savedPost = postRepository.save(post);
 
-        List<PostMedia> mediaList = new ArrayList<>();
+        if (request.getFiles() != null && !request.getFiles().isEmpty()) {
 
-        for(MultipartFile check : request.getFiles()){
-            cloudinaryService.validateImage(check);
-        }
+            for (MultipartFile file : request.getFiles()) {
+                cloudinaryService.validateImage(file);
+            }
 
-        for (MultipartFile file : request.getFiles()) {
+            List<PostMedia> mediaList = new ArrayList<>();
 
-            UploadImageResponse upload =
-                    cloudinaryService.uploadImage(file, "posts");
+            for (MultipartFile file : request.getFiles()) {
 
-            PostMedia media = PostMedia.builder()
-                    .post(savedPost)
-                    .mediaType(MediaType.IMAGE)
-                    .url(upload.getImageUrl())
-                    .publicId(upload.getPublicId())
-                    .build();
+                UploadImageResponse upload =
+                        cloudinaryService.uploadImage(file, "posts");
 
-            mediaList.add(media);
-        }
+                mediaList.add(PostMedia.builder()
+                        .post(savedPost)
+                        .mediaType(MediaType.IMAGE)
+                        .url(upload.getImageUrl())
+                        .publicId(upload.getPublicId())
+                        .build());
+            }
 
-        if (!mediaList.isEmpty()) {
             postMediaRepository.saveAll(mediaList);
         }
 
@@ -100,8 +121,40 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PostResponse> getAllPostByUserId(Long userId, Pageable pageable) {
-        return getAllPost(userId, pageable);
+    public Page<PostResponse> getAllPostByUserId(Long targetUserId, Pageable pageable) {
+
+        Long viewerId = UserContextHolder.getUserId();
+
+        if (blockPolicyService.isBlocked(viewerId, targetUserId)) {
+            throw new UserBlockedException("You cannot view this user's posts.");
+        }
+
+        if (viewerId.equals(targetUserId)) {
+            return getAllPost(targetUserId, pageable);
+        }
+
+        List<Visibility> visibilities;
+
+        if (followService.isFollowing(targetUserId)) {
+            visibilities = List.of(
+                    Visibility.PUBLIC,
+                    Visibility.FOLLOWERS
+            );
+        } else {
+            visibilities = List.of(
+                    Visibility.PUBLIC
+            );
+        }
+
+        return getAllPost(targetUserId, visibilities, pageable);
+    }
+    @Transactional(readOnly = true)
+    private Page<PostResponse> getAllPost(Long userId,List<Visibility> visibilities, Pageable pageable) {
+
+        Page<PostFlatResponse> flatPage =
+                postRepository.findAllVisiblePost(userId,visibilities, pageable);
+
+        return buildPostResponse(flatPage,pageable);
     }
 
     @Transactional(readOnly = true)
@@ -110,6 +163,20 @@ public class PostServiceImpl implements PostService {
         Page<PostFlatResponse> flatPage =
                 postRepository.findAllPostMe(userId, pageable);
 
+        return buildPostResponse(flatPage,pageable);
+    }
+
+    private Page<PostResponse> buildPostResponse(
+            Page<PostFlatResponse> flatPage,
+            Pageable pageable
+    ) {
+        if (flatPage.isEmpty()) {
+            return new PageImpl<>(
+                    Collections.emptyList(),
+                    pageable,
+                    flatPage.getTotalElements()
+            );
+        }
         List<Long> postIds = flatPage.getContent()
                 .stream()
                 .map(PostFlatResponse::getId)
@@ -121,14 +188,17 @@ public class PostServiceImpl implements PostService {
         Map<Long, List<PostMediaResponse>> mediaMap = new HashMap<>();
 
         for (PostMedia m : mediaList) {
+
             mediaMap
-                    .computeIfAbsent(m.getPost().getId(), k -> new ArrayList<>())
+                    .computeIfAbsent(
+                            m.getPost().getId(),
+                            k -> new ArrayList<>()
+                    )
                     .add(PostMediaResponse.builder()
                             .url(m.getUrl())
                             .publicId(m.getPublicId())
                             .type(m.getMediaType().name())
-                            .build()
-                    );
+                            .build());
         }
 
         List<PostResponse> result = flatPage.getContent()
@@ -136,15 +206,18 @@ public class PostServiceImpl implements PostService {
                 .map(row -> PostResponse.builder()
                         .id(row.getId())
                         .content(row.getContent())
+                        .visibility(row.getVisibility())
                         .createdAt(row.getCreatedAt())
                         .userId(row.getUserId())
                         .username(row.getUsername())
                         .avatarUrl(row.getAvatarUrl())
                         .postMediaResponses(
-                                mediaMap.getOrDefault(row.getId(), new ArrayList<>())
+                                mediaMap.getOrDefault(
+                                        row.getId(),
+                                        Collections.emptyList()
+                                )
                         )
-                        .build()
-                )
+                        .build())
                 .toList();
 
         return new PageImpl<>(
@@ -153,6 +226,7 @@ public class PostServiceImpl implements PostService {
                 flatPage.getTotalElements()
         );
     }
+
 
     @Override
     @Transactional
@@ -163,6 +237,22 @@ public class PostServiceImpl implements PostService {
                         new MediaNotFoundException("Media not found: " + publicId)
                 );
 
+        Post post = media.getPost();
+
+        postServiceDomain.checkOwner(post);
+
+        long totalMedia = postMediaRepository.countByPostId(post.getId());
+
+        boolean emptyContent =
+                post.getContent() == null ||
+                        post.getContent().isBlank();
+
+        if (totalMedia == 1 && emptyContent) {
+            throw new IllegalStateException(
+                    "Post must contain at least one media or content."
+            );
+        }
+
         cloudinaryService.deleteImage(publicId);
 
         postMediaRepository.delete(media);
@@ -170,25 +260,52 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void updatePostContent(Long postId, UpdatePostContent content) {
-        Post post = postRepository.findById(postId).orElseThrow(
-                () -> new PostNotFoundException("Post not found with id: "+postId)
-        );
-        post.setContent(content.getContent());
+    public void updatePostContent(Long postId, UpdatePostContent request) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() ->
+                        new PostNotFoundException(
+                                "Post not found with id: " + postId
+                        )
+                );
+
+        postServiceDomain.checkOwner(post);
+
+        boolean emptyContent =
+                request.getContent() == null ||
+                        request.getContent().isBlank();
+
+        long mediaCount =
+                postMediaRepository.countByPostId(postId);
+
+        if (emptyContent && mediaCount == 0) {
+            throw new IllegalArgumentException(
+                    "Post must contain content or media."
+            );
+        }
+
+        post.setContent(request.getContent());
+        post.setVisibility(request.getVisibility());
     }
 
     @Override
     @Transactional
     public void updatePostMedia(Long postId, UpdatePostMedia request) {
+        if (request.getFiles() == null || request.getFiles().isEmpty()) {
+            throw new IllegalArgumentException("No media uploaded.");
+        }
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new PostNotFoundException("Post not found with id: " + postId)
         );
+        postServiceDomain.checkOwner(post);
 
         List<PostMedia> mediaList = new ArrayList<>();
 
         for (MultipartFile file : request.getFiles()) {
-
             cloudinaryService.validateImage(file);
+        }
+
+        for (MultipartFile file : request.getFiles()) {
 
             UploadImageResponse upload =
                     cloudinaryService.uploadImage(file, "posts");
@@ -213,10 +330,12 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new PostNotFoundException("Post not found with postId: " + postId)
         );
+        postServiceDomain.checkOwner(post);
         List<PostMedia>  postMediaList = postMediaRepository.findByPostId(postId);
-        for(PostMedia media : postMediaList){
-            cloudinaryService.deleteImage(media.getPublicId());
-        }
+
+        postMediaList.forEach(media ->
+                cloudinaryService.deleteImage(media.getPublicId()));
+
         postRepository.delete(post);
 
         log.info("POST_EVENT | action=DELETE_POST | UserId={} | postId={} | status=SUCCESS",
