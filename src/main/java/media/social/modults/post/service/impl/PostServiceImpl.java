@@ -13,10 +13,11 @@ import media.social.modults.file.image.dto.response.UploadImageResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.entity.PostMedia;
 import media.social.modults.post.exception.post_media.MediaNotFoundException;
+import media.social.modults.post.repository.HashtagRepository;
+import media.social.modults.post.repository.PostHashtagRepository;
 import media.social.modults.post.repository.PostMediaRepository;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.post.PostNotFoundException;
-import media.social.modults.post.mapper.PostMapper;
 import media.social.modults.post.repository.PostRepository;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.file.image.service.CloudinaryService;
@@ -40,8 +41,9 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostMediaRepository postMediaRepository;
     private final UserServiceDomain userServiceDomain;
-    private final PostMapper postMapper;
     private final CloudinaryService cloudinaryService;
+    private final HashtagRepository hashtagRepository;
+    private final PostHashtagRepository postHashtagRepository;
 
 
     @Override
@@ -54,6 +56,7 @@ public class PostServiceImpl implements PostService {
         Post post = Post.builder()
                 .user(user)
                 .content(request.getContent())
+                .visibility(request.getVisibility())
                 .build();
 
         Post savedPost = postRepository.save(post);

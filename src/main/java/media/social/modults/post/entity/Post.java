@@ -42,6 +42,14 @@ public class Post {
     )
     private List<PostMedia> media = new ArrayList<>();
 
+    @Builder.Default
+    @OneToMany(
+            mappedBy = "post",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<PostHashtag> postHashtags = new ArrayList<>();
+
     @Column(
             name = "created_at",
             nullable = false,

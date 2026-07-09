@@ -8,8 +8,6 @@ import media.social.modults.file.image.exception.CloudinaryUploadException;
 import media.social.modults.file.image.exception.InvalidImageException;
 import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
-import media.social.modults.post.exception.like.LikeAlreadyExistsException;
-import media.social.modults.post.exception.like.LikeNotFoundException;
 import media.social.modults.post.exception.post.InvalidDateRangeException;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
@@ -60,16 +58,6 @@ public class GlobalExceptionHandler {
         return ResponseData.fail("Invalid date range", HttpStatus.BAD_REQUEST);
     }
 
-    // ================= LIKE =================
-    @ExceptionHandler(LikeAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleLikeAlreadyExists(LikeAlreadyExistsException ex) {
-        return ResponseData.fail("Already liked", HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(LikeNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleLikeNotFound(LikeNotFoundException ex) {
-        return ResponseData.fail("Like not found", HttpStatus.NOT_FOUND);
-    }
 
     // ================= FOLLOW =================
     @ExceptionHandler(FollowAlreadyExistsException.class)

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import media.social.modults.post.enums.Visibility;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -16,12 +17,11 @@ import java.util.List;
 @AllArgsConstructor
 public class CreatePostRequest {
 
-//    @NotNull(message = "UserId is required")
-//    private Long userId;
-
     @NotBlank(message = "Content is required")
     @Size(min = 1, max = 1000, message = "Content max 1000 characters")
     private String content;
+
+    private Visibility visibility;
 
     private List<MultipartFile> files;
 

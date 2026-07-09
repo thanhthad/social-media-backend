@@ -11,17 +11,17 @@ import org.springframework.data.domain.Pageable;
 
 public interface PostService {
 
-    public void createPost(CreatePostRequest request);
+    void createPost(CreatePostRequest request);
 
-    public Page<PostResponse> getAllPostMe(Pageable pageable);
+    Page<PostResponse> getAllPostMe(Pageable pageable);
 
-    public Page<PostResponse> getAllPostByUserId(Long userId, Pageable pageable);
+    Page<PostResponse> getAllPostByUserId(Long userId, Pageable pageable);
 
-    public void deletePostMedia(String publicId);
+    void deletePostMedia(String publicId);
 
-    public void updatePostContent(Long postId,UpdatePostContent content);
+    void updatePostContent(Long postId,UpdatePostContent content);
 
-    public void updatePostMedia(Long postId, UpdatePostMedia media);
+    void updatePostMedia(Long postId, UpdatePostMedia media);
 
     void deleteByPostId(Long id);
 
