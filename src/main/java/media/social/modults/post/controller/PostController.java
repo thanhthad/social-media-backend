@@ -112,6 +112,20 @@ public class PostController {
         );
     }
 
+    // ================= GET POST DETAIL =================
+    @GetMapping("/{postId}")
+    @Operation(summary = "Get post detail by id")
+    public ResponseEntity<?> getPostById(
+            @PathVariable Long postId
+    ) {
+
+        return ResponseData.success(
+                postService.getPostById(postId),
+                "Get post successfully",
+                HttpStatus.OK
+        );
+    }
+
     // ================= GET USER POSTS =================
     @GetMapping("/user/{userId}")
     @Operation(summary = "Get posts by userId")

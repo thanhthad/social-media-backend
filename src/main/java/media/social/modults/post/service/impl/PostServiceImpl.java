@@ -2,6 +2,7 @@ package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import media.social.modults.post.dto.response.post.PostDetailFlatResponse;
 import media.social.modults.post.enums.MediaType;
 import media.social.modults.post.dto.request.post.CreatePostRequest;
 import media.social.modults.post.dto.request.post.UpdatePostContent;
@@ -132,30 +133,25 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PostResponse getPostById(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(
-                () -> new PostNotFoundException("Post not found")
-        );
-        User user = userServiceDomain.getByUserId(UserContextHolder.getUserId());
-        Profile profile = profileRepo.
-        List<PostMedia> postMedias = postMediaRepository.findByPostId(postId);
-        List<PostMediaResponse> postMediaResponses = new ArrayList<>();
-        for(PostMedia postMedia : postMedias){
-            PostMediaResponse postMediaResponse = PostMediaResponse.builder()
-                    .url(postMedia.getUrl())
-                    .publicId(postMedia.getPublicId())
-                    .type(postMedia.getMediaType())
-            .build();
-            postMediaResponses.add(postMediaResponse);
-        }
+
+        PostDetailFlatResponse flat = postRepository.findPostDetailById(postId)
+                .orElseThrow(() ->
+                        new PostNotFoundException("Post not found with id: " + postId)
+                );
+
         return PostResponse.builder()
-                .id(postId)
-                .content(post.getContent())
-                .visibility(post.getVisibility())
-                .createdAt(post.getCreatedAt())
-                .userId(user.getId())
-                .username(user.getUsername())
-                .avatarUrl()
+                .id(flat.getId())
+                .content(flat.getContent())
+                .visibility(flat.getVisibility())
+                .createdAt(flat.getCreatedAt())
+                .userId(flat.getUserId())
+                .username(flat.getUsername())
+                .avatarUrl(flat.getAvatarUrl())
+                .postMediaResponses(
+                        postMediaRepository.findMediaResponseByPostId(postId)
+                )
                 .build();
     }
 
@@ -208,7 +204,7 @@ public class PostServiceImpl implements PostService {
                     .add(PostMediaResponse.builder()
                             .url(m.getUrl())
                             .publicId(m.getPublicId())
-                            .type(m.getMediaType().name())
+                            .type(m.getMediaType())
                             .build());
         }
 

@@ -1,5 +1,6 @@
 package media.social.modults.post.repository;
 
+import media.social.modults.post.dto.response.post.PostDetailFlatResponse;
 import media.social.modults.post.dto.response.post.PostFlatResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.enums.Visibility;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
@@ -59,5 +61,24 @@ ORDER BY p.createdAt DESC
             @Param("visibilities") List<Visibility> visibilities,
             Pageable pageable
     );
+
+    @Query("""
+    SELECT new media.social.modults.post.dto.response.post.PostDetailFlatResponse(
+        p.id,
+        p.content,
+        p.visibility,
+        p.createdAt,
+        u.id,
+        u.username,
+        pr.avatarUrl
+    )
+    FROM Post p
+    JOIN p.user u
+    LEFT JOIN Profile pr
+    ON pr.user.id = u.id
+    WHERE p.id = :postId
+    """)
+    Optional<PostDetailFlatResponse> findPostDetailById(Long postId);
+
 
 }
