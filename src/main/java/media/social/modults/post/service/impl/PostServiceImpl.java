@@ -3,6 +3,8 @@ package media.social.modults.post.service.impl;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import media.social.modults.post.dto.response.post.PostDetailFlatResponse;
+import media.social.modults.post.entity.Hashtag;
+import media.social.modults.post.entity.PostHashtag;
 import media.social.modults.post.enums.MediaType;
 import media.social.modults.post.dto.request.post.CreatePostRequest;
 import media.social.modults.post.dto.request.post.UpdatePostContent;
@@ -38,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Service
@@ -65,46 +69,6 @@ public class PostServiceImpl implements PostService {
                 postRepository.findFeed(viewerId, pageable);
 
         return buildPostResponse(flatPage, pageable);
-    }
-
-
-    @Override
-    @Transactional
-    public void createPost(CreatePostRequest request) {
-
-        boolean emptyContent =
-                request.getContent() == null ||
-                        request.getContent().isBlank();
-
-        boolean emptyFiles =
-                request.getFiles() == null ||
-                        request.getFiles().isEmpty();
-
-        if (emptyContent && emptyFiles) {
-            throw new IllegalArgumentException(
-                    "Post must contain content or at least one media."
-            );
-        }
-
-        Long userId = UserContextHolder.getUserId();
-
-        User user = userServiceDomain.getByUserId(userId);
-
-        Post post = Post.builder()
-                .user(user)
-                .content(request.getContent())
-                .visibility(request.getVisibility())
-                .build();
-
-        postRepository.save(post);
-
-        savePostMedia(post, request.getFiles());
-
-        log.info(
-                "POST_EVENT | action=CREATE_POST | userId={} | postId={}",
-                userId,
-                post.getId()
-        );
     }
 
     @Override
@@ -246,6 +210,116 @@ public class PostServiceImpl implements PostService {
         );
     }
 
+    @Override
+    @Transactional
+    public void createPost(CreatePostRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userServiceDomain.getByUserId(userId);
+
+        Post post = Post.builder()
+                .user(user)
+                .content(request.getContent())
+                .visibility(request.getVisibility())
+                .build();
+
+        postRepository.save(post);
+
+        savePostMedia(post, request.getFiles());
+
+        savePostHashtags(post, request.getContent());
+
+        log.info(
+                "POST_EVENT | action=CREATE_POST | userId={} | postId={}",
+                userId,
+                post.getId()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void updatePostContent(Long postId, UpdatePostContent request) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() ->
+                        new PostNotFoundException(
+                                "Post not found with id: " + postId
+                        )
+                );
+
+        postServiceDomain.checkOwner(post);
+
+        boolean emptyContent =
+                request.getContent() == null ||
+                        request.getContent().isBlank();
+
+        long mediaCount = postMediaRepository.countByPostId(postId);
+
+        if (emptyContent && mediaCount == 0) {
+            throw new IllegalArgumentException(
+                    "Post must contain content or media."
+            );
+        }
+
+        post.setContent(request.getContent());
+        post.setVisibility(request.getVisibility());
+
+        updatePostHashtags(post, request.getContent());
+    }
+
+
+    @Override
+    @Transactional
+    public void deleteByPostId(Long postId) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() ->
+                        new PostNotFoundException(
+                                "Post not found with id: " + postId
+                        )
+                );
+
+        postServiceDomain.checkOwner(post);
+
+        postMediaRepository.findByPostId(postId)
+                .forEach(media ->
+                        cloudinaryService.deleteImage(media.getPublicId()));
+
+        postMediaRepository.deleteByPostId(postId);
+
+        deleteUnusedHashtags(postId);
+
+        postRepository.delete(post);
+
+        log.info(
+                "POST_EVENT | action=DELETE_POST | userId={} | postId={}",
+                userId,
+                postId
+        );
+    }
+
+    @Override
+    @Transactional
+    public void updatePostMedia(Long postId, UpdatePostMedia request) {
+
+        if (request.getFiles() == null || request.getFiles().isEmpty()) {
+            throw new IllegalArgumentException("No media uploaded.");
+        }
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() ->
+                        new PostNotFoundException(
+                                "Post not found with id: " + postId
+                        )
+                );
+
+        postServiceDomain.checkOwner(post);
+
+        savePostMedia(post, request.getFiles());
+    }
 
     @Override
     @Transactional
@@ -277,75 +351,82 @@ public class PostServiceImpl implements PostService {
         postMediaRepository.delete(media);
     }
 
-    @Override
-    @Transactional
-    public void updatePostContent(Long postId, UpdatePostContent request) {
+    private void savePostHashtags(Post post, String content) {
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() ->
-                        new PostNotFoundException(
-                                "Post not found with id: " + postId
-                        )
-                );
+        Set<String> hashtagNames = extractHashtags(content);
 
-        postServiceDomain.checkOwner(post);
+        if (hashtagNames.isEmpty()) {
+            return;
+        }
 
-        boolean emptyContent =
-                request.getContent() == null ||
-                        request.getContent().isBlank();
+        List<PostHashtag> relations = new ArrayList<>();
 
-        long mediaCount =
-                postMediaRepository.countByPostId(postId);
+        for (String name : hashtagNames) {
 
-        if (emptyContent && mediaCount == 0) {
-            throw new IllegalArgumentException(
-                    "Post must contain content or media."
+            name = name.trim().toLowerCase();
+
+            String finalName = name;
+
+            Hashtag hashtag = hashtagRepository.findByName(name)
+                    .orElseGet(() ->
+                            hashtagRepository.save(
+                                    Hashtag.builder()
+                                            .name(finalName)
+                                            .build()
+                            ));
+
+            relations.add(
+                    PostHashtag.builder()
+                            .post(post)
+                            .hashtag(hashtag)
+                            .build()
             );
         }
 
-        post.setContent(request.getContent());
-        post.setVisibility(request.getVisibility());
+        postHashtagRepository.saveAll(relations);
     }
 
-    @Override
-    @Transactional
-    public void updatePostMedia(Long postId, UpdatePostMedia request) {
+    private void updatePostHashtags(Post post, String content) {
 
-        if (request.getFiles() == null || request.getFiles().isEmpty()) {
-            throw new IllegalArgumentException("No media uploaded.");
+        deleteUnusedHashtags(post.getId());
+
+        savePostHashtags(post, content);
+    }
+
+    private void deleteUnusedHashtags(Long postId) {
+
+        List<PostHashtag> relations =
+                postHashtagRepository.findByPost_Id(postId);
+
+        for (PostHashtag relation : relations) {
+
+            Hashtag hashtag = relation.getHashtag();
+
+            postHashtagRepository.delete(relation);
+
+            postHashtagRepository.delete(relation);
+            hashtagRepository.deleteIfUnused(hashtag.getHashtagId());
+        }
+    }
+
+    private Set<String> extractHashtags(String content) {
+
+        if (content == null || content.isBlank()) {
+            return Collections.emptySet();
         }
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() ->
-                        new PostNotFoundException(
-                                "Post not found with id: " + postId
-                        )
-                );
+        Pattern pattern =
+                Pattern.compile("#([\\p{L}\\p{N}_]+)");
 
-        postServiceDomain.checkOwner(post);
+        Matcher matcher = pattern.matcher(content);
 
-        savePostMedia(post, request.getFiles());
-    }
+        Set<String> hashtags = new HashSet<>();
 
+        while (matcher.find()) {
+            hashtags.add(matcher.group(1));
+        }
 
-    @Transactional
-    @Override
-    public void deleteByPostId(Long postId) {
-        Long userId = UserContextHolder.getUserId();
-
-        Post post = postRepository.findById(postId).orElseThrow(
-                () -> new PostNotFoundException("Post not found with postId: " + postId)
-        );
-        postServiceDomain.checkOwner(post);
-        List<PostMedia>  postMediaList = postMediaRepository.findByPostId(postId);
-
-        postMediaList.forEach(media ->
-                cloudinaryService.deleteImage(media.getPublicId()));
-
-        postRepository.delete(post);
-
-        log.info("POST_EVENT | action=DELETE_POST | UserId={} | postId={} | status=SUCCESS",
-                userId, postId);
+        return hashtags;
     }
 
     private void savePostMedia(Post post, List<MultipartFile> files) {
@@ -356,7 +437,8 @@ public class PostServiceImpl implements PostService {
 
         files.forEach(cloudinaryService::validateImage);
 
-        List<PostMedia> mediaList = new ArrayList<>();
+        List<PostMedia> mediaList =
+                new ArrayList<>(files.size());
 
         for (MultipartFile file : files) {
 

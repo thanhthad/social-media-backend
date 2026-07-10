@@ -19,7 +19,8 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("""
-SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+
+            SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -93,25 +94,24 @@ ORDER BY p.createdAt DESC
     )
     FROM Post p
     JOIN p.user u
-    LEFT JOIN Profile pr
-        ON pr.user.id = u.id
-    WHERE
-    (
+    LEFT JOIN Profile pr ON pr.user.id = u.id
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM Block b
+        WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
+           OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
+    )
+    AND (
         u.id = :viewerId
-    )
-    OR
-    (
-        p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
-    )
-    OR
-    (
-        p.visibility = media.social.modults.post.enums.Visibility.FOLLOWERS
-        AND EXISTS (
-            SELECT 1
-            FROM Follow f
-            WHERE
-                f.follower.id = :viewerId
-                AND f.following.id = u.id
+        OR p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
+        OR (
+            p.visibility = media.social.modults.post.enums.Visibility.FOLLOWERS
+            AND EXISTS (
+                SELECT 1
+                FROM Follow f
+                WHERE f.follower.id = :viewerId
+                  AND f.following.id = u.id
+            )
         )
     )
     ORDER BY p.createdAt DESC
@@ -120,4 +120,5 @@ ORDER BY p.createdAt DESC
             @Param("viewerId") Long viewerId,
             Pageable pageable
     );
+
 }

@@ -16,6 +16,8 @@ public interface PostMediaRepository extends JpaRepository<PostMedia, Long> {
 
     List<PostMedia> findByPostId(Long postId);
 
+    void deleteByPostId(Long postId);
+
     long countByPostId(Long postId);
 
     @Query("""

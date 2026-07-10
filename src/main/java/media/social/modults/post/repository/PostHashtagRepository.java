@@ -11,24 +11,15 @@ import java.util.List;
 
 public interface PostHashtagRepository
         extends JpaRepository<PostHashtag, Long> {
-
-    /**
-     * Kiểm tra một bài viết đã gắn hashtag hay chưa.
-     */
     boolean existsByPost_IdAndHashtag_HashtagId(
             Long postId,
             Long hashtagId
     );
 
-    /**
-     * Lấy tất cả hashtag của một bài viết.
-     */
+    long countByHashtag_HashtagId(Long hashtagId);
+
     List<PostHashtag> findByPost_Id(Long postId);
 
-    /**
-     * Xóa toàn bộ hashtag của bài viết.
-     * Dùng khi cập nhật bài viết.
-     */
     void deleteByPost_Id(Long postId);
 
     @Query("""
