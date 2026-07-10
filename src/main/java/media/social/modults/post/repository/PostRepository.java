@@ -1,6 +1,5 @@
 package media.social.modults.post.repository;
 
-import media.social.modults.post.dto.response.post.PostDetailFlatResponse;
 import media.social.modults.post.dto.response.post.PostFlatResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.enums.Visibility;
@@ -74,7 +73,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.post.PostDetailFlatResponse(
+    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -95,7 +94,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
               AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
         )
     """)
-    Optional<PostDetailFlatResponse> findPostDetailById(
+    Optional<PostFlatResponse> findPostDetailById(
             @Param("postId") Long postId
     );
 

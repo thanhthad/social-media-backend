@@ -2,8 +2,6 @@ package media.social.modults.post.repository;
 
 import media.social.modults.post.dto.response.hashtag.TrendingHashtagResponse;
 import media.social.modults.post.entity.PostHashtag;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -23,7 +21,7 @@ public interface PostHashtagRepository
     void deleteByPost_Id(Long postId);
 
     @Query("""
-        SELECT new media.social.modults.post.dto.response.TrendingHashtagResponse(
+        SELECT new media.social.modults.post.dto.response.hashtag.TrendingHashtagResponse(
             h.hashtagId,
             h.name,
             COUNT(ph)

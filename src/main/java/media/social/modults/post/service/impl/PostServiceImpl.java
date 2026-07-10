@@ -2,7 +2,6 @@ package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import media.social.modults.post.dto.response.post.PostDetailFlatResponse;
 import media.social.modults.post.entity.Hashtag;
 import media.social.modults.post.entity.PostHashtag;
 import media.social.modults.post.enums.MediaType;
@@ -21,7 +20,6 @@ import media.social.modults.post.repository.HashtagRepository;
 import media.social.modults.post.repository.PostHashtagRepository;
 import media.social.modults.post.repository.PostMediaRepository;
 import media.social.modults.post.service.PostServiceDomain;
-import media.social.modults.user.entity.Profile;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.post.repository.PostRepository;
@@ -112,7 +110,7 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public PostResponse getPostById(Long postId) {
 
-        PostDetailFlatResponse flat = postRepository.findPostDetailById(postId)
+        PostFlatResponse flat = postRepository.findPostDetailById(postId)
                 .orElseThrow(() ->
                         new PostNotFoundException("Post not found with id: " + postId)
                 );

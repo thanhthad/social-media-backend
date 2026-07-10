@@ -15,7 +15,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * ROOT COMMENTS
      */
     @Query("""
-        SELECT new media.social.modults.post.dto.response.CommentResponse(
+        SELECT new media.social.modults.post.dto.response.comment.CommentResponse(
             c.id,
             u.id,
             u.username,
@@ -39,7 +39,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * REPLIES
      */
     @Query("""
-        SELECT new media.social.modults.post.dto.response.CommentResponse(
+        SELECT new media.social.modults.post.dto.response.comment.CommentResponse(
             c.id,
             u.id,
             u.username,

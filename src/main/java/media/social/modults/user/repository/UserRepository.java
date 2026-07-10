@@ -31,7 +31,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     @Query("""
-    SELECT new media.social.modults.user.dto.response.pub.UserSearchResponse(
+    SELECT new media.social.modults.user.dto.response.user.UserSearchResponse(
         u.id,
         u.username,
         p.avatarUrl,
