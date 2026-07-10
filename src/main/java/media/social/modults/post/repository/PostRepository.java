@@ -28,7 +28,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         )
     FROM Post p
     JOIN p.user u
-    LEFT JOIN Profile pr ON pr.user.id = u.id
+    LEFT JOIN u.profile pr
     WHERE u.id = :userId
         AND NOT EXISTS (
             SELECT 1
@@ -55,7 +55,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     )
     FROM Post p
     JOIN p.user u
-    LEFT JOIN Profile pr ON pr.user.id = u.id
+    LEFT JOIN u.profile pr
     WHERE u.id = :userId
     AND p.visibility IN :visibilities
     AND NOT EXISTS (
@@ -84,8 +84,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     )
     FROM Post p
     JOIN p.user u
-    LEFT JOIN Profile pr
-    ON pr.user.id = u.id
+    LEFT JOIN u.profile pr
     WHERE p.id = :postId
     AND NOT EXISTS (
             SELECT 1
@@ -111,7 +110,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     )
     FROM Post p
     JOIN p.user u
-    LEFT JOIN Profile pr ON pr.user.id = u.id
+    LEFT JOIN u.profile pr
     WHERE NOT EXISTS (
         SELECT 1
         FROM Block b
@@ -156,7 +155,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     )
     FROM Post p
     JOIN p.user u
-    LEFT JOIN Profile pr ON pr.user.id = u.id
+    LEFT JOIN u.profile pr
     WHERE NOT EXISTS(
         SELECT 1
         FROM Block b
@@ -204,7 +203,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     FROM PostHashtag ph
     JOIN ph.post p
     JOIN p.user u
-    LEFT JOIN Profile pr ON pr.user.id=u.id
+    LEFT JOIN u.profile pr
     WHERE LOWER(ph.hashtag.name)=LOWER(:name)
     AND NOT EXISTS(
         SELECT 1

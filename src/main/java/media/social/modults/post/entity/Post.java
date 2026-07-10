@@ -41,7 +41,7 @@ public class Post {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<PostMedia> media = new ArrayList<>();
+    private List<PostMedia> medias = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(

@@ -29,7 +29,14 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
 
         Role adminRole = roleRepository.findByName(RoleName.ADMIN.name())
-                .orElseThrow();
+                .orElseGet(() -> {
+
+                    Role role = Role.builder()
+                            .name(RoleName.ADMIN.name())
+                            .build();
+
+                    return roleRepository.save(role);
+                });
 
         if (userRepository.findByUsername("admin").isEmpty()
                 && !userRepository.existsByEmail("admin@gmail.com"))

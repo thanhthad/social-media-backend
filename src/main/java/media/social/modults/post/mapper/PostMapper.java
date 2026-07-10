@@ -10,12 +10,5 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface PostMapper {
 
-    default List<String> mapImages(Post post) {
-        if (post.getMedia() == null) return new ArrayList<>();
 
-        return post.getMedia()
-                .stream()
-                .map(PostMedia::getUrl)
-                .toList();
-    }
 }
