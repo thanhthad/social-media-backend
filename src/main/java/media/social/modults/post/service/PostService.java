@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 
 public interface PostService {
+    Page<PostResponse> getFeed(Pageable pageable);
 
     void createPost(CreatePostRequest request);
 

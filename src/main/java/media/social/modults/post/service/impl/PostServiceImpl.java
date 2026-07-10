@@ -55,6 +55,18 @@ public class PostServiceImpl implements PostService {
     private final FollowService followService;
     private final PostServiceDomain postServiceDomain;
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getFeed(Pageable pageable) {
+
+        Long viewerId = UserContextHolder.getUserId();
+
+        Page<PostFlatResponse> flatPage =
+                postRepository.findFeed(viewerId, pageable);
+
+        return buildPostResponse(flatPage, pageable);
+    }
+
 
     @Override
     @Transactional

@@ -21,6 +21,17 @@ public class PostController {
 
     private final PostService postService;
 
+    @GetMapping("/feed")
+    @Operation(summary = "Get news feed")
+    public ResponseEntity<?> getFeed(Pageable pageable) {
+
+        return ResponseData.success(
+                postService.getFeed(pageable),
+                "Get feed successfully",
+                HttpStatus.OK
+        );
+    }
+
     // ================= CREATE POST =================
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create new post with media")

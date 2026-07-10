@@ -81,4 +81,43 @@ ORDER BY p.createdAt DESC
     Optional<PostDetailFlatResponse> findPostDetailById(Long postId);
 
 
+    @Query("""
+    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+        p.id,
+        p.content,
+        p.visibility,
+        p.createdAt,
+        u.id,
+        u.username,
+        pr.avatarUrl
+    )
+    FROM Post p
+    JOIN p.user u
+    LEFT JOIN Profile pr
+        ON pr.user.id = u.id
+    WHERE
+    (
+        u.id = :viewerId
+    )
+    OR
+    (
+        p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
+    )
+    OR
+    (
+        p.visibility = media.social.modults.post.enums.Visibility.FOLLOWERS
+        AND EXISTS (
+            SELECT 1
+            FROM Follow f
+            WHERE
+                f.follower.id = :viewerId
+                AND f.following.id = u.id
+        )
+    )
+    ORDER BY p.createdAt DESC
+    """)
+    Page<PostFlatResponse> findFeed(
+            @Param("viewerId") Long viewerId,
+            Pageable pageable
+    );
 }

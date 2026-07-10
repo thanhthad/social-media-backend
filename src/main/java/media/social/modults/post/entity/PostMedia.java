@@ -27,7 +27,11 @@ public class PostMedia {
     @Column(nullable = false,unique = true)
     private String url;
 
-    @Column(name = "public_id",nullable = false)
+    @Column(
+            name = "public_id",
+            nullable = false,
+            unique = true
+    )
     private String publicId;
 
     @Enumerated(EnumType.STRING)
