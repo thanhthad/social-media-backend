@@ -19,22 +19,21 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("""
-
-            SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl
-    )
-FROM Post p
-JOIN p.user u
-LEFT JOIN Profile pr ON pr.user.id = u.id
-WHERE u.id = :userId
-ORDER BY p.createdAt DESC
-""")
+                SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+            p.id,
+            p.content,
+            p.visibility,
+            p.createdAt,
+            u.id,
+            u.username,
+            pr.avatarUrl
+        )
+    FROM Post p
+    JOIN p.user u
+    LEFT JOIN Profile pr ON pr.user.id = u.id
+    WHERE u.id = :userId
+    ORDER BY p.createdAt DESC
+    """)
     Page<PostFlatResponse> findAllPostMe(
             @Param("userId") Long userId,
             Pageable pageable
@@ -118,6 +117,89 @@ ORDER BY p.createdAt DESC
     """)
     Page<PostFlatResponse> findFeed(
             @Param("viewerId") Long viewerId,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+        p.id,
+        p.content,
+        p.visibility,
+        p.createdAt,
+        u.id,
+        u.username,
+        pr.avatarUrl
+    )
+    FROM Post p
+    JOIN p.user u
+    LEFT JOIN Profile pr ON pr.user.id = u.id
+    WHERE NOT EXISTS(
+        SELECT 1
+        FROM Block b
+        WHERE (b.blocker.id=:viewerId AND b.blocked.id=u.id)
+           OR (b.blocker.id=u.id AND b.blocked.id=:viewerId)
+    )
+    AND LOWER(p.content) LIKE LOWER(CONCAT('%',:keyword,'%'))
+    AND (
+            u.id=:viewerId
+            OR p.visibility=media.social.modults.post.enums.Visibility.PUBLIC
+            OR (
+                p.visibility=media.social.modults.post.enums.Visibility.FOLLOWERS
+                AND EXISTS(
+                    SELECT 1
+                    FROM Follow f
+                    WHERE f.follower.id=:viewerId
+                    AND f.following.id=u.id
+                )
+            )
+    )
+    ORDER BY p.createdAt DESC
+    """)
+    Page<PostFlatResponse> searchByContent(
+            @Param("viewerId") Long viewerId,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT DISTINCT new media.social.modults.post.dto.response.post.PostFlatResponse(
+        p.id,
+        p.content,
+        p.visibility,
+        p.createdAt,
+        u.id,
+        u.username,
+        pr.avatarUrl
+    )
+    FROM PostHashtag ph
+    JOIN ph.post p
+    JOIN p.user u
+    LEFT JOIN Profile pr ON pr.user.id=u.id
+    WHERE LOWER(ph.hashtag.name)=LOWER(:name)
+    AND NOT EXISTS(
+        SELECT 1
+        FROM Block b
+        WHERE (b.blocker.id=:viewerId AND b.blocked.id=u.id)
+           OR (b.blocker.id=u.id AND b.blocked.id=:viewerId)
+    )
+    AND (
+            u.id=:viewerId
+            OR p.visibility=media.social.modults.post.enums.Visibility.PUBLIC
+            OR (
+                p.visibility=media.social.modults.post.enums.Visibility.FOLLOWERS
+                AND EXISTS(
+                    SELECT 1
+                    FROM Follow f
+                    WHERE f.follower.id=:viewerId
+                    AND f.following.id=u.id
+                )
+            )
+    )
+    ORDER BY p.createdAt DESC
+    """)
+    Page<PostFlatResponse> searchByHashtag(
+            @Param("viewerId") Long viewerId,
+            @Param("name") String name,
             Pageable pageable
     );
 

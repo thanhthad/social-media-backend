@@ -28,6 +28,16 @@ public interface PostService {
 
     void deleteByPostId(Long id);
 
+    Page<PostResponse> searchByContent(
+            String keyword,
+            Pageable pageable
+    );
+
+    Page<PostResponse> searchByHashtag(
+            String hashtag,
+            Pageable pageable
+    );
+
 
 
 }

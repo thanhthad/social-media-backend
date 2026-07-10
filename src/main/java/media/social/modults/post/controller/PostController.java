@@ -32,6 +32,34 @@ public class PostController {
         );
     }
 
+    @GetMapping("/search")
+    @Operation(summary = "Search posts by content")
+    public ResponseEntity<?> searchByContent(
+            @RequestParam String keyword,
+            Pageable pageable
+    ) {
+
+        return ResponseData.success(
+                postService.searchByContent(keyword, pageable),
+                "Search successfully",
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/search/hashtag")
+    @Operation(summary = "Search posts by hashtag")
+    public ResponseEntity<?> searchByHashtag(
+            @RequestParam String name,
+            Pageable pageable
+    ) {
+
+        return ResponseData.success(
+                postService.searchByHashtag(name, pageable),
+                "Search hashtag successfully",
+                HttpStatus.OK
+        );
+    }
+
     // ================= CREATE POST =================
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create new post with media")

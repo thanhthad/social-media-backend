@@ -149,6 +149,44 @@ public class PostServiceImpl implements PostService {
         return buildPostResponse(flatPage,pageable);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchByContent(
+            String keyword,
+            Pageable pageable
+    ) {
+
+        Long viewerId = UserContextHolder.getUserId();
+
+        Page<PostFlatResponse> page =
+                postRepository.searchByContent(
+                        viewerId,
+                        keyword.trim(),
+                        pageable
+                );
+
+        return buildPostResponse(page, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchByHashtag(
+            String hashtag,
+            Pageable pageable
+    ) {
+
+        Long viewerId = UserContextHolder.getUserId();
+
+        Page<PostFlatResponse> page =
+                postRepository.searchByHashtag(
+                        viewerId,
+                        hashtag.trim().toLowerCase(),
+                        pageable
+                );
+
+        return buildPostResponse(page, pageable);
+    }
+
     private Page<PostResponse> buildPostResponse(
             Page<PostFlatResponse> flatPage,
             Pageable pageable
