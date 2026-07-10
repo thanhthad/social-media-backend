@@ -11,7 +11,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +31,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN Profile pr ON pr.user.id = u.id
     WHERE u.id = :userId
+        AND NOT EXISTS (
+            SELECT 1
+            FROM Report r
+            WHERE r.post.id = p.id
+              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+        )
     ORDER BY p.createdAt DESC
     """)
     Page<PostFlatResponse> findAllPostMe(
@@ -54,6 +59,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     LEFT JOIN Profile pr ON pr.user.id = u.id
     WHERE u.id = :userId
     AND p.visibility IN :visibilities
+    AND NOT EXISTS (
+        SELECT 1
+        FROM Report r
+        WHERE r.post.id = p.id
+          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+            )
     ORDER BY p.createdAt DESC
     """)
     Page<PostFlatResponse> findAllVisiblePost(
@@ -77,8 +88,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     LEFT JOIN Profile pr
     ON pr.user.id = u.id
     WHERE p.id = :postId
+    AND NOT EXISTS (
+            SELECT 1
+            FROM Report r
+            WHERE r.post.id = p.id
+              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+        )
     """)
-    Optional<PostDetailFlatResponse> findPostDetailById(Long postId);
+    Optional<PostDetailFlatResponse> findPostDetailById(
+            @Param("postId") Long postId
+    );
 
 
     @Query("""
@@ -100,6 +119,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
            OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
     )
+   AND NOT EXISTS (
+            SELECT 1
+            FROM Report r
+            WHERE r.post.id = p.id
+              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+        )
     AND (
         u.id = :viewerId
         OR p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
@@ -139,6 +164,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id=:viewerId AND b.blocked.id=u.id)
            OR (b.blocker.id=u.id AND b.blocked.id=:viewerId)
     )
+    AND NOT EXISTS (
+            SELECT 1
+            FROM Report r
+            WHERE r.post.id = p.id
+              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+        )
     AND LOWER(p.content) LIKE LOWER(CONCAT('%',:keyword,'%'))
     AND (
             u.id=:viewerId
@@ -181,6 +212,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         FROM Block b
         WHERE (b.blocker.id=:viewerId AND b.blocked.id=u.id)
            OR (b.blocker.id=u.id AND b.blocked.id=:viewerId)
+    )
+    AND NOT EXISTS (
+            SELECT 1
+            FROM Report r
+            WHERE r.post.id = p.id
+              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
     )
     AND (
             u.id=:viewerId
