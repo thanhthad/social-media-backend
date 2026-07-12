@@ -1,11 +1,15 @@
 package media.social.modults.user.dto.response.user;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import media.social.modults.user.Enum.Status;
 
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserProfileResponse {
 
     private Long id;

@@ -10,11 +10,20 @@ import media.social.modults.post.exception.comment.CommentAlreadyExistsException
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.exception.post.InvalidDateRangeException;
 import media.social.modults.post.exception.post.PostNotFoundException;
+import media.social.modults.post.exception.reaction.ReactionNotFoundException;
+import media.social.modults.post.exception.report.ReportAlreadyExistsException;
+import media.social.modults.post.exception.report.ReportAlreadyReviewedException;
+import media.social.modults.post.exception.report.ReportNotFoundException;
+import media.social.modults.user.exception.block.BlockAlreadyExistsException;
+import media.social.modults.user.exception.block.BlockNotFoundException;
+import media.social.modults.user.exception.block.UserBlockedException;
 import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
 import media.social.modults.user.exception.follow.FollowNotFoundException;
 import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
+import media.social.modults.user.exception.role.RoleNotFoundException;
+import media.social.modults.user.exception.user.UnauthorizedException;
 import media.social.modults.user.exception.user.UserAlreadyExistsException;
 import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.security.context.UserContextHolder;
@@ -36,7 +45,29 @@ public class GlobalExceptionHandler {
         return UserContextHolder.getUserId();
     }
 
-    // ================= USER =================
+    //==================BLOCK==================
+    @ExceptionHandler(BlockNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBlockNotFound(BlockNotFoundException ex) {
+        return ResponseData.fail("Block not found", HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BlockAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBlockAlreadyExists(BlockAlreadyExistsException ex) {
+        return ResponseData.fail("Block already exists", HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(UserBlockedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserBlocked(UserBlockedException ex) {
+        return ResponseData.fail("User is blocked", HttpStatus.FORBIDDEN);
+    }
+
+    //===================ROLE==================
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleRoleNotFound(RoleNotFoundException ex) {
+        return ResponseData.fail("Role not found", HttpStatus.NOT_FOUND);
+    }
+
+    //====================USER==================
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserNotFound(UserNotFoundException ex) {
         return ResponseData.fail("User not found", HttpStatus.NOT_FOUND);
@@ -47,7 +78,34 @@ public class GlobalExceptionHandler {
         return ResponseData.fail("User already exists", HttpStatus.CONFLICT);
     }
 
-    // ================= POST =================
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorized(UnauthorizedException ex) {
+        return ResponseData.fail("Unauthorized", HttpStatus.UNAUTHORIZED);
+    }
+
+    //====================REPORT==================
+    @ExceptionHandler(ReportNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReportNotFound(ReportNotFoundException ex) {
+        return ResponseData.fail("Report not found", HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ReportAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReportAlreadyExists(ReportAlreadyExistsException ex) {
+        return ResponseData.fail("Report already exists", HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(ReportAlreadyReviewedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReportAlreadyReviewed(ReportAlreadyReviewedException ex) {
+        return ResponseData.fail("Report already reviewed", HttpStatus.CONFLICT);
+    }
+
+    //====================REACTION==================
+    @ExceptionHandler(ReactionNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReactionNotFound(ReactionNotFoundException ex) {
+        return ResponseData.fail("Reaction not found", HttpStatus.NOT_FOUND);
+    }
+
+    //====================POST==================
     @ExceptionHandler(PostNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handlePostNotFound(PostNotFoundException ex) {
         return ResponseData.fail("Post not found", HttpStatus.NOT_FOUND);
@@ -58,8 +116,7 @@ public class GlobalExceptionHandler {
         return ResponseData.fail("Invalid date range", HttpStatus.BAD_REQUEST);
     }
 
-
-    // ================= FOLLOW =================
+    //====================FOLLOW==================
     @ExceptionHandler(FollowAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleFollowAlreadyExists(FollowAlreadyExistsException ex) {
         return ResponseData.fail("Already following this user", HttpStatus.CONFLICT);
@@ -70,15 +127,15 @@ public class GlobalExceptionHandler {
         return ResponseData.fail("Follow relationship not found", HttpStatus.NOT_FOUND);
     }
 
-    // ================= COMMENT =================
+    //====================COMMENT==================
     @ExceptionHandler(CommentAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleCommentAlreadyExists(CommentAlreadyExistsException ex) {
-        return ResponseData.fail("Already comment this user", HttpStatus.CONFLICT);
+        return ResponseData.fail("Comment already exists", HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(CommentNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleCommentNotFound(CommentNotFoundException ex) {
-        return ResponseData.fail("comment  not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail("Comment not found", HttpStatus.NOT_FOUND);
     }
 
     // ================= REFRESH TOKEN =================
