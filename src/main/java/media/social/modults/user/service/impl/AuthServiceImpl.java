@@ -38,7 +38,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserRoleRepository userRoleRepository;
     private final RoleRepository roleRepository;
 
-
     @Override
     public AuthResponse login(LoginRequest request) {
 
@@ -89,7 +88,7 @@ public class AuthServiceImpl implements AuthService {
         User saved = userRepository.save(user);
 
         Profile profile = Profile.builder()
-                .user(user)
+                .user(saved)
                 .createdAt(LocalDateTime.now())
                 .build();
         profileRepository.save(profile);
@@ -101,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
         UserRole userRole =UserRole.builder()
                 .id(new UserRoleId(user.getId(),role.getId()))
                 .role(role)
-                .user(user)
+                .user(saved)
                 .assignedAt(LocalDateTime.now())
                 .assignedBy(null)
                 .build();
