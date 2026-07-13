@@ -28,6 +28,8 @@ import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenExcep
 import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
 import media.social.modults.user.exception.role.RoleNotFoundException;
+import media.social.modults.user.exception.role.UserRoleAlreadyExistsException;
+import media.social.modults.user.exception.role.UserRoleNotFoundException;
 import media.social.modults.user.exception.user.UnauthorizedException;
 import media.social.modults.user.exception.user.UserAlreadyExistsException;
 import media.social.modults.user.exception.user.UserNotFoundException;
@@ -81,6 +83,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RoleNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleRoleNotFound(RoleNotFoundException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserRoleNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserRoleNotFound(UserRoleNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserRoleAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserRoleAlreadyExists(UserRoleAlreadyExistsException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     //====================USER==================

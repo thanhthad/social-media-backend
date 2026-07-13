@@ -8,6 +8,8 @@ import media.social.modults.user.entity.User;
 import media.social.modults.user.entity.UserRole;
 import media.social.modults.user.entity.UserRoleId;
 import media.social.modults.user.exception.role.RoleNotFoundException;
+import media.social.modults.user.exception.role.UserRoleAlreadyExistsException;
+import media.social.modults.user.exception.role.UserRoleNotFoundException;
 import media.social.modults.user.repository.RoleRepository;
 import media.social.modults.user.repository.UserRoleRepository;
 import media.social.modults.user.security.context.UserContextHolder;
@@ -36,7 +38,7 @@ public class UserRoleServiceImpl implements UserRoleService {
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
         if (userRoleRepository.existsByUser_IdAndRole_Name(userId, roleName.name())) {
-            throw new RuntimeException("User already has this role");
+            throw new UserRoleAlreadyExistsException("User already has this role");
         }
 
         Long adminId = UserContextHolder.getUserId();
@@ -59,7 +61,7 @@ public class UserRoleServiceImpl implements UserRoleService {
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
         if (!userRoleRepository.existsByUser_IdAndRole_Name(userId, roleName.name())) {
-            throw new RuntimeException("User does not have this role");
+            throw new UserRoleNotFoundException("User does not have this role");
         }
 
         userRoleRepository.deleteById(new UserRoleId(userId, role.getId()));
