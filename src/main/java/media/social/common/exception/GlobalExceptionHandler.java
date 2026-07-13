@@ -1,5 +1,6 @@
 package media.social.common.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
@@ -8,6 +9,7 @@ import media.social.modults.file.image.exception.CloudinaryUploadException;
 import media.social.modults.file.image.exception.InvalidImageException;
 import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
+import media.social.modults.post.exception.post.ForbiddenException;
 import media.social.modults.post.exception.post.InvalidDateRangeException;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.post.exception.reaction.ReactionNotFoundException;
@@ -32,6 +34,7 @@ import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.security.context.UserContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -173,8 +176,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleBadCredentials(BadCredentialsException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<ApiResponse<Object>> handleBadCredentials(
+            BadCredentialsException ex
+    ) {
+        return ResponseData.fail(
+                "Invalid email or password",
+                HttpStatus.UNAUTHORIZED
+        );
     }
 
     // ================= CLOUDINARY =================
@@ -194,7 +202,29 @@ public class GlobalExceptionHandler {
 
         return ResponseData.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    // ================= JSON =================
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Object>> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex
+    ) {
 
+        if (ex.getCause() instanceof InvalidFormatException invalidFormatException) {
+
+            if (invalidFormatException.getTargetType() != null
+                    && invalidFormatException.getTargetType().isEnum()) {
+
+                return ResponseData.fail(
+                        "Invalid enum value",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+        }
+
+        return ResponseData.fail(
+                "Invalid request body",
+                HttpStatus.BAD_REQUEST
+        );
+    }
     // ================= VALIDATION =================
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse<Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
@@ -230,7 +260,11 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
+    //===================FORBIDDEN=====================================
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleForbidden(ForbiddenException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
     // ================= FALLBACK (ONLY IMPORTANT LOG) =================
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {

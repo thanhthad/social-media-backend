@@ -3,6 +3,8 @@ package media.social.modults.user.repository;
 import media.social.modults.user.dto.response.block.ListUserBlockedResponse;
 import media.social.modults.user.entity.Block;
 import media.social.modults.user.entity.BlockId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -35,5 +37,5 @@ public interface BlockRepository extends JpaRepository<Block, BlockId> {
     WHERE b.blocker.id = :userId
     ORDER BY b.createdAt DESC
 """)
-    List<ListUserBlockedResponse> findBlockedUsers(@Param("userId") Long userId);
+    Page<ListUserBlockedResponse> findBlockedUsers(@Param("userId") Long userId, Pageable pageable);
 }

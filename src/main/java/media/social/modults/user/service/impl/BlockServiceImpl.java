@@ -13,6 +13,8 @@ import media.social.modults.user.repository.BlockRepository;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.BlockService;
 import media.social.modults.user.service.domain.UserServiceDomain;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,7 +72,7 @@ public class BlockServiceImpl implements BlockService {
     }
 
     @Override
-    public BlockCheckResponse checkBlocked(Long targetUserId) {
+    public boolean checkBlocked(Long targetUserId) {
 
         Long currentUserId = UserContextHolder.getUserId();
 
@@ -78,16 +80,14 @@ public class BlockServiceImpl implements BlockService {
                 .findBlock(currentUserId, targetUserId)
                 .isPresent();
 
-        return BlockCheckResponse.builder()
-                .blocked(blocked)
-                .build();
+        return blocked;
     }
 
     @Override
-    public List<ListUserBlockedResponse> getBlockedUsers() {
+    public Page<ListUserBlockedResponse> getBlockedUsers(Pageable pageable) {
 
         Long currentUserId = UserContextHolder.getUserId();
 
-        return blockRepository.findBlockedUsers(currentUserId);
+        return blockRepository.findBlockedUsers(currentUserId,pageable);
     }
 }

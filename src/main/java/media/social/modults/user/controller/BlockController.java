@@ -9,6 +9,8 @@ import media.social.modults.user.dto.request.block.BlockRequest;
 import media.social.modults.user.dto.response.block.BlockCheckResponse;
 import media.social.modults.user.dto.response.block.ListUserBlockedResponse;
 import media.social.modults.user.service.BlockService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,11 +61,8 @@ public class BlockController {
             @PathVariable Long userId
     ) {
 
-        BlockCheckResponse response =
-                blockService.checkBlocked(userId);
-
         return ResponseData.success(
-                response,
+                blockService.checkBlocked(userId),
                 "Check block status successfully",
                 HttpStatus.OK
         );
@@ -71,10 +70,12 @@ public class BlockController {
 
     @GetMapping("/me")
     @Operation(summary = "Get blocked users of current user")
-    public ResponseEntity<?> getBlockedUsers() {
+    public ResponseEntity<?> getBlockedUsers(
+            Pageable pageable
+    ) {
 
-        List<ListUserBlockedResponse> response =
-                blockService.getBlockedUsers();
+        Page<ListUserBlockedResponse> response =
+                blockService.getBlockedUsers(pageable);
 
         return ResponseData.success(
                 response,

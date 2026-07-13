@@ -41,39 +41,32 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
 
-        try {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
 
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
-            CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        String accessToken = jwtUtil.generateAccessToken(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAuthorities()
+        );
 
-            String accessToken = jwtUtil.generateAccessToken(
-                    user.getId(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getAuthorities()
-            );
+        String refreshToken = refreshTokenService.create(user.getId()).getToken();
 
-            String refreshToken = refreshTokenService.create(user.getId()).getToken();
+        return AuthResponse.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
 
-            return AuthResponse.builder()
-                    .userId(user.getId())
-                    .username(user.getUsername())
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .build();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
     }
-
 
     @Override
     @Transactional
