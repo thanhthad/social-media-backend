@@ -179,4 +179,18 @@ public class PostController {
                 HttpStatus.OK
         );
     }
+
+    // ================= GET USER POSTS =================
+    @GetMapping("/savedPost")
+    @Operation(summary = "Get SavedPost")
+    public ResponseEntity<?> getSavedPosts(
+            Pageable pageable
+    ) {
+
+        return ResponseData.success(
+                postService.getAllSavedPost(pageable),
+                "Get saved posts successfully",
+                HttpStatus.OK
+        );
+    }
 }

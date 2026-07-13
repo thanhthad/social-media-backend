@@ -1,3 +1,10 @@
+-- Thiết lập các bảng
+CREATE TABLE roles (
+                       role_id BIGSERIAL PRIMARY KEY,
+                       name VARCHAR(50) UNIQUE NOT NULL,
+                       description VARCHAR(255)
+);
+
 CREATE TABLE users (
                        user_id BIGSERIAL PRIMARY KEY,
                        username VARCHAR(50) UNIQUE NOT NULL,
@@ -10,22 +17,30 @@ CREATE TABLE users (
                        last_active_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE roles (
-                       role_id BIGSERIAL PRIMARY KEY,
-                       name VARCHAR(50) UNIQUE NOT NULL,
-                       description VARCHAR(255)
+CREATE TABLE user_roles (
+                            user_id BIGINT NOT NULL,
+                            role_id BIGINT NOT NULL,
+
+                            assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                            assigned_by BIGINT,
+
+                            PRIMARY KEY (user_id, role_id),
+
+                            CONSTRAINT fk_user_roles_user
+                                FOREIGN KEY (user_id)
+                                    REFERENCES users(user_id)
+                                    ON DELETE CASCADE,
+
+                            CONSTRAINT fk_user_roles_role
+                                FOREIGN KEY (role_id)
+                                    REFERENCES roles(role_id)
+                                    ON DELETE CASCADE,
+
+                            CONSTRAINT fk_user_roles_assigned_by
+                                FOREIGN KEY (assigned_by)
+                                    REFERENCES users(user_id)
 );
 
-CREATE TABLE conversations (
-                               conversation_id BIGSERIAL PRIMARY KEY,
-                               type VARCHAR(50),
-                               created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE hashtags (
-                          hashtag_id BIGSERIAL PRIMARY KEY,
-                          name VARCHAR(50) UNIQUE NOT NULL
-);
 
 CREATE TABLE profiles (
                           id BIGSERIAL PRIMARY KEY,
@@ -45,19 +60,18 @@ CREATE TABLE profiles (
 
 CREATE TABLE posts (
                        post_id BIGSERIAL PRIMARY KEY,
-                       user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
-                       content TEXT,
-                       visibility VARCHAR(20),
-                       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
 
-CREATE TABLE user_roles (
-                            user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-                            role_id BIGINT NOT NULL REFERENCES roles(role_id) ON DELETE CASCADE,
-                            assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                            assigned_by BIGINT REFERENCES users(user_id),
-                            PRIMARY KEY (user_id, role_id)
+                       user_id BIGINT NOT NULL
+                           REFERENCES users(user_id)
+                               ON DELETE CASCADE,
+
+                       content TEXT,
+
+                       visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
+
+                       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE post_media (
@@ -81,10 +95,21 @@ CREATE TABLE comments (
 
 CREATE TABLE reactions (
                            reaction_id BIGSERIAL PRIMARY KEY,
-                           user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
-                           post_id BIGINT REFERENCES posts(post_id) ON DELETE CASCADE,
-                           type VARCHAR(50),
-                           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+
+                           user_id BIGINT NOT NULL
+                               REFERENCES users(user_id)
+                                   ON DELETE CASCADE,
+
+                           post_id BIGINT NOT NULL
+                               REFERENCES posts(post_id)
+                                   ON DELETE CASCADE,
+
+                           type VARCHAR(50) NOT NULL,
+
+                           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                           CONSTRAINT unique_user_post_reaction
+                               UNIQUE(user_id, post_id)
 );
 
 CREATE TABLE follows (
@@ -101,10 +126,31 @@ CREATE TABLE saved_posts (
                              PRIMARY KEY (user_id, post_id)
 );
 
+CREATE TABLE hashtags (
+                          hashtag_id BIGSERIAL PRIMARY KEY,
+                          name VARCHAR(50) UNIQUE NOT NULL
+);
+
 CREATE TABLE post_hashtags (
-                               post_id BIGINT REFERENCES posts(post_id) ON DELETE CASCADE,
-                               hashtag_id BIGINT REFERENCES hashtags(hashtag_id) ON DELETE CASCADE,
-                               PRIMARY KEY (post_id, hashtag_id)
+                               id BIGSERIAL PRIMARY KEY,
+
+                               post_id BIGINT NOT NULL,
+                               hashtag_id BIGINT NOT NULL,
+
+                               created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                               CONSTRAINT fk_post_hashtag_post
+                                   FOREIGN KEY (post_id)
+                                       REFERENCES posts(post_id)
+                                       ON DELETE CASCADE,
+
+                               CONSTRAINT fk_post_hashtag_hashtag
+                                   FOREIGN KEY (hashtag_id)
+                                       REFERENCES hashtags(hashtag_id)
+                                       ON DELETE CASCADE,
+
+                               CONSTRAINT uk_post_hashtag
+                                   UNIQUE(post_id, hashtag_id)
 );
 
 CREATE TABLE refresh_tokens (
@@ -128,6 +174,12 @@ CREATE TABLE notifications (
                                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE conversations (
+                               conversation_id BIGSERIAL PRIMARY KEY,
+                               type VARCHAR(50),
+                               created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE conversation_members (
                                       conversation_id BIGINT REFERENCES conversations(conversation_id) ON DELETE CASCADE,
                                       user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
@@ -148,13 +200,30 @@ CREATE TABLE messages (
 
 CREATE TABLE reports (
                          report_id BIGSERIAL PRIMARY KEY,
-                         reporter_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
-                         post_id BIGINT REFERENCES posts(post_id) ON DELETE CASCADE,
-                         reason TEXT,
-                         status VARCHAR(50),
-                         reviewed_by BIGINT REFERENCES users(user_id),
+
+                         reporter_id BIGINT NOT NULL
+                             REFERENCES users(user_id)
+                                 ON DELETE CASCADE,
+
+                         post_id BIGINT NOT NULL
+                             REFERENCES posts(post_id)
+                                 ON DELETE CASCADE,
+
+                         reason TEXT NOT NULL,
+
+                         status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+
+                         reviewed_by BIGINT
+                             REFERENCES users(user_id),
+
                          reviewed_at TIMESTAMP WITH TIME ZONE,
-                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+
+                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                         CONSTRAINT uk_report_user_post
+                             UNIQUE(reporter_id, post_id)
 );
 
 CREATE TABLE blocks (

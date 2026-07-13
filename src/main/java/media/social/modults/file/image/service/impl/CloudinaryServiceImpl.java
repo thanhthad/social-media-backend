@@ -32,9 +32,6 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             "webp"
     );
 
-    // =========================================================
-    // UPLOAD IMAGE
-    // =========================================================
     @Override
     public UploadImageResponse uploadImage(
             MultipartFile file,
@@ -81,10 +78,6 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             );
         }
     }
-
-    // =========================================================
-    // DELETE IMAGE
-    // =========================================================
     @Override
     public void deleteImage(String publicId) {
 
@@ -116,9 +109,6 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         }
     }
 
-    // =========================================================
-    // VALIDATE IMAGE
-    // =========================================================
     public void validateImage(MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
@@ -146,9 +136,6 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         validateExtension(file.getOriginalFilename());
     }
 
-    // =========================================================
-    // VALIDATE FILE EXTENSION
-    // =========================================================
     private void validateExtension(String filename) {
 
         if (filename == null || !filename.contains(".")) {

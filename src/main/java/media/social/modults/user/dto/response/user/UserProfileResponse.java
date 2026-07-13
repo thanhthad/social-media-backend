@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import media.social.modults.user.Enum.Status;
 
 @Getter
 @Builder
@@ -17,8 +16,6 @@ public class UserProfileResponse {
     private String username;
 
     private String email;
-
-    private Status status;
 
     private ProfileResponse profile;
 }

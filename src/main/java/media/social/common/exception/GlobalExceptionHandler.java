@@ -19,6 +19,7 @@ import media.social.modults.user.exception.block.BlockNotFoundException;
 import media.social.modults.user.exception.block.UserBlockedException;
 import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
 import media.social.modults.user.exception.follow.FollowNotFoundException;
+import media.social.modults.user.exception.profile.ProfileNotFoundException;
 import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
 import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
@@ -48,143 +49,138 @@ public class GlobalExceptionHandler {
     //==================BLOCK==================
     @ExceptionHandler(BlockNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleBlockNotFound(BlockNotFoundException ex) {
-        return ResponseData.fail("Block not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(BlockAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleBlockAlreadyExists(BlockAlreadyExistsException ex) {
-        return ResponseData.fail("Block already exists", HttpStatus.CONFLICT);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(UserBlockedException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserBlocked(UserBlockedException ex) {
-        return ResponseData.fail("User is blocked", HttpStatus.FORBIDDEN);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
 
     //===================ROLE==================
     @ExceptionHandler(RoleNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleRoleNotFound(RoleNotFoundException ex) {
-        return ResponseData.fail("Role not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     //====================USER==================
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserNotFound(UserNotFoundException ex) {
-        return ResponseData.fail("User not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
-        return ResponseData.fail("User already exists", HttpStatus.CONFLICT);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<Object>> handleUnauthorized(UnauthorizedException ex) {
-        return ResponseData.fail("Unauthorized", HttpStatus.UNAUTHORIZED);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ProfileNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleProfileNotFound(ProfileNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     //====================REPORT==================
     @ExceptionHandler(ReportNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleReportNotFound(ReportNotFoundException ex) {
-        return ResponseData.fail("Report not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(ReportAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleReportAlreadyExists(ReportAlreadyExistsException ex) {
-        return ResponseData.fail("Report already exists", HttpStatus.CONFLICT);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(ReportAlreadyReviewedException.class)
     public ResponseEntity<ApiResponse<Object>> handleReportAlreadyReviewed(ReportAlreadyReviewedException ex) {
-        return ResponseData.fail("Report already reviewed", HttpStatus.CONFLICT);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     //====================REACTION==================
     @ExceptionHandler(ReactionNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleReactionNotFound(ReactionNotFoundException ex) {
-        return ResponseData.fail("Reaction not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     //====================POST==================
     @ExceptionHandler(PostNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handlePostNotFound(PostNotFoundException ex) {
-        return ResponseData.fail("Post not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InvalidDateRangeException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidDateRange(InvalidDateRangeException ex) {
-        return ResponseData.fail("Invalid date range", HttpStatus.BAD_REQUEST);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     //====================FOLLOW==================
     @ExceptionHandler(FollowAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleFollowAlreadyExists(FollowAlreadyExistsException ex) {
-        return ResponseData.fail("Already following this user", HttpStatus.CONFLICT);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(FollowNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleFollowNotFound(FollowNotFoundException ex) {
-        return ResponseData.fail("Follow relationship not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     //====================COMMENT==================
     @ExceptionHandler(CommentAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleCommentAlreadyExists(CommentAlreadyExistsException ex) {
-        return ResponseData.fail("Comment already exists", HttpStatus.CONFLICT);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(CommentNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleCommentNotFound(CommentNotFoundException ex) {
-        return ResponseData.fail("Comment not found", HttpStatus.NOT_FOUND);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     // ================= REFRESH TOKEN =================
     @ExceptionHandler(InvalidRefreshTokenException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
-        return ResponseData.fail("Invalid refresh token", HttpStatus.UNAUTHORIZED);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(RefreshTokenExpiredException.class)
     public ResponseEntity<ApiResponse<Object>> handleExpiredRefreshToken(RefreshTokenExpiredException ex) {
-        return ResponseData.fail("Refresh token expired", HttpStatus.UNAUTHORIZED);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(RefreshTokenRevokedException.class)
     public ResponseEntity<ApiResponse<Object>> handleRevokedRefreshToken(RefreshTokenRevokedException ex) {
-        return ResponseData.fail("Refresh token revoked", HttpStatus.UNAUTHORIZED);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Object>> handleBadCredentials(BadCredentialsException ex) {
-        return ResponseData.fail("Invalid username or password", HttpStatus.UNAUTHORIZED);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
     // ================= CLOUDINARY =================
     @ExceptionHandler(InvalidImageException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidImage(InvalidImageException ex) {
-        return ResponseData.fail("Invalid image", HttpStatus.BAD_REQUEST);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(CloudinaryUploadException.class)
     public ResponseEntity<ApiResponse<Object>> handleUpload(CloudinaryUploadException ex) {
 
-        log.error("CLOUDINARY_UPLOAD_FAILED | userId={} | msg={}",
-                getUserId(),
-                ex.getMessage()
-        );
-
-        return ResponseData.fail("Upload failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(CloudinaryDeleteException.class)
     public ResponseEntity<ApiResponse<Object>> handleDelete(CloudinaryDeleteException ex) {
 
-        log.error("CLOUDINARY_DELETE_FAILED | userId={} | msg={}",
-                getUserId(),
-                ex.getMessage()
-        );
-
-        return ResponseData.fail("Delete failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // ================= VALIDATION =================

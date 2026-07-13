@@ -41,32 +41,37 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
 
-        Authentication authentication =
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                request.getEmail(),
-                                request.getPassword()
-                        )
-                );
+        try {
 
-        CustomUserDetails user =
-                (CustomUserDetails) authentication.getPrincipal();
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
 
-        String accessToken = jwtUtil.generateAccessToken(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getAuthorities()
-        );
+            CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
-        String refreshToken = refreshTokenService.create(user.getId()).getToken();
+            String accessToken = jwtUtil.generateAccessToken(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getAuthorities()
+            );
 
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+            String refreshToken = refreshTokenService.create(user.getId()).getToken();
+
+            return AuthResponse.builder()
+                    .userId(user.getId())
+                    .username(user.getUsername())
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
 
@@ -79,6 +84,9 @@ public class AuthServiceImpl implements AuthService {
         if(userRepository.existsByEmail(request.getEmail())){
             throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
         }
+        Role role = roleRepository.findByName(RoleName.USER.name()).orElseThrow(
+                () -> new RoleNotFoundException("Role not found")
+        );
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -92,10 +100,6 @@ public class AuthServiceImpl implements AuthService {
                 .createdAt(LocalDateTime.now())
                 .build();
         profileRepository.save(profile);
-
-        Role role = roleRepository.findByName(RoleName.USER.name()).orElseThrow(
-                () -> new RoleNotFoundException("Role not found")
-        );
 
         UserRole userRole =UserRole.builder()
                 .id(new UserRoleId(user.getId(),role.getId()))

@@ -106,11 +106,59 @@ public class PostServiceImpl implements PostService {
         return getAllPost(targetUserId, visibilities, pageable);
     }
 
+
+    @Transactional(readOnly = true)
+    private Page<PostResponse> getAllPost(Long userId, Pageable pageable) {
+
+        Page<PostFlatResponse> flatPage =
+                postRepository.findAllPostMe(userId, pageable);
+
+        return buildPostResponse(flatPage,pageable);
+    }
+    @Transactional(readOnly = true)
+    private Page<PostResponse> getAllPost(Long userId,List<Visibility> visibilities, Pageable pageable) {
+
+        Page<PostFlatResponse> flatPage =
+                postRepository.findAllVisiblePost(userId,visibilities, pageable);
+
+        return buildPostResponse(flatPage,pageable);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public PostResponse getPostById(Long postId) {
+        Long viewerId = UserContextHolder.getUserId();
 
-        PostFlatResponse flat = postRepository.findPostDetailById(postId)
+        Post post = postRepository.findByIdWithUser(postId)
+                .orElseThrow(() ->
+                        new PostNotFoundException("Post not found")
+                );
+
+        Long ownerId = post.getUser().getId();
+        if (blockPolicyService.isBlocked(viewerId, ownerId)) {
+            throw new UserBlockedException("You cannot view this user's posts.");
+        }
+
+        List<Visibility> visibilities;
+
+        if (viewerId.equals(ownerId)) {
+            visibilities = List.of(
+                    Visibility.PUBLIC,
+                    Visibility.FOLLOWERS,
+                    Visibility.PRIVATE
+            );
+        } else if (followService.isFollowing(ownerId)) {
+            visibilities = List.of(
+                    Visibility.PUBLIC,
+                    Visibility.FOLLOWERS
+            );
+        } else {
+            visibilities = List.of(
+                    Visibility.PUBLIC
+            );
+        }
+
+        PostFlatResponse flat = postRepository.findPostDetailById(postId,visibilities)
                 .orElseThrow(() ->
                         new PostNotFoundException("Post not found with id: " + postId)
                 );
@@ -127,24 +175,6 @@ public class PostServiceImpl implements PostService {
                         postMediaRepository.findMediaResponseByPostId(postId)
                 )
                 .build();
-    }
-
-    @Transactional(readOnly = true)
-    private Page<PostResponse> getAllPost(Long userId,List<Visibility> visibilities, Pageable pageable) {
-
-        Page<PostFlatResponse> flatPage =
-                postRepository.findAllVisiblePost(userId,visibilities, pageable);
-
-        return buildPostResponse(flatPage,pageable);
-    }
-
-    @Transactional(readOnly = true)
-    private Page<PostResponse> getAllPost(Long userId, Pageable pageable) {
-
-        Page<PostFlatResponse> flatPage =
-                postRepository.findAllPostMe(userId, pageable);
-
-        return buildPostResponse(flatPage,pageable);
     }
 
     @Override
@@ -183,6 +213,15 @@ public class PostServiceImpl implements PostService {
                 );
 
         return buildPostResponse(page, pageable);
+    }
+
+    @Override
+    public Page<PostResponse> getAllSavedPost(Pageable pageable) {
+        Long userId = UserContextHolder.getUserId();
+
+        Page<PostFlatResponse> postFlatResponses = postRepository.findSavedPosts(userId,pageable);
+
+        return buildPostResponse(postFlatResponses,pageable);
     }
 
     private Page<PostResponse> buildPostResponse(

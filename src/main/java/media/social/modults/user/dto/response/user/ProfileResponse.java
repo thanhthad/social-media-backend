@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 @Builder
 public class ProfileResponse {
 
-    private Long id;
-
     private String fullName;
 
     private String avatarUrl;

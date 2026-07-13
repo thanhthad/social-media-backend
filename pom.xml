@@ -126,12 +126,12 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
-			<version>9.22.3</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-sqlserver</artifactId>
-			<version>9.22.3</version>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<version>10.15.2</version>
 		</dependency>
 
 

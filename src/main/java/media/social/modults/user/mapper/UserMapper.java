@@ -19,7 +19,6 @@ public class UserMapper {
 
         if (profile != null) {
             profileResponse = ProfileResponse.builder()
-                    .id(profile.getId())
                     .fullName(profile.getFullName())
                     .avatarUrl(profile.getAvatarUrl())
                     .bio(profile.getBio())
@@ -36,7 +35,6 @@ public class UserMapper {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .status(user.getStatus())
                 .profile(profileResponse)
                 .build();
     }

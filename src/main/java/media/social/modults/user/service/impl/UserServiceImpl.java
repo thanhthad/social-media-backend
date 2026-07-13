@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(userId)
                 .orElseThrow(() ->
                         new UserNotFoundException(
-                                "User not found with id: " + userId
+                                "User not found  "
                         )
                 );
     }
@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
         return profileRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new ProfileNotFoundException(
-                                "Profile not found with userId: " + userId
+                                "Profile not found "
                         )
                 );
     }
@@ -165,7 +165,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
                         new UserNotFoundException(
-                                "User not found with id: " + userId
+                                "User not found "
                         )
                 );
 

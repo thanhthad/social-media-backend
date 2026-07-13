@@ -15,6 +15,15 @@ import java.util.Optional;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
+    @Query("""
+    SELECT p
+    FROM Post p
+    JOIN FETCH p.user
+    WHERE p.id = :postId
+""")
+    Optional<Post> findByIdWithUser(
+            @Param("postId") Long postId
+    );
 
     @Query("""
                 SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
@@ -30,6 +39,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE u.id = :userId
+        AND u.status = media.social.modults.user.Enum.Status.ACTIVE
         AND NOT EXISTS (
             SELECT 1
             FROM Report r
@@ -58,6 +68,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     LEFT JOIN u.profile pr
     WHERE u.id = :userId
     AND p.visibility IN :visibilities
+    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
@@ -86,15 +97,18 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE p.id = :postId
+    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND p.visibility IN :visibilities
     AND NOT EXISTS (
-            SELECT 1
-            FROM Report r
-            WHERE r.post.id = p.id
-              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
-        )
+        SELECT 1
+        FROM Report r
+        WHERE r.post.id = p.id
+          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+    )
     """)
     Optional<PostFlatResponse> findPostDetailById(
-            @Param("postId") Long postId
+            @Param("postId") Long postId,
+            @Param("visibilities") List<Visibility> visibilities
     );
 
 
@@ -117,6 +131,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
            OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
     )
+   AND u.status = media.social.modults.user.Enum.Status.ACTIVE
    AND NOT EXISTS (
             SELECT 1
             FROM Report r
@@ -162,6 +177,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id=:viewerId AND b.blocked.id=u.id)
            OR (b.blocker.id=u.id AND b.blocked.id=:viewerId)
     )
+    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
     AND NOT EXISTS (
             SELECT 1
             FROM Report r
@@ -205,6 +221,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE LOWER(ph.hashtag.name)=LOWER(:name)
+    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
     AND NOT EXISTS(
         SELECT 1
         FROM Block b
@@ -235,6 +252,54 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<PostFlatResponse> searchByHashtag(
             @Param("viewerId") Long viewerId,
             @Param("name") String name,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+        p.id,
+        p.content,
+        p.visibility,
+        p.createdAt,
+        u.id,
+        u.username,
+        pr.avatarUrl
+    )
+    FROM SavedPost sp
+    JOIN sp.post p
+    JOIN p.user u
+    LEFT JOIN u.profile pr
+    WHERE sp.user.id = :userId
+    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND NOT EXISTS (
+        SELECT 1
+        FROM Block b
+        WHERE (b.blocker.id = :userId AND b.blocked.id = u.id)
+           OR (b.blocker.id = u.id AND b.blocked.id = :userId)
+    )
+    AND NOT EXISTS (
+        SELECT 1
+        FROM Report r
+        WHERE r.post.id = p.id
+          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+    )
+    AND (
+        u.id = :userId
+        OR p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
+        OR (
+            p.visibility = media.social.modults.post.enums.Visibility.FOLLOWERS
+            AND EXISTS (
+                SELECT 1
+                FROM Follow f
+                WHERE f.follower.id = :userId
+                  AND f.following.id = u.id
+            )
+        )
+    )
+    ORDER BY sp.createdAt DESC
+""")
+    Page<PostFlatResponse> findSavedPosts(
+            @Param("userId") Long userId,
             Pageable pageable
     );
 
