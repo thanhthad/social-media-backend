@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
@@ -32,6 +31,7 @@ public class ReportServiceImpl implements ReportService {
     private final UserServiceDomain userServiceDomain;
 
     @Override
+    @Transactional
     public void create(
             CreateReportRequest request
     ) {
@@ -56,6 +56,7 @@ public class ReportServiceImpl implements ReportService {
         reportRepository.save(report);
     }
 
+    @Transactional
     @Override
     public void review(
             Long reportId,

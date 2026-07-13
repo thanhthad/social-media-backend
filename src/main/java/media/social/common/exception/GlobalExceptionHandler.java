@@ -14,6 +14,8 @@ import media.social.modults.post.exception.reaction.ReactionNotFoundException;
 import media.social.modults.post.exception.report.ReportAlreadyExistsException;
 import media.social.modults.post.exception.report.ReportAlreadyReviewedException;
 import media.social.modults.post.exception.report.ReportNotFoundException;
+import media.social.modults.post.exception.saved_post.SavedPostAlreadyExistsException;
+import media.social.modults.post.exception.saved_post.SavedPostNotFoundException;
 import media.social.modults.user.exception.block.BlockAlreadyExistsException;
 import media.social.modults.user.exception.block.BlockNotFoundException;
 import media.social.modults.user.exception.block.UserBlockedException;
@@ -46,6 +48,16 @@ public class GlobalExceptionHandler {
         return UserContextHolder.getUserId();
     }
 
+    //==================SAVED_POST=============
+    @ExceptionHandler(SavedPostNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleSavedPostNotFound(SavedPostNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(SavedPostAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleSavedPostAlreadyExists(SavedPostAlreadyExistsException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
+    }
     //==================BLOCK==================
     @ExceptionHandler(BlockNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleBlockNotFound(BlockNotFoundException ex) {
