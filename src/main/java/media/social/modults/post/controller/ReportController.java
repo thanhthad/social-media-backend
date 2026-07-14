@@ -11,6 +11,7 @@ import media.social.modults.post.service.ReportService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,7 +22,6 @@ public class ReportController {
     private final ReportService reportService;
 
     // ================= CREATE REPORT =================
-
     @PostMapping
     @Operation(summary = "Report a post")
     public ResponseEntity<?> createReport(
@@ -38,7 +38,7 @@ public class ReportController {
     }
 
     // ================= REVIEW REPORT =================
-
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     @PatchMapping("/{reportId}")
     @Operation(summary = "Review report")
     public ResponseEntity<?> reviewReport(
@@ -59,7 +59,7 @@ public class ReportController {
     }
 
     // ================= GET ALL REPORTS =================
-
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     @GetMapping
     @Operation(summary = "Get all reports")
     public ResponseEntity<?> getAll(
@@ -74,7 +74,7 @@ public class ReportController {
     }
 
     // ================= GET REPORTS BY STATUS =================
-
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     @GetMapping("/status")
     @Operation(summary = "Get reports by status")
     public ResponseEntity<?> getByStatus(

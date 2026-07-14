@@ -9,10 +9,9 @@ import media.social.modults.file.image.exception.CloudinaryUploadException;
 import media.social.modults.file.image.exception.InvalidImageException;
 import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
-import media.social.modults.post.exception.post.ForbiddenException;
-import media.social.modults.post.exception.post.InvalidDateRangeException;
-import media.social.modults.post.exception.post.PostNotFoundException;
+import media.social.modults.post.exception.post.*;
 import media.social.modults.post.exception.reaction.ReactionNotFoundException;
+import media.social.modults.post.exception.report.CannotReportOwnPostException;
 import media.social.modults.post.exception.report.ReportAlreadyExistsException;
 import media.social.modults.post.exception.report.ReportAlreadyReviewedException;
 import media.social.modults.post.exception.report.ReportNotFoundException;
@@ -132,6 +131,11 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(CannotReportOwnPostException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReportOwnPost(CannotReportOwnPostException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
     //====================REACTION==================
     @ExceptionHandler(ReactionNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleReactionNotFound(ReactionNotFoundException ex) {
@@ -146,6 +150,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidDateRangeException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidDateRange(InvalidDateRangeException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(PostFollowersOnlyException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePostFollowOnly(PostFollowersOnlyException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(CannotSaveOwnPostException.class)
+    public ResponseEntity<ApiResponse<Object>> handleSaveOwnPost(CannotSaveOwnPostException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(PostPrivateException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePostPrivate(PostPrivateException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

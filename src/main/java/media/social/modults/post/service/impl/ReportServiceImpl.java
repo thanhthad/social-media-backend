@@ -7,7 +7,11 @@ import media.social.modults.post.dto.response.report.ReportDetailResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.entity.Report;
 import media.social.modults.post.enums.ReportStatus;
+import media.social.modults.post.exception.post.CannotSaveOwnPostException;
+import media.social.modults.post.exception.post.PostFollowersOnlyException;
 import media.social.modults.post.exception.post.PostNotFoundException;
+import media.social.modults.post.exception.post.PostPrivateException;
+import media.social.modults.post.exception.report.CannotReportOwnPostException;
 import media.social.modults.post.exception.report.ReportAlreadyExistsException;
 import media.social.modults.post.exception.report.ReportAlreadyReviewedException;
 import media.social.modults.post.exception.report.ReportNotFoundException;
@@ -16,6 +20,7 @@ import media.social.modults.post.repository.ReportRepository;
 import media.social.modults.post.service.ReportService;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.security.context.UserContextHolder;
+import media.social.modults.user.service.FollowService;
 import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +34,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final PostRepository postRepository;
     private final UserServiceDomain userServiceDomain;
+    private final FollowService followService;
 
     @Override
     @Transactional
@@ -46,6 +52,24 @@ public class ReportServiceImpl implements ReportService {
 
         Post post = postRepository.findById(request.getPostId())
                 .orElseThrow(() -> new PostNotFoundException("Post not found"));
+
+        if (post.getUser().getId().equals(userId)) {
+            throw new CannotReportOwnPostException("You cannot report your own post.");
+        }
+
+        switch (post.getVisibility()) {
+            case PRIVATE ->
+                    throw new PostPrivateException("You cannot report this private post.");
+
+            case FOLLOWERS -> {
+                if (!followService.isFollowing(post.getUser().getId())) {
+                    throw new PostFollowersOnlyException(
+                            "You must follow this user to report this post.");
+                }
+            }
+            case PUBLIC -> {
+            }
+        }
 
         Report report = Report.builder()
                 .reporter(user)
