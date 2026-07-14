@@ -6,7 +6,7 @@ import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
 import media.social.modults.file.image.exception.CloudinaryDeleteException;
 import media.social.modults.file.image.exception.CloudinaryUploadException;
-import media.social.modults.file.image.exception.InvalidImageException;
+import media.social.modults.file.image.exception.InvalidMediaException;
 import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.exception.post.*;
@@ -228,8 +228,8 @@ public class GlobalExceptionHandler {
     }
 
     // ================= CLOUDINARY =================
-    @ExceptionHandler(InvalidImageException.class)
-    public ResponseEntity<ApiResponse<Object>> handleInvalidImage(InvalidImageException ex) {
+    @ExceptionHandler(InvalidMediaException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidImage(InvalidMediaException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

@@ -7,9 +7,8 @@ import lombok.Getter;
 @Builder
 @Getter
 @AllArgsConstructor
-public class UploadImageResponse {
-
-    private String imageUrl;
-
+public class UploadFileResponse {
+    private String fileUrl;
     private String publicId;
+    private String resourceType;
 }

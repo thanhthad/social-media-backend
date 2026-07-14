@@ -1,6 +1,6 @@
 package media.social.user.service;
 
-import media.social.modults.file.image.dto.response.UploadImageResponse;
+import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.user.dto.request.user.ChangePasswordRequest;
 import media.social.modults.user.dto.request.user.UpdateAvatarRequest;
@@ -62,7 +62,7 @@ public class UserServiceImplTest {
 
             MultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", new byte[0]);
             UpdateAvatarRequest request = new UpdateAvatarRequest(file);
-            UploadImageResponse uploadResponse = new UploadImageResponse("new_url", "new_id");
+            UploadFileResponse uploadResponse = new UploadFileResponse("new_url", "new_id");
 
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
             when(profileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(testProfile));

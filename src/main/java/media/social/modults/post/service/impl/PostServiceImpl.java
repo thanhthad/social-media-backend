@@ -11,7 +11,7 @@ import media.social.modults.post.dto.request.post.UpdatePostMedia;
 import media.social.modults.post.dto.response.post.PostFlatResponse;
 import media.social.modults.post.dto.response.post.PostMediaResponse;
 import media.social.modults.post.dto.response.post.PostResponse;
-import media.social.modults.file.image.dto.response.UploadImageResponse;
+import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.entity.PostMedia;
 import media.social.modults.post.enums.Visibility;
@@ -517,7 +517,7 @@ public class PostServiceImpl implements PostService {
 
         for (MultipartFile file : files) {
 
-            UploadImageResponse upload =
+            UploadFileResponse upload =
                     cloudinaryService.uploadImage(file, "posts");
 
             mediaList.add(PostMedia.builder()

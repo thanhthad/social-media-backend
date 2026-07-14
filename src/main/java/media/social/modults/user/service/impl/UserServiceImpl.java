@@ -1,7 +1,7 @@
 package media.social.modults.user.service.impl;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
-import media.social.modults.file.image.dto.response.UploadImageResponse;
+import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.user.Enum.Status;
 import media.social.modults.user.dto.request.user.ChangePasswordRequest;
@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService {
 
         cloudinaryService.validateImage(request.getFile());
 
-        UploadImageResponse upload =
+        UploadFileResponse upload =
                 cloudinaryService.uploadImage(
                         request.getFile(),
                         "avatars"

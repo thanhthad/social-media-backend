@@ -4,11 +4,12 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import media.social.modults.file.image.dto.response.UploadImageResponse;
+import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.file.image.exception.CloudinaryDeleteException;
 import media.social.modults.file.image.exception.CloudinaryUploadException;
-import media.social.modults.file.image.exception.InvalidImageException;
+import media.social.modults.file.image.exception.InvalidMediaException;
 import media.social.modults.file.image.service.CloudinaryService;
+import media.social.modults.post.enums.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,47 +24,60 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
     private final Cloudinary cloudinary;
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024;      // 5MB
+    private static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024;     // 50MB
 
-    private static final List<String> ALLOWED_EXTENSIONS = List.of(
+    private static final List<String> ALLOWED_IMAGE_EXTENSIONS = List.of(
             "jpg",
             "jpeg",
             "png",
             "webp"
     );
 
+    private static final List<String> ALLOWED_VIDEO_EXTENSIONS = List.of(
+            "mp4",
+            "mov",
+            "avi",
+            "mkv",
+            "webm"
+    );
+
     @Override
-    public UploadImageResponse uploadImage(
+    public UploadFileResponse uploadFile(
             MultipartFile file,
-            String folder
+            String folder,
+            MediaType mediaType
     ) {
+
+        validateFile(file, mediaType);
+
         try {
 
             Map<String, Object> uploadResult =
                     cloudinary.uploader().upload(
-                            file.getBytes(),
+                            file.getInputStream(),
                             ObjectUtils.asMap(
-                                    "folder",
-                                    folder
+                                    "folder", folder,
+                                    "resource_type", mediaType.name().toLowerCase()
                             )
                     );
 
-            String imageUrl =
-                    uploadResult.get("secure_url").toString();
-
-            String publicId =
-                    uploadResult.get("public_id").toString();
+            String fileUrl = uploadResult.get("secure_url").toString();
+            String publicId = uploadResult.get("public_id").toString();
+            String resourceType = uploadResult.get("resource_type").toString();
 
             log.info(
-                    "Cloudinary upload success | folder={} | publicId={}",
+                    "Cloudinary upload success | type={} | folder={} | publicId={}",
+                    resourceType,
                     folder,
                     publicId
             );
 
-            return UploadImageResponse.builder()
-                    .imageUrl(imageUrl)
-                    .publicId(publicId)
-                    .build();
+            return new UploadFileResponse(
+                    fileUrl,
+                    publicId,
+                    resourceType
+            );
 
         } catch (IOException e) {
 
@@ -74,23 +88,31 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             );
 
             throw new CloudinaryUploadException(
-                    "Failed to upload image to Cloudinary"
+                    "Failed to upload file to Cloudinary"
             );
         }
     }
+
     @Override
-    public void deleteImage(String publicId) {
+    public void deleteFile(
+            String publicId,
+            MediaType mediaType
+    ) {
 
         try {
 
             Map<String, Object> result =
                     cloudinary.uploader().destroy(
                             publicId,
-                            ObjectUtils.emptyMap()
+                            ObjectUtils.asMap(
+                                    "resource_type",
+                                    mediaType.name().toLowerCase()
+                            )
                     );
 
             log.info(
-                    "Cloudinary delete success | publicId={} | result={}",
+                    "Cloudinary delete success | type={} | publicId={} | result={}",
+                    mediaType,
                     publicId,
                     result.get("result")
             );
@@ -104,58 +126,86 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             );
 
             throw new CloudinaryDeleteException(
-                    "Failed to delete image from Cloudinary"
+                    "Failed to delete file from Cloudinary"
             );
         }
     }
 
-    public void validateImage(MultipartFile file) {
+    @Override
+    public void validateFile(
+            MultipartFile file,
+            MediaType mediaType
+    ) {
 
         if (file == null || file.isEmpty()) {
-            throw new InvalidImageException(
-                    "Image file is empty"
-            );
+            throw new InvalidMediaException("File is empty");
         }
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new InvalidImageException(
-                    "Image size exceeds 5MB"
+        long maxSize = mediaType == MediaType.IMAGE
+                ? MAX_IMAGE_SIZE
+                : MAX_VIDEO_SIZE;
+
+        if (file.getSize() > maxSize) {
+            throw new InvalidMediaException(
+                    mediaType == MediaType.IMAGE
+                            ? "Image size exceeds 5MB"
+                            : "Video size exceeds 50MB"
             );
         }
 
         String contentType = file.getContentType();
 
-        if (contentType == null ||
+        if (contentType == null) {
+            throw new InvalidMediaException("Invalid content type");
+        }
+
+        if (mediaType == MediaType.IMAGE &&
                 !contentType.startsWith("image/")) {
 
-            throw new InvalidImageException(
+            throw new InvalidMediaException(
                     "Invalid image content type"
             );
         }
 
-        validateExtension(file.getOriginalFilename());
+        if (mediaType == MediaType.VIDEO &&
+                !contentType.startsWith("video/")) {
+
+            throw new InvalidMediaException(
+                    "Invalid video content type"
+            );
+        }
+
+        validateExtension(
+                file.getOriginalFilename(),
+                mediaType
+        );
     }
 
-    private void validateExtension(String filename) {
+    private void validateExtension(
+            String filename,
+            MediaType mediaType
+    ) {
 
         if (filename == null || !filename.contains(".")) {
 
-            throw new InvalidImageException(
+            throw new InvalidMediaException(
                     "Invalid file name"
             );
         }
 
-        String extension =
-                filename.substring(
-                                filename.lastIndexOf(".") + 1
-                        )
-                        .toLowerCase();
+        String extension = filename.substring(
+                filename.lastIndexOf(".") + 1
+        ).toLowerCase();
 
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+        List<String> allowedExtensions =
+                mediaType == MediaType.IMAGE
+                        ? ALLOWED_IMAGE_EXTENSIONS
+                        : ALLOWED_VIDEO_EXTENSIONS;
 
-            throw new InvalidImageException(
-                    "Invalid file extension. Allowed: "
-                            + ALLOWED_EXTENSIONS
+        if (!allowedExtensions.contains(extension)) {
+
+            throw new InvalidMediaException(
+                    "Invalid file extension. Allowed: " + allowedExtensions
             );
         }
     }
