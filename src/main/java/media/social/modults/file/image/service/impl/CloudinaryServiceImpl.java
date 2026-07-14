@@ -13,6 +13,7 @@ import media.social.modults.post.enums.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     private final Cloudinary cloudinary;
 
     private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024;      // 5MB
-    private static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024;     // 50MB
+    private static final long MAX_VIDEO_SIZE = 300  * 1024 * 1024;     // 300MB
 
     private static final List<String> ALLOWED_IMAGE_EXTENSIONS = List.of(
             "jpg",
@@ -48,49 +49,55 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             String folder,
             MediaType mediaType
     ) {
-
         validateFile(file, mediaType);
+
+        File tempFile = null;
 
         try {
 
+            String extension = getExtension(file.getOriginalFilename());
+
+            tempFile = File.createTempFile(
+                    "cloudinary-",
+                    "." + extension
+            );
+            file.transferTo(tempFile);
             Map<String, Object> uploadResult =
                     cloudinary.uploader().upload(
-                            file.getInputStream(),
+                            tempFile,
                             ObjectUtils.asMap(
                                     "folder", folder,
                                     "resource_type", mediaType.name().toLowerCase()
                             )
                     );
-
-            String fileUrl = uploadResult.get("secure_url").toString();
-            String publicId = uploadResult.get("public_id").toString();
-            String resourceType = uploadResult.get("resource_type").toString();
-
-            log.info(
-                    "Cloudinary upload success | type={} | folder={} | publicId={}",
-                    resourceType,
-                    folder,
-                    publicId
-            );
-
             return new UploadFileResponse(
-                    fileUrl,
-                    publicId,
-                    resourceType
+                    uploadResult.get("secure_url").toString(),
+                    uploadResult.get("public_id").toString(),
+                    mediaType.name()
             );
-
         } catch (IOException e) {
-
             log.error(
                     "Cloudinary upload failed | folder={}",
                     folder,
                     e
             );
-
             throw new CloudinaryUploadException(
                     "Failed to upload file to Cloudinary"
             );
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
         }
+    }
+
+    private String getExtension(String filename) {
+
+        if (filename == null || !filename.contains(".")) {
+            return "tmp";
+        }
+
+        return filename.substring(filename.lastIndexOf('.') + 1);
     }
 
     @Override

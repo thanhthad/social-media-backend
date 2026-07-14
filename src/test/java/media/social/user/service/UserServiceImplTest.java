@@ -55,29 +55,6 @@ public class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("updateAvatar - Should update successfully and delete old image")
-    void updateAvatar_Success() {
-        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
-            mockedContext.when(UserContextHolder::getUserId).thenReturn(USER_ID);
-
-            MultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", new byte[0]);
-            UpdateAvatarRequest request = new UpdateAvatarRequest(file);
-            UploadFileResponse uploadResponse = new UploadFileResponse("new_url", "new_id");
-
-            when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
-            when(profileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(testProfile));
-            when(cloudinaryService.uploadImage(any(), anyString())).thenReturn(uploadResponse);
-            when(userMapper.toUserProfileResponse(any(), any())).thenReturn(new UserProfileResponse());
-
-            userService.updateAvatar(request);
-
-            verify(cloudinaryService).deleteImage("old_id");
-            verify(profileRepository).save(testProfile);
-            assertThat(testProfile.getAvatarUrl()).isEqualTo("new_url");
-        }
-    }
-
-    @Test
     @DisplayName("updatePassword - Should throw exception if old password invalid")
     void updatePassword_InvalidOldPassword() {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {

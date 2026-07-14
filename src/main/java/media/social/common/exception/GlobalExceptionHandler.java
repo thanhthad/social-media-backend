@@ -10,6 +10,7 @@ import media.social.modults.file.image.exception.InvalidMediaException;
 import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.exception.post.*;
+import media.social.modults.post.exception.post_media.InvalidImageException;
 import media.social.modults.post.exception.reaction.ReactionNotFoundException;
 import media.social.modults.post.exception.report.CannotReportOwnPostException;
 import media.social.modults.post.exception.report.ReportAlreadyExistsException;
@@ -42,6 +43,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +54,17 @@ public class GlobalExceptionHandler {
     private Long getUserId(){
         return UserContextHolder.getUserId();
     }
+    // ================= FILE ===========================
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException ex
+    ) {
 
+        return ResponseData.fail(
+                "File size exceeds the maximum allowed limit.",
+                HttpStatus.BAD_REQUEST
+        );
+    }
     // ================= SPRING SECURITY =================
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex) {
@@ -73,6 +85,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleSavedPostAlreadyExists(SavedPostAlreadyExistsException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
+
     //==================BLOCK==================
     @ExceptionHandler(BlockNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleBlockNotFound(BlockNotFoundException ex) {
@@ -176,6 +189,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PostPrivateException.class)
     public ResponseEntity<ApiResponse<Object>> handlePostPrivate(PostPrivateException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidImageException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidImage(InvalidImageException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

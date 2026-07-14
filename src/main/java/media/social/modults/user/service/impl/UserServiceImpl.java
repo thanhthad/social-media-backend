@@ -1,4 +1,5 @@
 package media.social.modults.user.service.impl;
+import media.social.modults.post.enums.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import media.social.modults.file.image.dto.response.UploadFileResponse;
@@ -107,21 +108,26 @@ public class UserServiceImpl implements UserService {
         User user = getCurrentUser();
         Profile profile = getCurrentProfile(user.getId());
 
-        cloudinaryService.validateImage(request.getFile());
+        cloudinaryService.validateFile(
+                request.getFile(),
+                MediaType.IMAGE
+        );
 
         UploadFileResponse upload =
-                cloudinaryService.uploadImage(
+                cloudinaryService.uploadFile(
                         request.getFile(),
-                        "avatars"
+                        "avatars",
+                        MediaType.IMAGE
                 );
 
         if (profile.getAvatarPublicId() != null) {
-            cloudinaryService.deleteImage(
-                    profile.getAvatarPublicId()
+            cloudinaryService.deleteFile(
+                    profile.getAvatarPublicId(),
+                    MediaType.IMAGE
             );
         }
 
-        profile.setAvatarUrl(upload.getImageUrl());
+        profile.setAvatarUrl(upload.getFileUrl());
         profile.setAvatarPublicId(upload.getPublicId());
 
         profileRepository.save(profile);

@@ -15,6 +15,7 @@ import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.entity.PostMedia;
 import media.social.modults.post.enums.Visibility;
+import media.social.modults.post.exception.post_media.InvalidImageException;
 import media.social.modults.post.exception.post_media.MediaNotFoundException;
 import media.social.modults.post.repository.HashtagRepository;
 import media.social.modults.post.repository.PostHashtagRepository;
@@ -343,7 +344,6 @@ public class PostServiceImpl implements PostService {
         updatePostHashtags(post, request.getContent());
     }
 
-
     @Override
     @Transactional
     public void deleteByPostId(Long postId) {
@@ -361,7 +361,10 @@ public class PostServiceImpl implements PostService {
 
         postMediaRepository.findByPostId(postId)
                 .forEach(media ->
-                        cloudinaryService.deleteImage(media.getPublicId()));
+                        cloudinaryService.deleteFile(
+                                media.getPublicId(),
+                                media.getMediaType()
+                        ));
 
         postMediaRepository.deleteByPostId(postId);
 
@@ -421,7 +424,7 @@ public class PostServiceImpl implements PostService {
             );
         }
 
-        cloudinaryService.deleteImage(publicId);
+        cloudinaryService.deleteFile(publicId,media.getMediaType());
 
         postMediaRepository.delete(media);
     }
@@ -510,24 +513,46 @@ public class PostServiceImpl implements PostService {
             return;
         }
 
-        files.forEach(cloudinaryService::validateImage);
-
-        List<PostMedia> mediaList =
-                new ArrayList<>(files.size());
+        List<PostMedia> mediaList = new ArrayList<>(files.size());
 
         for (MultipartFile file : files) {
 
+            MediaType mediaType = getMediaType(file);
+
             UploadFileResponse upload =
-                    cloudinaryService.uploadImage(file, "posts");
+                    cloudinaryService.uploadFile(
+                            file,
+                            "posts",
+                            mediaType
+                    );
 
             mediaList.add(PostMedia.builder()
                     .post(post)
-                    .mediaType(MediaType.IMAGE)
-                    .url(upload.getImageUrl())
+                    .mediaType(mediaType)
+                    .url(upload.getFileUrl())
                     .publicId(upload.getPublicId())
                     .build());
         }
 
         postMediaRepository.saveAll(mediaList);
+    }
+
+    private MediaType getMediaType(MultipartFile file) {
+
+        String contentType = file.getContentType();
+
+        if (contentType == null) {
+            throw new InvalidImageException("Invalid content type");
+        }
+
+        if (contentType.startsWith("image/")) {
+            return MediaType.IMAGE;
+        }
+
+        if (contentType.startsWith("video/")) {
+            return MediaType.VIDEO;
+        }
+
+        throw new InvalidImageException("Unsupported media type");
     }
 }
