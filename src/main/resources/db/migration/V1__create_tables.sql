@@ -180,23 +180,44 @@ CREATE TABLE conversations (
                                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE messages (
+                          message_id BIGSERIAL PRIMARY KEY,
+
+                          conversation_id BIGINT
+                              REFERENCES conversations(conversation_id)
+                                  ON DELETE CASCADE,
+
+                          sender_id BIGINT
+                              REFERENCES users(user_id)
+                                  ON DELETE CASCADE,
+
+                          reply_to_message_id BIGINT
+                              REFERENCES messages(message_id),
+
+                          content TEXT,
+
+                          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                          read_at TIMESTAMP WITH TIME ZONE,
+
+                          is_deleted BOOLEAN DEFAULT FALSE
+);
+
+
 CREATE TABLE conversation_members (
                                       conversation_id BIGINT REFERENCES conversations(conversation_id) ON DELETE CASCADE,
                                       user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
+
                                       joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                                      last_read_message_id BIGINT
+                                          REFERENCES messages(message_id),
+
                                       PRIMARY KEY (conversation_id, user_id)
 );
 
-CREATE TABLE messages (
-                          message_id BIGSERIAL PRIMARY KEY,
-                          conversation_id BIGINT REFERENCES conversations(conversation_id) ON DELETE CASCADE,
-                          sender_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
-                          content TEXT,
-                          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                          read_at TIMESTAMP WITH TIME ZONE,
-                          is_deleted BOOLEAN DEFAULT FALSE
-);
 
 CREATE TABLE reports (
                          report_id BIGSERIAL PRIMARY KEY,
@@ -231,4 +252,39 @@ CREATE TABLE blocks (
                         blocked_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                         PRIMARY KEY (blocker_id, blocked_id)
+);
+
+CREATE TABLE comment_reactions (
+                                   reaction_id BIGSERIAL PRIMARY KEY,
+
+                                   user_id BIGINT NOT NULL
+                                       REFERENCES users(user_id)
+                                           ON DELETE CASCADE,
+
+                                   comment_id BIGINT NOT NULL
+                                       REFERENCES comments(comment_id)
+                                           ON DELETE CASCADE,
+
+                                   type VARCHAR(50) NOT NULL,
+
+                                   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                                   CONSTRAINT uk_user_comment_reaction
+                                       UNIQUE(user_id, comment_id)
+);
+
+CREATE TABLE message_media (
+                               media_id BIGSERIAL PRIMARY KEY,
+
+                               message_id BIGINT NOT NULLs
+                                   REFERENCES messages(message_id)
+                                       ON DELETE CASCADE,
+
+                               url VARCHAR(255),
+
+                               public_id VARCHAR(255),
+
+                               media_type VARCHAR(50),
+
+                               created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

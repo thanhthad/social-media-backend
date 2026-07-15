@@ -1,6 +1,7 @@
 package media.social.modults.post.dto.response.comment;
 
 import lombok.*;
+import media.social.modults.post.enums.ReactionType;
 
 import java.time.LocalDateTime;
 
@@ -25,8 +26,10 @@ public class CommentResponse {
 
     private LocalDateTime createdAt;
 
-//    private Long totalLikes;
-
     private Long totalReplies;
+
+    private Long totalReactions;
+
+    private ReactionType myReaction;
 
 }

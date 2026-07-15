@@ -8,6 +8,7 @@ import media.social.modults.post.dto.response.comment.CommentResponse;
 import media.social.modults.post.entity.Comment;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
+import media.social.modults.post.repository.CommentReactionRepository;
 import media.social.modults.post.repository.CommentRepository;
 import media.social.modults.post.service.CommentService;
 import media.social.modults.post.service.PostServiceDomain;
@@ -26,6 +27,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final PostServiceDomain postServiceDomain;
     private final UserServiceDomain userServiceDomain;
+    private final CommentReactionRepository commentReactionRepository;
 
     @Override
     @Transactional
@@ -65,6 +67,8 @@ public class CommentServiceImpl implements CommentService {
                 .content(saved.getContent())
                 .createdAt(saved.getCreatedAt())
                 .totalReplies(0L)
+                .totalReactions(0L)
+                .myReaction(null)
                 .build();
     }
 
@@ -101,6 +105,8 @@ public class CommentServiceImpl implements CommentService {
                 .content(saved.getContent())
                 .createdAt(saved.getCreatedAt())
                 .totalReplies(0L)
+                .totalReactions(0L)
+                .myReaction(null)
                 .build();
     }
 
@@ -132,6 +138,15 @@ public class CommentServiceImpl implements CommentService {
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .totalReplies(commentRepository.countByParent_Id(comment.getId()))
+                .totalReactions(
+                        commentReactionRepository.countByCommentId(comment.getId())
+                )
+                .myReaction(
+                        commentReactionRepository.findReactionType(
+                                userId,
+                                comment.getId()
+                        )
+                )
                 .build();
     }
 
@@ -151,14 +166,34 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CommentResponse> getRootComments(Long postId, Pageable pageable) {
-        return commentRepository.findRootComments(postId, pageable);
+    public Page<CommentResponse> getRootComments(
+            Long postId,
+            Pageable pageable
+    ) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        return commentRepository.findRootComments(
+                postId,
+                userId,
+                pageable
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CommentResponse> getReplies(Long parentId, Pageable pageable) {
-        return commentRepository.findReplies(parentId, pageable);
+    public Page<CommentResponse> getReplies(
+            Long parentId,
+            Pageable pageable
+    ) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        return commentRepository.findReplies(
+                parentId,
+                userId,
+                pageable
+        );
     }
 
     @Override
