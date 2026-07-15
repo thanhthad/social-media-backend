@@ -7,6 +7,7 @@ import media.social.common.response.ResponseData;
 import media.social.modults.file.image.exception.CloudinaryDeleteException;
 import media.social.modults.file.image.exception.CloudinaryUploadException;
 import media.social.modults.file.image.exception.InvalidMediaException;
+import media.social.modults.notification.exception.NotificationNotFoundException;
 import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.exception.post.*;
@@ -53,6 +54,11 @@ public class GlobalExceptionHandler {
 
     private Long getUserId(){
         return UserContextHolder.getUserId();
+    }
+    // ================= NOTIFICATION ===========================
+    @ExceptionHandler(NotificationNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotificationNotFound(NotificationNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
     // ================= FILE ===========================
     @ExceptionHandler(MaxUploadSizeExceededException.class)

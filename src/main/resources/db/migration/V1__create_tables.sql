@@ -169,7 +169,6 @@ CREATE TABLE notifications (
                                entity_type VARCHAR(50),
                                entity_id BIGINT,
                                type VARCHAR(50),
-                               message TEXT,
                                is_read BOOLEAN DEFAULT FALSE,
                                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
