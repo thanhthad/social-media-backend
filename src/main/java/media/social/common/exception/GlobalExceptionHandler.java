@@ -55,11 +55,17 @@ public class GlobalExceptionHandler {
     private Long getUserId(){
         return UserContextHolder.getUserId();
     }
+
     // ================= NOTIFICATION ===========================
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleNotificationNotFound(NotificationNotFoundException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
+    @ExceptionHandler(NotificationNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotificationAlreadyExists(NotificationNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
     // ================= FILE ===========================
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiResponse<Object>> handleMaxUploadSizeExceeded(

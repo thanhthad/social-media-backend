@@ -5,6 +5,7 @@ import media.social.modults.notification.dto.response.NotificationResponse;
 import media.social.modults.notification.entity.Notification;
 import media.social.modults.notification.enums.EntityType;
 import media.social.modults.notification.enums.NotificationType;
+import media.social.modults.notification.exception.NotificationAlreadyExistsException;
 import media.social.modults.notification.exception.NotificationNotFoundException;
 import media.social.modults.notification.repository.NotificationRepository;
 import media.social.modults.notification.service.NotificationService;
@@ -30,11 +31,25 @@ public class NotificationServiceImpl implements NotificationService {
             Long entityId,
             NotificationType type
     ) {
-
-        if (receiver.getId().equals(sender.getId())) {
-            return;
+        if (sender != null
+                && receiver.getId().equals(sender.getId())) {
+            throw new IllegalArgumentException(
+                    "Cannot create notification for yourself"
+            );
         }
-
+        boolean exists = notificationRepository
+                .existsByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+                        receiver.getId(),
+                        sender.getId(),
+                        entityType,
+                        entityId,
+                        type
+                );
+        if (exists) {
+            throw new NotificationAlreadyExistsException(
+                    "Notification already exists"
+            );
+        }
         Notification notification = Notification.builder()
                 .receiver(receiver)
                 .sender(sender)
@@ -42,8 +57,39 @@ public class NotificationServiceImpl implements NotificationService {
                 .entityId(entityId)
                 .type(type)
                 .build();
-
         notificationRepository.save(notification);
+    }
+
+    @Override
+    @Transactional
+    public void delete(
+            Long receiverId,
+            Long senderId,
+            EntityType entityType,
+            Long entityId,
+            NotificationType type
+    ) {
+        boolean exists = notificationRepository
+                .existsByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+                        receiverId,
+                        senderId,
+                        entityType,
+                        entityId,
+                        type
+                );
+        if (!exists) {
+            throw new NotificationNotFoundException(
+                    "Notification not found"
+            );
+        }
+        notificationRepository
+                .deleteByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+                        receiverId,
+                        senderId,
+                        entityType,
+                        entityId,
+                        type
+                );
     }
 
     @Override

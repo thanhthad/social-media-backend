@@ -1,6 +1,9 @@
 package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modults.notification.enums.EntityType;
+import media.social.modults.notification.enums.NotificationType;
+import media.social.modults.notification.service.NotificationService;
 import media.social.modults.post.dto.response.reaction.ReactionCountResponse;
 import media.social.modults.post.dto.response.reaction.ReactionResponse;
 import media.social.modults.post.dto.response.reaction.UserReactionResponse;
@@ -32,6 +35,7 @@ public class CommentReactionServiceImpl
     private final CommentReactionRepository commentReactionRepository;
     private final CommentRepository commentRepository;
     private final UserServiceDomain userServiceDomain;
+    private final NotificationService notificationService;
 
     private Comment getComment(Long commentId) {
         return commentRepository.findById(commentId)
@@ -66,6 +70,15 @@ public class CommentReactionServiceImpl
                     .build();
 
             commentReactionRepository.save(reaction);
+
+            notificationService.create(
+                    comment.getUser(),
+                    user,
+                    EntityType.COMMENT,
+                    comment.getId(),
+                    NotificationType.COMMENT_REACTION
+            );
+
             return;
         }
 
@@ -83,7 +96,7 @@ public class CommentReactionServiceImpl
 
         Long userId = UserContextHolder.getUserId();
 
-        getComment(commentId);
+        Comment comment = getComment(commentId);
 
         CommentReaction reaction =
                 commentReactionRepository
@@ -93,6 +106,14 @@ public class CommentReactionServiceImpl
                                         "Reaction Not Found"));
 
         commentReactionRepository.delete(reaction);
+
+        notificationService.delete(
+                comment.getUser().getId(),
+                userId,
+                EntityType.COMMENT,
+                comment.getId(),
+                NotificationType.COMMENT_REACTION
+        );
     }
 
     @Override

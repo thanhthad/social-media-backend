@@ -1,6 +1,9 @@
 package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modults.notification.enums.EntityType;
+import media.social.modults.notification.enums.NotificationType;
+import media.social.modults.notification.service.NotificationService;
 import media.social.modults.post.dto.request.comment.CreateCommentRequest;
 import media.social.modults.post.dto.request.comment.ReplyCommentRequest;
 import media.social.modults.post.dto.request.comment.UpdateCommentContent;
@@ -28,6 +31,7 @@ public class CommentServiceImpl implements CommentService {
     private final PostServiceDomain postServiceDomain;
     private final UserServiceDomain userServiceDomain;
     private final CommentReactionRepository commentReactionRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -36,17 +40,18 @@ public class CommentServiceImpl implements CommentService {
         long userId = UserContextHolder.getUserId();
 
         Post post = postServiceDomain.getByPostId(request.getPostId());
+
         User user = userServiceDomain.getByUserId(userId);
 
         Comment parent = null;
-
         if (request.getParentId() != null) {
             parent = commentRepository.findById(request.getParentId())
                     .orElseThrow(() ->
-                            new CommentNotFoundException("Parent comment not found")
+                            new CommentNotFoundException(
+                                    "Parent comment not found"
+                            )
                     );
         }
-
         Comment saved = commentRepository.save(
                 Comment.builder()
                         .post(post)
@@ -55,7 +60,24 @@ public class CommentServiceImpl implements CommentService {
                         .content(request.getContent())
                         .build()
         );
-
+        if (parent != null) {
+            notificationService.create(
+                    parent.getUser(),
+                    user,
+                    EntityType.COMMENT,
+                    parent.getId(),
+                    NotificationType.COMMENT_REPLY
+            );
+        }
+        else {
+            notificationService.create(
+                    post.getUser(),
+                    user,
+                    EntityType.POST,
+                    post.getId(),
+                    NotificationType.POST_COMMENT
+            );
+        }
         return CommentResponse.builder()
                 .commentId(saved.getId())
                 .userId(user.getId())
@@ -70,6 +92,26 @@ public class CommentServiceImpl implements CommentService {
                 .totalReactions(0L)
                 .myReaction(null)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void deleteComment(Long commentId) {
+
+        long userId = UserContextHolder.getUserId();
+
+        Comment comment = commentRepository.findByIdAndUser_Id(commentId, userId)
+                .orElseThrow(() ->
+                        new CommentNotFoundException("Not found or not allowed")
+                );
+        notificationService.delete(
+                comment.getPost().getUser().getId(),
+                userId,
+                EntityType.POST,
+                comment.getPost().getId(),
+                NotificationType.POST_COMMENT
+        );
+        commentRepository.delete(comment);
     }
 
     @Override
@@ -150,19 +192,6 @@ public class CommentServiceImpl implements CommentService {
                 .build();
     }
 
-    @Override
-    @Transactional
-    public void deleteComment(Long commentId) {
-
-        long userId = UserContextHolder.getUserId();
-
-        Comment comment = commentRepository.findByIdAndUser_Id(commentId, userId)
-                .orElseThrow(() ->
-                        new CommentNotFoundException("Not found or not allowed")
-                );
-
-        commentRepository.delete(comment);
-    }
 
     @Override
     @Transactional(readOnly = true)

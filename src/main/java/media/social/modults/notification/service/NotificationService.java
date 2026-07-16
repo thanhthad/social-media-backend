@@ -9,6 +9,14 @@ import org.springframework.data.domain.Pageable;
 
 public interface NotificationService {
 
+    void delete(
+            Long receiverId,
+            Long senderId,
+            EntityType entityType,
+            Long entityId,
+            NotificationType type
+    );
+
     void create(
             User receiver,
             User sender,

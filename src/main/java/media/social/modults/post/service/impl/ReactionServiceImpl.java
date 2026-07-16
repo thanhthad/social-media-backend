@@ -1,6 +1,9 @@
 package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modults.notification.enums.EntityType;
+import media.social.modults.notification.enums.NotificationType;
+import media.social.modults.notification.service.NotificationService;
 import media.social.modults.post.dto.response.reaction.ReactionCountResponse;
 import media.social.modults.post.dto.response.reaction.ReactionResponse;
 import media.social.modults.post.dto.response.reaction.UserReactionResponse;
@@ -31,6 +34,7 @@ public class ReactionServiceImpl implements ReactionService {
     private final ReactionRepository reactionRepository;
     private final PostRepository postRepository;
     private final UserServiceDomain userServiceDomain;
+    private final NotificationService notificationService;
 
     private Post getPost(Long postId) {
         return postRepository.findById(postId)
@@ -60,6 +64,13 @@ public class ReactionServiceImpl implements ReactionService {
                     .build();
 
             reactionRepository.save(reaction);
+            notificationService.create(
+                    post.getUser(),
+                    user,
+                    EntityType.POST,
+                    post.getId(),
+                    NotificationType.POST_REACTION
+            );
             return;
         }
 
@@ -75,7 +86,7 @@ public class ReactionServiceImpl implements ReactionService {
 
         Long userId = UserContextHolder.getUserId();
 
-        getPost(postId);
+        Post post = getPost(postId);
 
         Reaction reaction = reactionRepository
                 .findByUserIdAndPostId(userId, postId)
@@ -84,6 +95,14 @@ public class ReactionServiceImpl implements ReactionService {
                 );
 
         reactionRepository.delete(reaction);
+
+        notificationService.delete(
+                post.getUser().getId(),
+                userId,
+                EntityType.POST,
+                post.getId(),
+                NotificationType.POST_REACTION
+        );
     }
 
     @Override

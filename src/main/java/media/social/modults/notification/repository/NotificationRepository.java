@@ -2,6 +2,8 @@ package media.social.modults.notification.repository;
 
 import media.social.modults.notification.dto.response.NotificationResponse;
 import media.social.modults.notification.entity.Notification;
+import media.social.modults.notification.enums.EntityType;
+import media.social.modults.notification.enums.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +14,22 @@ import java.util.Optional;
 
 public interface NotificationRepository
         extends JpaRepository<Notification, Long> {
+
+    long deleteByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+            Long receiverId,
+            Long senderId,
+            EntityType entityType,
+            Long entityId,
+            NotificationType type
+    );
+
+    boolean existsByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+            Long receiverId,
+            Long senderId,
+            EntityType entityType,
+            Long entityId,
+            NotificationType type
+    );
 
     @Query("""
         SELECT new media.social.modults.notification.dto.response.NotificationResponse(
