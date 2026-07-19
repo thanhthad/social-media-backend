@@ -9,6 +9,7 @@ import media.social.modults.notification.exception.NotificationAlreadyExistsExce
 import media.social.modults.notification.exception.NotificationNotFoundException;
 import media.social.modults.notification.repository.NotificationRepository;
 import media.social.modults.notification.service.NotificationService;
+import media.social.modults.notification.websocket.NotificationPublisher;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.security.context.UserContextHolder;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationPublisher notificationPublisher;
 
     @Override
     @Transactional
@@ -57,7 +59,27 @@ public class NotificationServiceImpl implements NotificationService {
                 .entityId(entityId)
                 .type(type)
                 .build();
-        notificationRepository.save(notification);
+
+        Notification saved =
+                notificationRepository.save(notification);
+
+        NotificationResponse response =
+                NotificationResponse.builder()
+                        .notificationId(saved.getId())
+                        .senderId(sender.getId())
+                        .senderUsername(sender.getUsername())
+                        .senderAvatar(sender.getProfile().getAvatarUrl())
+                        .type(saved.getType())
+                        .entityType(saved.getEntityType())
+                        .entityId(saved.getEntityId())
+                        .isRead(saved.getIsRead())
+                        .createdAt(saved.getCreatedAt())
+                        .build();
+
+        notificationPublisher.sendToUser(
+                receiver.getId(),
+                response
+        );
     }
 
     @Override

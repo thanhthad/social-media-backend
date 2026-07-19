@@ -47,12 +47,10 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
-<!--		&lt;!&ndash; SQL SERVER &ndash;&gt;-->
-<!--		<dependency>-->
-<!--			<groupId>com.microsoft.sqlserver</groupId>-->
-<!--			<artifactId>mssql-jdbc</artifactId>-->
-<!--			<scope>runtime</scope>-->
-<!--		</dependency>-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>
