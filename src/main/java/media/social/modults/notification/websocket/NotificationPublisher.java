@@ -24,4 +24,13 @@ public class NotificationPublisher {
 
     }
 
+    public void sendGlobalNotification(
+            String message
+    ){
+        messagingTemplate.convertAndSend(
+                "/topic/system",
+                message
+        );
+    }
+
 }
