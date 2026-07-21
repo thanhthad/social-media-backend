@@ -1,9 +1,11 @@
 package media.social.modults.conversation.entity;
 
+import jakarta.persistence.Embeddable;
 import lombok.*;
 
 import java.io.Serializable;
 
+@Embeddable
 @Getter
 @Setter
 @NoArgsConstructor
@@ -11,8 +13,8 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class ConversationMemberId implements Serializable {
 
-    private Long conversation;
+    private Long conversationId;
 
-    private Long user;
+    private Long userId;
 
 }

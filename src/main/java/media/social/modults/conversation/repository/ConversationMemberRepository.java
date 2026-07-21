@@ -1,10 +1,12 @@
 package media.social.modults.conversation.repository;
 
 import media.social.modults.conversation.dto.response.ConversationMemberResponse;
+import media.social.modults.conversation.entity.Conversation;
 import media.social.modults.conversation.entity.ConversationMember;
 import media.social.modults.conversation.entity.ConversationMemberId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,16 +20,47 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     Optional<ConversationMember> findByConversationIdAndUserId(Long conversationId, Long userId);
 
     @Query("""
-        SELECT new media.social.modults.conversation_member.dto.response.ConversationMemberResponse(
-            u.id,
-            u.username,
-            p.avatarUrl
-        )
+        SELECT cm.conversation
         FROM ConversationMember cm
-        JOIN cm.user u
-        LEFT JOIN u.profile p
-        WHERE cm.conversation.id = :conversationId
-        """)
-    List<ConversationMemberResponse> findMembersByConversationId(Long conversationId);
+        WHERE cm.user.id = :userId
+        ORDER BY cm.conversation.lastMessageAt DESC
+    """)
+    List<Conversation> findConversationsByUserId(
+            @Param("userId") Long userId
+    );
 
+    @Query("""
+    SELECT new media.social.modults.conversation.dto.response.ConversationMemberResponse(
+        u.id,
+        u.username,
+        p.avatarUrl
+    )
+    FROM ConversationMember cm
+    JOIN cm.user u
+    LEFT JOIN u.profile p
+    WHERE cm.conversation.id = :conversationId
+""")
+    List<ConversationMemberResponse> findMembersByConversationId(
+            @Param("conversationId") Long conversationId
+    );
+    @Query("""
+    SELECT c
+    FROM Conversation c
+    JOIN ConversationMember cm1
+        ON cm1.conversation = c
+    JOIN ConversationMember cm2
+        ON cm2.conversation = c
+    WHERE c.type = media.social.modults.conversation.enums.ConversationType.PRIVATE
+    AND cm1.user.id = :userId
+    AND cm2.user.id = :targetUserId
+    AND (
+        SELECT COUNT(cm3)
+        FROM ConversationMember cm3
+        WHERE cm3.conversation = c
+    ) = 2
+""")
+    Optional<Conversation> findPrivateConversation(
+            @Param("userId") Long userId,
+            @Param("targetUserId") Long targetUserId
+    );
 }

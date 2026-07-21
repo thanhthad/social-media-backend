@@ -1,24 +1,34 @@
 package media.social.modults.conversation.service.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modults.conversation.dto.request.CreateGroupRequest;
+import media.social.modults.conversation.dto.request.UpdateGroupNameRequest;
 import media.social.modults.conversation.dto.response.ConversationMemberResponse;
+import media.social.modults.conversation.dto.response.ConversationResponse;
 import media.social.modults.conversation.entity.Conversation;
 import media.social.modults.conversation.entity.ConversationMember;
+import media.social.modults.conversation.entity.ConversationMemberId;
 import media.social.modults.conversation.entity.Message;
-import media.social.modults.conversation.exception.ConversationNotFoundException;
-import media.social.modults.conversation.exception.MemberNotFoundException;
-import media.social.modults.conversation.exception.MessageNotFoundException;
-import media.social.modults.conversation.exception.UserInMemberAlreadyExists;
+import media.social.modults.conversation.enums.ConversationType;
+import media.social.modults.conversation.exception.*;
 import media.social.modults.conversation.repository.ConversationMemberRepository;
 import media.social.modults.conversation.repository.ConversationRepository;
 import media.social.modults.conversation.repository.MessageRepository;
 import media.social.modults.conversation.service.ConversationMemberService;
+import media.social.modults.conversation.service.ConversationService;
+import media.social.modults.file.image.dto.response.UploadFileResponse;
+import media.social.modults.file.image.service.CloudinaryService;
+import media.social.modults.post.enums.MediaType;
 import media.social.modults.user.entity.User;
+import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.domain.UserServiceDomain;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -26,8 +36,326 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
 
     private final ConversationMemberRepository conversationMemberRepository;
     private final ConversationRepository conversationRepository;
+    private final ConversationService conversationService;
     private final MessageRepository messageRepository;
     private final UserServiceDomain userServiceDomain;
+    private final CloudinaryService cloudinaryService;
+
+    @Override
+    @Transactional
+    public ConversationResponse createPrivateConversation(Long targetUserId) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        if(userId.equals(targetUserId)){
+            throw new IllegalArgumentException(
+                    "Cannot create conversation with yourself"
+            );
+        }
+        User currentUser = userServiceDomain.getByUserId(userId);
+
+        User targetUser = userServiceDomain.getByUserId(targetUserId);
+
+        Optional<Conversation> existingConversation =
+                conversationMemberRepository.findPrivateConversation(
+                        userId,
+                        targetUserId
+                );
+        if (existingConversation.isPresent()) {
+            Conversation conversation = existingConversation.get();
+            return mapToResponse(conversation,userId);
+        }
+        Conversation conversation =
+                conversationService.create(
+                        ConversationType.PRIVATE
+                );
+        ConversationMember currentMember =
+                ConversationMember.builder()
+                        .id(
+                                new ConversationMemberId(
+                                        conversation.getId(),
+                                        userId
+                                )
+                        )
+                        .conversation(conversation)
+                        .user(currentUser)
+                        .build();
+
+        ConversationMember targetMember =
+                ConversationMember.builder()
+                        .id(
+                                new ConversationMemberId(
+                                        conversation.getId(),
+                                        targetUserId
+                                )
+                        )
+                        .conversation(conversation)
+                        .user(targetUser)
+                        .build();
+
+        conversationMemberRepository.save(currentMember);
+        conversationMemberRepository.save(targetMember);
+
+        return mapToResponse(conversation,userId);
+    }
+
+    @Transactional
+    public void updateGroupAvatar(
+            Long conversationId,
+            MultipartFile file
+    ){
+        Conversation conversation =
+                conversationRepository.findById(conversationId)
+                        .orElseThrow(
+                                () -> new ConversationNotFoundException(
+                                        "Conversation not found"
+                                )
+                        );
+        Long userId = UserContextHolder.getUserId();
+        if(conversation.getType()
+                != ConversationType.GROUP){
+
+            throw new IllegalArgumentException(
+                    "Only group can update avatar"
+            );
+        }
+        if(!conversation.getOwner()
+                .getId()
+                .equals(userId)){
+
+            throw new AccessDeniedException(
+                    "Only owner can update avatar"
+            );
+        }
+        cloudinaryService.validateFile(
+                file,
+                MediaType.IMAGE
+        );
+        UploadFileResponse upload =
+                cloudinaryService.uploadFile(
+                        file,
+                        "conversation/avatar",
+                        MediaType.IMAGE
+                );
+        if(conversation.getAvatarPublicId()!=null){
+
+            cloudinaryService.deleteFile(
+                    conversation.getAvatarPublicId(),
+                    MediaType.IMAGE
+            );
+        }
+        conversation.setAvatarUrl(
+                upload.getFileUrl()
+        );
+        conversation.setAvatarPublicId(
+                upload.getPublicId()
+        );
+    }
+
+    @Transactional
+    public void updateGroupName(
+            Long conversationId,
+            UpdateGroupNameRequest request
+    ){
+        Long userId = UserContextHolder.getUserId();
+        Conversation conversation =
+                conversationRepository.findById(conversationId)
+                        .orElseThrow(
+                                () -> new ConversationNotFoundException(
+                                        "Conversation not found"
+                                )
+                        );
+        if(conversation.getType()
+                != ConversationType.GROUP){
+
+            throw new IllegalArgumentException(
+                    "Only group can update name"
+            );
+        }
+        if(!conversation.getOwner()
+                .getId()
+                .equals(userId)){
+
+            throw new AccessDeniedException(
+                    "Only owner can update group"
+            );
+        }
+        conversation.setName(
+                request.getName()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void deleteConversation(Long conversationId){
+        Long userId =
+                UserContextHolder.getUserId();
+        Conversation conversation =
+                conversationRepository.findById(conversationId)
+                        .orElseThrow(
+                                () -> new ConversationNotFoundException(
+                                        "Conversation not found"
+                                )
+                        );
+        if(conversation.getType()
+                != ConversationType.GROUP){
+
+            throw new IllegalArgumentException(
+                    "Cannot delete private conversation"
+            );
+        }
+        if(!conversation.getOwner()
+                .getId()
+                .equals(userId)){
+
+            throw new AccessDeniedException(
+                    "Only owner can delete group"
+            );
+        }
+        if(conversation.getAvatarPublicId()!=null){
+
+            cloudinaryService.deleteFile(
+                    conversation.getAvatarPublicId(),
+                    MediaType.IMAGE
+            );
+        }
+        conversationRepository.delete(conversation);
+    }
+
+    @Override
+    @Transactional
+    public ConversationResponse createGroupConversation(
+            CreateGroupRequest request
+    ) {
+        Long userId = UserContextHolder.getUserId();
+
+        User currentUser =
+                userServiceDomain.getByUserId(userId);
+
+        if(request.getMemberIds() == null
+                || request.getMemberIds().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Group must have members"
+            );
+        }
+        Conversation conversation =
+                conversationService.create(
+                        ConversationType.GROUP
+                );
+        conversation.setOwner(currentUser);
+        conversation.setName(request.getName());
+
+        if(request.getAvatar() != null
+                && !request.getAvatar().isEmpty()) {
+            cloudinaryService.validateFile(
+                    request.getAvatar(),
+                    MediaType.IMAGE
+            );
+            UploadFileResponse upload =
+                    cloudinaryService.uploadFile(
+                            request.getAvatar(),
+                            "conversation/avatar",
+                            MediaType.IMAGE
+                    );
+            conversation.setAvatarUrl(
+                    upload.getFileUrl()
+            );
+            conversation.setAvatarPublicId(
+                    upload.getPublicId()
+            );
+        }
+        conversationRepository.save(conversation);
+        ConversationMember owner =
+                ConversationMember.builder()
+                        .id(
+                                new ConversationMemberId(
+                                        conversation.getId(),
+                                        userId
+                                )
+                        )
+                        .conversation(conversation)
+                        .user(currentUser)
+                        .build();
+        conversationMemberRepository.save(owner);
+        List<ConversationMember> members =
+                request.getMemberIds()
+                        .stream()
+                        .filter(id -> !id.equals(userId))
+                        .distinct()
+                        .map(id -> {
+                            User user =
+                                    userServiceDomain
+                                            .getByUserId(id);
+                            return ConversationMember.builder()
+                                    .id(
+                                            new ConversationMemberId(
+                                                    conversation.getId(),
+                                                    id
+                                            )
+                                    )
+                                    .conversation(conversation)
+                                    .user(user)
+                                    .build();
+
+                        })
+                        .toList();
+        conversationMemberRepository.saveAll(members);
+        return mapToResponse(
+                conversation,
+                userId
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConversationResponse> getMyConversations() {
+        Long userId =
+                UserContextHolder.getUserId();
+        List<Conversation> conversations =
+                conversationMemberRepository
+                        .findConversationsByUserId(userId);
+        return conversations.stream()
+                .map(c -> mapToResponse(c,userId))
+                .toList();
+    }
+
+    private ConversationResponse mapToResponse(
+            Conversation conversation,
+            Long currentUserId
+    ){
+        List<ConversationMemberResponse> members =
+                conversationMemberRepository
+                        .findMembersByConversationId(
+                                conversation.getId()
+                        );
+        String displayName;
+        String avatarUrl;
+        if(conversation.getType()
+                == ConversationType.PRIVATE){
+            ConversationMemberResponse target =
+                    members.stream()
+                            .filter(m ->
+                                    !m.getUserId()
+                                            .equals(currentUserId)
+                            )
+                            .findFirst()
+                            .orElseThrow();
+            displayName = target.getUsername();
+            avatarUrl = target.getAvatarUrl();
+        }else {
+            displayName = conversation.getName();
+            avatarUrl = conversation.getAvatarUrl();
+        }
+        return ConversationResponse.builder()
+                .id(conversation.getId())
+                .type(conversation.getType())
+                .displayName(displayName)
+                .avatarUrl(avatarUrl)
+                .members(members)
+                .createdAt(conversation.getCreatedAt())
+                .build();
+    }
 
     @Override
     @Transactional
@@ -36,27 +364,68 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new ConversationNotFoundException("Conversation not found"));
 
+        Long currentUserId =
+                UserContextHolder.getUserId();
+
+
+        if(!conversation.getOwner()
+                .getId()
+                .equals(currentUserId)){
+
+            throw new AccessDeniedException(
+                    "Only owner can add member"
+            );
+        }
         User user = userServiceDomain.getByUserId(userId);
+
+        if(conversation.getType().equals(ConversationType.PRIVATE)){
+            throw new IllegalArgumentException("This is a PRIVATE conversation");
+        }
 
         if (conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId)) {
             throw new UserInMemberAlreadyExists("User already exists");
         }
 
-        ConversationMember member = ConversationMember.builder()
-                .conversation(conversation)
-                .user(user)
-                .build();
+        ConversationMember member =
+                ConversationMember.builder()
+                        .id(
+                                new ConversationMemberId(
+                                        conversationId,
+                                        userId
+                                )
+                        )
+                        .conversation(conversation)
+                        .user(user)
+                        .build();
 
         conversationMemberRepository.save(member);
     }
 
-
     @Override
     @Transactional
     public void removeMember(Long conversationId, Long userId) {
+        Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(
+                () -> new ConversationNotFoundException("Conversation not found")
+        );
+        Long currentUserId =
+                UserContextHolder.getUserId();
+
+
+        if(!conversation.getOwner()
+                .getId()
+                .equals(currentUserId)){
+
+            throw new AccessDeniedException(
+                    "Only owner can remove member"
+            );
+        }
 
         if (!conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId)) {
             throw new MemberNotFoundException("Member not found");
+        }
+
+        if(conversation.getType().equals(ConversationType.PRIVATE)){
+            throw new IllegalArgumentException("This is a PRIVATE conversation");
         }
 
         conversationMemberRepository.deleteByConversationIdAndUserId(conversationId, userId);
@@ -92,15 +461,4 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
         member.setLastReadMessage(message);
     }
 
-
-    private ConversationMemberResponse mapToResponse(ConversationMember member) {
-
-        User user = member.getUser();
-
-        return ConversationMemberResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
-                .build();
-    }
 }

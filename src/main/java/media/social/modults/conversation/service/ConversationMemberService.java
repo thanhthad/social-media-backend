@@ -1,10 +1,32 @@
 package media.social.modults.conversation.service;
 
+import media.social.modults.conversation.dto.request.CreateGroupRequest;
+import media.social.modults.conversation.dto.request.UpdateGroupNameRequest;
 import media.social.modults.conversation.dto.response.ConversationMemberResponse;
+import media.social.modults.conversation.dto.response.ConversationResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface ConversationMemberService {
+
+    ConversationResponse createPrivateConversation(Long targetUserId);
+
+    void updateGroupAvatar(
+            Long conversationId,
+            MultipartFile file
+    );
+
+    void updateGroupName(
+            Long conversationId,
+            UpdateGroupNameRequest request
+    );
+
+    void deleteConversation(Long conversationId);
+
+    ConversationResponse createGroupConversation(CreateGroupRequest request);
+
+    List<ConversationResponse> getMyConversations();
 
     void addMember(Long conversationId, Long userId);
 

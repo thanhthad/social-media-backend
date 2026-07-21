@@ -17,19 +17,15 @@ public class ConversationServiceImpl implements ConversationService {
 
     private final ConversationRepository conversationRepository;
 
-
     @Override
-    public ConversationResponse create(ConversationType type) {
+    public Conversation create(ConversationType type) {
 
         Conversation conversation = Conversation.builder()
                 .type(type)
                 .build();
 
-        conversationRepository.save(conversation);
-
-        return mapToResponse(conversation);
+        return conversationRepository.save(conversation);
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -41,7 +37,6 @@ public class ConversationServiceImpl implements ConversationService {
         return mapToResponse(conversation);
     }
 
-
     @Override
     public void delete(Long conversationId) {
 
@@ -50,7 +45,6 @@ public class ConversationServiceImpl implements ConversationService {
 
         conversationRepository.delete(conversation);
     }
-
 
     private ConversationResponse mapToResponse(Conversation conversation) {
 

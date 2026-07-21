@@ -5,6 +5,7 @@ import lombok.Getter;
 import media.social.modults.conversation.enums.ConversationType;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -14,6 +15,11 @@ public class ConversationResponse {
 
     private ConversationType type;
 
-    private OffsetDateTime createdAt;
+    private String displayName;
 
+    private String avatarUrl;
+
+    private List<ConversationMemberResponse> members;
+
+    private OffsetDateTime createdAt;
 }
