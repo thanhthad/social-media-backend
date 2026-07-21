@@ -42,6 +42,7 @@ public class MessageReaction {
     )
     private Message message;
 
+    @Enumerated(EnumType.STRING)
     @Column(
             nullable = false,
             length = 50

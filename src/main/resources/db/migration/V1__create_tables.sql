@@ -175,7 +175,19 @@ CREATE TABLE notifications (
 
 CREATE TABLE conversations (
                                conversation_id BIGSERIAL PRIMARY KEY,
-                               type VARCHAR(50),
+
+                               type VARCHAR(50) NOT NULL,
+
+                               owner_id BIGINT
+                                                REFERENCES users(user_id)
+                                                    ON DELETE SET NULL,
+
+                               name VARCHAR(255),
+
+                               avatar_url VARCHAR(255),
+
+                               avatar_public_id VARCHAR(255),
+
                                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -197,13 +209,30 @@ CREATE TABLE messages (
 
                           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-                          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-                          read_at TIMESTAMP WITH TIME ZONE,
 
                           is_deleted BOOLEAN DEFAULT FALSE
 );
 
+CREATE TABLE message_reactions (
+
+                                   reaction_id BIGSERIAL PRIMARY KEY,
+
+                                   user_id BIGINT NOT NULL
+                                       REFERENCES users(user_id)
+                                           ON DELETE CASCADE,
+
+                                   message_id BIGINT NOT NULL
+                                       REFERENCES messages(message_id)
+                                           ON DELETE CASCADE,
+
+                                   type VARCHAR(50) NOT NULL,
+
+                                   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+
+                                   CONSTRAINT uk_user_message_reaction
+                                       UNIQUE(user_id, message_id)
+);
 
 CREATE TABLE conversation_members (
                                       conversation_id BIGINT REFERENCES conversations(conversation_id) ON DELETE CASCADE,
@@ -275,7 +304,7 @@ CREATE TABLE comment_reactions (
 CREATE TABLE message_media (
                                media_id BIGSERIAL PRIMARY KEY,
 
-                               message_id BIGINT NOT NULLs
+                               message_id BIGINT NOT NULL
                                    REFERENCES messages(message_id)
                                        ON DELETE CASCADE,
 
