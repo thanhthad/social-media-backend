@@ -431,14 +431,12 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
         conversationMemberRepository.deleteByConversationIdAndUserId(conversationId, userId);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public boolean isMember(Long conversationId, Long userId) {
 
         return conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId);
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -447,18 +445,31 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
         return conversationMemberRepository.findMembersByConversationId(conversationId);
     }
 
-
     @Override
     @Transactional
-    public void updateLastReadMessage(Long conversationId, Long userId, Long messageId) {
-
-        ConversationMember member = conversationMemberRepository.findByConversationIdAndUserId(conversationId, userId)
-                .orElseThrow(() -> new MemberNotFoundException("Member not found"));
-
-        Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new MessageNotFoundException("Message not found"));
-
+    public void updateLastReadMessage(
+            Long conversationId,
+            Long messageId
+    ){
+        Long userId = UserContextHolder.getUserId();
+        ConversationMember member =
+                conversationMemberRepository
+                        .findByConversationIdAndUserId(
+                                conversationId,
+                                userId
+                        )
+                        .orElseThrow(
+                                () -> new MemberNotFoundException(
+                                        "Member not found"
+                                )
+                        );
+        Message message =
+                messageRepository.findById(messageId)
+                        .orElseThrow(
+                                () -> new MessageNotFoundException(
+                                        "Message not found"
+                                )
+                        );
         member.setLastReadMessage(message);
     }
-
 }

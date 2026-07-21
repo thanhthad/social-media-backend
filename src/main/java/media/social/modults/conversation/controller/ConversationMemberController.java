@@ -178,7 +178,6 @@ public class ConversationMemberController {
 
         conversationMemberService.updateLastReadMessage(
                 conversationId,
-                null,
                 messageId
         );
 

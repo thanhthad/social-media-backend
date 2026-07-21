@@ -36,5 +36,5 @@ public interface ConversationMemberService {
 
     List<ConversationMemberResponse> getMembers(Long conversationId);
 
-    void updateLastReadMessage(Long conversationId, Long userId, Long messageId);
+    void updateLastReadMessage(Long conversationId, Long messageId);
 }

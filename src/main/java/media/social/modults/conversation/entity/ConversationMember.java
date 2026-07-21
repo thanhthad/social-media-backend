@@ -15,10 +15,8 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class ConversationMember {
 
-
     @EmbeddedId
     private ConversationMemberId id;
-
 
     @MapsId("conversationId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -28,7 +26,6 @@ public class ConversationMember {
     )
     private Conversation conversation;
 
-
     @MapsId("userId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
@@ -37,7 +34,6 @@ public class ConversationMember {
     )
     private User user;
 
-
     @Column(
             name = "joined_at",
             nullable = false,
@@ -45,11 +41,9 @@ public class ConversationMember {
     )
     private OffsetDateTime joinedAt;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_read_message_id")
     private Message lastReadMessage;
-
 
     @PrePersist
     public void prePersist() {
