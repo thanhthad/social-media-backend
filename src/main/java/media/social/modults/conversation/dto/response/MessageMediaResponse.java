@@ -11,8 +11,6 @@ public class MessageMediaResponse {
 
     private String url;
 
-    private String publicId;
-
     private String mediaType;
 
 }

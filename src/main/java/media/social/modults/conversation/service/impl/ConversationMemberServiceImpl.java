@@ -3,8 +3,10 @@ package media.social.modults.conversation.service.impl;
 import lombok.AllArgsConstructor;
 import media.social.modults.conversation.dto.request.CreateGroupRequest;
 import media.social.modults.conversation.dto.request.UpdateGroupNameRequest;
+import media.social.modults.conversation.dto.response.ConversationListResponse;
 import media.social.modults.conversation.dto.response.ConversationMemberResponse;
 import media.social.modults.conversation.dto.response.ConversationResponse;
+import media.social.modults.conversation.dto.response.LastMessageResponse;
 import media.social.modults.conversation.entity.Conversation;
 import media.social.modults.conversation.entity.ConversationMember;
 import media.social.modults.conversation.entity.ConversationMemberId;
@@ -97,6 +99,37 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
         conversationMemberRepository.save(targetMember);
 
         return mapToResponse(conversation,userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ConversationResponse getConversationDetail(
+            Long conversationId
+    ) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        if(!conversationMemberRepository
+                .existsByConversationIdAndUserId(
+                        conversationId,
+                        userId
+                )){
+            throw new AccessDeniedException(
+                    "You are not a member"
+            );
+        }
+
+        Conversation conversation =
+                conversationRepository.findById(conversationId)
+                        .orElseThrow(() ->
+                                new ConversationNotFoundException(
+                                        "Conversation not found"
+                                ));
+
+        return mapToResponse(
+                conversation,
+                userId
+        );
     }
 
     @Transactional
@@ -309,15 +342,118 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
 
     @Override
     @Transactional(readOnly = true)
-    public List<ConversationResponse> getMyConversations() {
-        Long userId =
-                UserContextHolder.getUserId();
+    public List<ConversationListResponse> getMyConversations() {
+
+        Long userId = UserContextHolder.getUserId();
+
         List<Conversation> conversations =
                 conversationMemberRepository
                         .findConversationsByUserId(userId);
+
         return conversations.stream()
-                .map(c -> mapToResponse(c,userId))
+                .map(c -> mapToConversationListResponse(c, userId))
                 .toList();
+    }
+
+    private ConversationListResponse mapToConversationListResponse(
+            Conversation conversation,
+            Long currentUserId
+    ) {
+
+        List<ConversationMemberResponse> members =
+                conversationMemberRepository
+                        .findMembersByConversationId(
+                                conversation.getId()
+                        );
+
+        String displayName;
+        String avatarUrl;
+
+        if (conversation.getType() == ConversationType.PRIVATE) {
+
+            ConversationMemberResponse target =
+                    members.stream()
+                            .filter(m ->
+                                    !m.getUserId().equals(currentUserId)
+                            )
+                            .findFirst()
+                            .orElseThrow();
+
+            displayName = target.getUsername();
+            avatarUrl = target.getAvatarUrl();
+
+        } else {
+
+            displayName = conversation.getName();
+            avatarUrl = conversation.getAvatarUrl();
+        }
+
+        Message message =
+                messageRepository
+                        .findTopByConversationIdOrderByCreatedAtDesc(
+                                conversation.getId()
+                        )
+                        .orElse(null);
+
+        LastMessageResponse lastMessage = null;
+
+        if (message != null) {
+
+            lastMessage = LastMessageResponse.builder()
+                    .id(message.getId())
+                    .preview(buildPreview(message))
+                    .senderId(message.getSender().getId())
+                    .senderName(message.getSender().getUsername())
+                    .createdAt(message.getCreatedAt())
+                    .build();
+        }
+
+        return ConversationListResponse.builder()
+                .id(conversation.getId())
+                .type(conversation.getType())
+                .displayName(displayName)
+                .avatarUrl(avatarUrl)
+                .lastMessage(lastMessage)
+                .createdAt(conversation.getCreatedAt())
+                .build();
+    }
+
+    private String buildPreview(Message message) {
+
+        if (message.getContent() != null &&
+                !message.getContent().isBlank()) {
+            return message.getContent();
+        }
+
+        int imageCount = message.getMedia()
+                .stream()
+                .filter(m -> m.getMediaType() == MediaType.IMAGE)
+                .toList()
+                .size();
+
+        int videoCount = message.getMedia()
+                .stream()
+                .filter(m -> m.getMediaType() == MediaType.VIDEO)
+                .toList()
+                .size();
+
+        if (imageCount > 0 && videoCount == 0) {
+            return imageCount == 1
+                    ? "Đã gửi một hình ảnh"
+                    : "Đã gửi " + imageCount + " hình ảnh";
+        }
+
+        if (videoCount > 0 && imageCount == 0) {
+            return videoCount == 1
+                    ? "Đã gửi một video"
+                    : "Đã gửi " + videoCount + " video";
+        }
+
+        if (imageCount > 0 && videoCount > 0) {
+            return "Đã gửi tệp đính kèm";
+        }
+
+        return "";
     }
 
     private ConversationResponse mapToResponse(
@@ -410,6 +546,11 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
         Long currentUserId =
                 UserContextHolder.getUserId();
 
+        if(userId.equals(conversation.getOwner().getId())){
+            throw new IllegalArgumentException(
+                    "Owner cannot remove himself"
+            );
+        }
 
         if(!conversation.getOwner()
                 .getId()

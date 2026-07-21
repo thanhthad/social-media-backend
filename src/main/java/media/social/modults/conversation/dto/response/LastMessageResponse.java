@@ -4,26 +4,18 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 
 @Getter
 @Builder
-public class MessageResponse {
+public class LastMessageResponse {
 
     private Long id;
 
-    private Long conversationId;
+    private String preview;
 
     private Long senderId;
 
     private String senderName;
 
-    private String content;
-
-    private Long replyToMessageId;
-
-    private List<MessageMediaResponse> medias;
-
     private OffsetDateTime createdAt;
-
 }

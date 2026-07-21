@@ -59,11 +59,6 @@ public class Message {
     )
     private OffsetDateTime createdAt;
 
-    @Column(
-            name = "updated_at"
-    )
-    private OffsetDateTime updatedAt;
-
     @OneToMany(
             mappedBy = "message",
             cascade = CascadeType.ALL,
@@ -85,12 +80,5 @@ public class Message {
     @PrePersist
     public void prePersist(){
         this.createdAt = OffsetDateTime.now();
-        this.updatedAt = OffsetDateTime.now();
     }
-
-    @PreUpdate
-    public void preUpdate(){
-        this.updatedAt = OffsetDateTime.now();
-    }
-
 }
