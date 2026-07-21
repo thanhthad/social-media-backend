@@ -58,12 +58,8 @@ public class ConversationMemberController {
     @GetMapping
     public ResponseEntity<?> getMyConversations(){
 
-        List<ConversationResponse> response =
-                conversationMemberService.getMyConversations();
-
-
         return ResponseData.success(
-                response,
+                conversationMemberService.getMyConversations(),
                 "Get conversations successfully",
                 HttpStatus.OK
         );
