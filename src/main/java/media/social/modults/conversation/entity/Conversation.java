@@ -7,7 +7,6 @@ import media.social.modults.user.entity.User;
 
 import java.time.OffsetDateTime;
 
-
 @Entity
 @Table(name = "conversations")
 @Getter
@@ -23,7 +22,7 @@ public class Conversation {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
+    @Column(name = "type", nullable = false)
     private ConversationType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -33,13 +32,16 @@ public class Conversation {
     @Column(name = "name")
     private String name;
 
-
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-
     @Column(name = "avatar_public_id")
     private String avatarPublicId;
+
+    @Column(
+            name = "last_message_at"
+    )
+    private OffsetDateTime lastMessageAt;
 
     @Column(
             name = "created_at",

@@ -103,6 +103,10 @@ public class MessageServiceImpl implements MessageService {
 
         Message saved = messageRepository.save(message);
 
+        conversation.setLastMessageAt(saved.getCreatedAt());
+
+        conversationRepository.save(conversation);
+
         return mapToResponse(saved);
     }
 
@@ -113,7 +117,6 @@ public class MessageServiceImpl implements MessageService {
             Long conversationId,
             Pageable pageable
     ) {
-
         Long userId = UserContextHolder.getUserId();
 
         checkMember(conversationId, userId);

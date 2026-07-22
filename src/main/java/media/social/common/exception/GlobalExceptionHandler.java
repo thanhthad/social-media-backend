@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
+import media.social.modults.conversation.exception.*;
 import media.social.modults.file.image.exception.CloudinaryDeleteException;
 import media.social.modults.file.image.exception.CloudinaryUploadException;
 import media.social.modults.file.image.exception.InvalidMediaException;
+import media.social.modults.notification.exception.NotificationAlreadyExistsException;
 import media.social.modults.notification.exception.NotificationNotFoundException;
 import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
@@ -56,13 +58,46 @@ public class GlobalExceptionHandler {
         return UserContextHolder.getUserId();
     }
 
+    // ================= CONVERSATION ===========================
+    @ExceptionHandler(ConversationNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConversationNotFound(ConversationNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ConversationAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConversationAlreadyExists(ConversationAlreadyExistsException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    // ================= MEMBER ===========================
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMemberNotFound(MemberNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MemberAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMemberAlreadyExists(MemberAlreadyExistsException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(UserInMemberAlreadyExists.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserInMemberAlreadyExists(UserInMemberAlreadyExists ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    // ================= MESSAGE ===========================
+    @ExceptionHandler(MessageNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMessageNotFound(MessageNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
     // ================= NOTIFICATION ===========================
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleNotificationNotFound(NotificationNotFoundException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
-    @ExceptionHandler(NotificationNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleNotificationAlreadyExists(NotificationNotFoundException ex) {
+    @ExceptionHandler(NotificationAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotificationAlreadyExists(NotificationAlreadyExistsException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
@@ -332,11 +367,13 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
     //===================FORBIDDEN=====================================
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiResponse<Object>> handleForbidden(ForbiddenException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
+
     // ================= FALLBACK (ONLY IMPORTANT LOG) =================
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {
