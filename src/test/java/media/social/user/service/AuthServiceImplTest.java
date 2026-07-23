@@ -51,7 +51,7 @@
         @BeforeEach
         void setUp() {
             testUser = User.builder().id(1L).username("testuser").email("test@mail.com").build();
-            testRole = Role.builder().id(1L).name(RoleName.USER.name()).build();
+            testRole = Role.builder().id(1L).name(RoleName.USER).build();
         }
 
         @Test
@@ -82,7 +82,7 @@
             when(userRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("encoded-password");
             when(userRepository.save(any(User.class))).thenReturn(testUser);
-            when(roleRepository.findByName(RoleName.USER.name())).thenReturn(Optional.of(testRole));
+            when(roleRepository.findByName(RoleName.USER)).thenReturn(Optional.of(testRole));
 
             authService.register(request);
 

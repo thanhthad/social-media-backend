@@ -2,6 +2,7 @@ package media.social.modults.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import media.social.modults.user.Enum.RoleName;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,8 +20,9 @@ public class Role {
     @Column(name = "role_id")
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true, length = 50)
-    private UserRole name;
+    private RoleName name;
 
     @Column(length = 255)
     private String description;

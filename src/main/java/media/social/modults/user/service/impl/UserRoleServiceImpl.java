@@ -34,10 +34,10 @@ public class UserRoleServiceImpl implements UserRoleService {
 
         User user = userServiceDomain.getByUserId(userId);
 
-        Role role = roleRepository.findByName(roleName.name())
+        Role role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
-        if (userRoleRepository.existsByUser_IdAndRole_Name(userId, roleName.name())) {
+        if (userRoleRepository.existsByUser_IdAndRole_Name(userId, roleName)) {
             throw new UserRoleAlreadyExistsException("User already has this role");
         }
 
@@ -57,10 +57,10 @@ public class UserRoleServiceImpl implements UserRoleService {
     @Override
     public void removeRole(Long userId, RoleName roleName) {
 
-        Role role = roleRepository.findByName(roleName.name())
+        Role role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
-        if (!userRoleRepository.existsByUser_IdAndRole_Name(userId, roleName.name())) {
+        if (!userRoleRepository.existsByUser_IdAndRole_Name(userId, roleName)) {
             throw new UserRoleNotFoundException("User does not have this role");
         }
 
@@ -89,7 +89,7 @@ public class UserRoleServiceImpl implements UserRoleService {
 
         return userRoleRepository.existsByUser_IdAndRole_Name(
                 userId,
-                roleName.name()
+                roleName
         );
     }
 

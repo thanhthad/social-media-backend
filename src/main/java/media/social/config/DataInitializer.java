@@ -28,11 +28,11 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
-        Role adminRole = roleRepository.findByName(RoleName.ADMIN.name())
+        Role adminRole = roleRepository.findByName(RoleName.ADMIN)
                 .orElseGet(() -> {
 
                     Role role = Role.builder()
-                            .name(RoleName.ADMIN.name())
+                            .name(RoleName.ADMIN)
                             .build();
 
                     return roleRepository.save(role);

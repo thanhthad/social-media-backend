@@ -23,7 +23,7 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> 
     WHERE ur.user.id = :userId
     AND ur.role.name = :roleName
 """)
-    boolean existsUserRole(Long userId, String roleName);
+    boolean existsUserRole(Long userId, RoleName roleName);
 
     @Query("""
     SELECT r
@@ -39,7 +39,7 @@ public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> 
     JOIN ur.user u
     WHERE ur.role.name = :roleName
 """)
-    List<User> findUsersByRole(String roleName);
+    List<User> findUsersByRole(RoleName roleName);
 
-    boolean existsByUser_IdAndRole_Name(Long userId, String roleName);
+    boolean existsByUser_IdAndRole_Name(Long userId, RoleName roleName);
 }
