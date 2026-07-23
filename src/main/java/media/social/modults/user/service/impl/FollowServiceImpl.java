@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import media.social.modults.notification.enums.EntityType;
 import media.social.modults.notification.enums.NotificationType;
 import media.social.modults.notification.service.NotificationService;
+import media.social.modults.user.Enum.RoleName;
 import media.social.modults.user.dto.response.user.FollowCountResponse;
 import media.social.modults.user.dto.response.user.FollowUserResponse;
 import media.social.modults.user.entity.Follow;
@@ -15,9 +16,11 @@ import media.social.modults.user.repository.FollowRepository;
 import media.social.modults.user.repository.UserRepository;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.FollowService;
+import media.social.modults.user.service.domain.UserRoleServiceDomain;
 import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,7 @@ public class FollowServiceImpl implements FollowService {
     private final UserRepository userRepository;
     private final UserServiceDomain userServiceDomain;
     private final NotificationService notificationService;
+    private final UserRoleServiceDomain userRoleServiceDomain;
 
     @Override
     @Transactional
@@ -41,6 +45,11 @@ public class FollowServiceImpl implements FollowService {
         if (currentUserId.equals(targetUserId)) {
             throw new IllegalArgumentException("You cannot follow yourself");
         }
+
+        if(userRoleServiceDomain.hasRole(targetUserId, RoleName.ADMIN) || userRoleServiceDomain.hasRole(targetUserId,RoleName.MODERATOR)){
+            throw new AccessDeniedException("You do not have permit to follow this user");
+        }
+
 
         if (followRepository.existsByFollower_IdAndFollowing_Id(currentUserId, targetUserId)) {
             throw new FollowAlreadyExistsException("You already follow this user with id:"+targetUserId);
