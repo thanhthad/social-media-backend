@@ -255,7 +255,7 @@ public class PostServiceImpl implements PostService {
                     )
                     .add(PostMediaResponse.builder()
                             .url(m.getUrl())
-                            .publicId(m.getPublicId())
+                            .postMediaId(m.getId())
                             .type(m.getMediaType())
                             .build());
         }
@@ -401,11 +401,11 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void deletePostMedia(String publicId) {
+    public void deletePostMedia(Long PostMediaId) {
 
-        PostMedia media = postMediaRepository.findByPublicId(publicId)
+        PostMedia media = postMediaRepository.findById(PostMediaId)
                 .orElseThrow(() ->
-                        new MediaNotFoundException("Media not found: " + publicId)
+                        new MediaNotFoundException("Media not found: " + PostMediaId)
                 );
 
         Post post = media.getPost();
@@ -424,7 +424,7 @@ public class PostServiceImpl implements PostService {
             );
         }
 
-        cloudinaryService.deleteFile(publicId,media.getMediaType());
+        cloudinaryService.deleteFile(media.getPublicId(),media.getMediaType());
 
         postMediaRepository.delete(media);
     }

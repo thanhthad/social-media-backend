@@ -9,7 +9,7 @@ import media.social.modults.post.enums.MediaType;
 @Setter
 @Builder
 public class PostMediaResponse {
+    private Long postMediaId;
     private String url;
-    private String publicId;
     private MediaType type;
 }

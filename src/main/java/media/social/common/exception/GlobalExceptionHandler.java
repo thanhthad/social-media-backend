@@ -15,6 +15,7 @@ import media.social.modults.post.exception.comment.CommentAlreadyExistsException
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.exception.post.*;
 import media.social.modults.post.exception.post_media.InvalidImageException;
+import media.social.modults.post.exception.post_media.MediaNotFoundException;
 import media.social.modults.post.exception.reaction.ReactionNotFoundException;
 import media.social.modults.post.exception.report.CannotReportOwnPostException;
 import media.social.modults.post.exception.report.ReportAlreadyExistsException;
@@ -214,6 +215,12 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    //====================POST_MEDIA==================
+    @ExceptionHandler(MediaNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMediaNotFound(MediaNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
     //====================POST==================
     @ExceptionHandler(PostNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handlePostNotFound(PostNotFoundException ex) {
@@ -303,6 +310,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleInvalidImage(InvalidMediaException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
+
 
     @ExceptionHandler(CloudinaryUploadException.class)
     public ResponseEntity<ApiResponse<Object>> handleUpload(CloudinaryUploadException ex) {

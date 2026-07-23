@@ -21,7 +21,7 @@ public interface PostService {
 
     PostResponse getPostById(Long postId);
 
-    void deletePostMedia(String publicId);
+    void deletePostMedia(Long PostMediaId);
 
     void updatePostContent(Long postId,UpdatePostContent content);
 

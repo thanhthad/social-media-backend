@@ -7,6 +7,7 @@ import media.social.common.response.ResponseData;
 import media.social.modults.post.dto.request.post.CreatePostRequest;
 import media.social.modults.post.dto.request.post.UpdatePostContent;
 import media.social.modults.post.dto.request.post.UpdatePostMedia;
+import media.social.modults.post.entity.Post;
 import media.social.modults.post.service.PostService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -125,12 +126,12 @@ public class PostController {
     }
 
     // ================= DELETE MEDIA (FIXED) =================
-    @DeleteMapping("/media")
-    @Operation(summary = "Delete media by publicId")
+    @DeleteMapping("/media/{mediaId}")
+    @Operation(summary = "Delete media by postMediaId")
     public ResponseEntity<?> deleteMedia(
-            @RequestParam String publicId
+            @PathVariable Long mediaId
     ) {
-        postService.deletePostMedia(publicId);
+        postService.deletePostMedia(mediaId);
 
         return ResponseData.success(
                 null,
