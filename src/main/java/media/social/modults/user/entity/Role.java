@@ -20,7 +20,7 @@ public class Role {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String name;
+    private UserRole name;
 
     @Column(length = 255)
     private String description;

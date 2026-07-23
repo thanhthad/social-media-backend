@@ -7,6 +7,7 @@ import media.social.modults.notification.service.NotificationService;
 import media.social.modults.user.dto.response.user.FollowCountResponse;
 import media.social.modults.user.dto.response.user.FollowUserResponse;
 import media.social.modults.user.entity.Follow;
+import media.social.modults.user.entity.FollowId;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
 import media.social.modults.user.exception.follow.FollowNotFoundException;
@@ -52,6 +53,10 @@ public class FollowServiceImpl implements FollowService {
                 .orElseThrow(() -> new FollowNotFoundException("Target user not found"));
 
         Follow follow = Follow.builder()
+                .id(new FollowId(
+                        follower.getId(),
+                        following.getId()
+                ))
                 .follower(follower)
                 .following(following)
                 .build();

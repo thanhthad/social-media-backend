@@ -10,6 +10,7 @@ import media.social.modults.post.dto.response.reaction.UserReactionResponse;
 import media.social.modults.post.entity.Comment;
 import media.social.modults.post.entity.CommentReaction;
 import media.social.modults.post.enums.ReactionType;
+import media.social.modults.post.exception.comment.CanNotCommentYourself;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.exception.reaction.ReactionNotFoundException;
 import media.social.modults.post.repository.CommentReactionRepository;
@@ -56,6 +57,9 @@ public class CommentReactionServiceImpl
 
         User user = userServiceDomain.getByUserId(userId);
 
+        if(comment.getUser().getId().equals(userId)){
+            throw new CanNotCommentYourself("Can not comment yourself");
+        }
         CommentReaction reaction =
                 commentReactionRepository
                         .findByUserIdAndCommentId(userId, commentId)

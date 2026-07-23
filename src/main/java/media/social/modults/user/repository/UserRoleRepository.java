@@ -1,5 +1,6 @@
 package media.social.modults.user.repository;
 
+import media.social.modults.user.Enum.RoleName;
 import media.social.modults.user.entity.Role;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.entity.UserRole;
@@ -10,6 +11,12 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> {
+
+    boolean existsByUserIdAndRoleName(
+            Long userId,
+            RoleName roleName
+    );
+
     @Query("""
     SELECT CASE WHEN COUNT(ur) > 0 THEN true ELSE false END
     FROM UserRole ur

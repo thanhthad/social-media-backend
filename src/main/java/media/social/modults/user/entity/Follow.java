@@ -1,9 +1,7 @@
 package media.social.modults.user.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -17,10 +15,12 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Follow {
 
     @EmbeddedId
-    private FollowId id = new FollowId();
+    private FollowId id ;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("followerId")

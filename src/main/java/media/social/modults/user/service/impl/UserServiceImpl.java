@@ -1,5 +1,10 @@
 package media.social.modults.user.service.impl;
 import media.social.modults.post.enums.MediaType;
+import media.social.modults.user.Enum.RoleName;
+import media.social.modults.user.dto.response.role.RoleResponse;
+import media.social.modults.user.service.domain.UserRoleServiceDomain;
+import media.social.modults.user.service.domain.UserServiceDomain;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import media.social.modults.file.image.dto.response.UploadFileResponse;
@@ -27,6 +32,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -37,6 +44,8 @@ public class UserServiceImpl implements UserService {
     private final ProfileMapper profileMapper;
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
+    private final UserRoleServiceDomain userRoleServiceDomain;
+    private final UserServiceDomain userServiceDomain;
 
     private User getCurrentUser() {
         Long userId = UserContextHolder.getUserId();
@@ -168,19 +177,75 @@ public class UserServiceImpl implements UserService {
     @Override
     public PublicUserProfileResponse getUserById(Long userId) {
 
-        User user = userRepository.findById(userId)
+        User targetUser = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new UserNotFoundException(
-                                "User not found "
-                        )
+                        new UserNotFoundException("User not found")
                 );
+
+        Long currentUserId = UserContextHolder.getUserId();
+
+        User currentUser = userServiceDomain.getByUserId(currentUserId);
+
+        validateCanViewProfile(
+                currentUserId,
+                userId
+        );
 
         Profile profile = getCurrentProfile(userId);
 
         return buildPublicProfileResponse(
-                user,
+                targetUser,
                 profile
         );
+    }
+    private void validateCanViewProfile(
+            Long currentUserId,
+            Long targetUserId
+    ) {
+
+
+        boolean currentIsAdmin =
+                userRoleServiceDomain.hasRole(
+                        currentUserId,
+                        RoleName.ADMIN
+                );
+
+        if (currentIsAdmin) {
+            return;
+        }
+
+        boolean currentIsModerator =
+                userRoleServiceDomain.hasRole(
+                        currentUserId,
+                        RoleName.MODERATOR
+                );
+
+        boolean targetIsAdmin =
+                userRoleServiceDomain.hasRole(
+                        targetUserId,
+                        RoleName.ADMIN
+                );
+
+        boolean targetIsModerator =
+                userRoleServiceDomain.hasRole(
+                        targetUserId,
+                        RoleName.MODERATOR
+                );
+
+        if (currentIsModerator && targetIsAdmin) {
+
+            throw new AccessDeniedException(
+                    "Moderator cannot view admin profile"
+            );
+        }
+
+        if (!currentIsModerator
+                && (targetIsAdmin || targetIsModerator)) {
+
+            throw new AccessDeniedException(
+                    "You cannot view this profile"
+            );
+        }
     }
 
     @Transactional(readOnly = true)

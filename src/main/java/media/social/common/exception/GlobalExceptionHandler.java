@@ -10,6 +10,7 @@ import media.social.modults.file.image.exception.CloudinaryUploadException;
 import media.social.modults.file.image.exception.InvalidMediaException;
 import media.social.modults.notification.exception.NotificationAlreadyExistsException;
 import media.social.modults.notification.exception.NotificationNotFoundException;
+import media.social.modults.post.exception.comment.CanNotCommentYourself;
 import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.exception.post.*;
@@ -259,6 +260,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CommentAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleCommentAlreadyExists(CommentAlreadyExistsException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(CanNotCommentYourself.class)
+    public ResponseEntity<ApiResponse<Object>> handleCommentYourself(CanNotCommentYourself ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(CommentNotFoundException.class)

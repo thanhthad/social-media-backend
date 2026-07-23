@@ -96,7 +96,7 @@ public class UserRoleServiceImpl implements UserRoleService {
     private RoleResponse mapToResponse(Role role) {
 
         return RoleResponse.builder()
-                .name(role.getName())
+                .name(role.getName().toString())
                 .description(role.getDescription())
                 .build();
     }
