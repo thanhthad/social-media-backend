@@ -22,11 +22,9 @@ public interface PostMediaRepository extends JpaRepository<PostMedia, Long> {
 
     @Query("""
 SELECT new media.social.modults.post.dto.response.post.PostMediaResponse(
-
+    pm.id,
     pm.url,
-    pm.publicId,
     pm.mediaType
-
 )
 
 FROM PostMedia pm

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class ReportDetailResponse {
+    private Long reportId;
 
     private Long postId;
 

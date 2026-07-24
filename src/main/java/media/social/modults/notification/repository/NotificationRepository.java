@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface NotificationRepository
         extends JpaRepository<Notification, Long> {
 
-    long deleteByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+    void deleteByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
             Long receiverId,
             Long senderId,
             EntityType entityType,
@@ -24,6 +24,14 @@ public interface NotificationRepository
     );
 
     boolean existsByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+            Long receiverId,
+            Long senderId,
+            EntityType entityType,
+            Long entityId,
+            NotificationType type
+    );
+
+    Optional<Notification> findByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
             Long receiverId,
             Long senderId,
             EntityType entityType,

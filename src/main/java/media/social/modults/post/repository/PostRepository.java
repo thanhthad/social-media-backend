@@ -18,7 +18,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("""
     SELECT p
     FROM Post p
-    JOIN FETCH p.user
     WHERE p.id = :postId
 """)
     Optional<Post> findByIdWithUser(

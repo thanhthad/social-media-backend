@@ -20,6 +20,7 @@ import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,7 @@ public class CommentServiceImpl implements CommentService {
                             )
                     );
         }
+
         Comment saved = commentRepository.save(
                 Comment.builder()
                         .post(post)
@@ -94,23 +96,38 @@ public class CommentServiceImpl implements CommentService {
                 .build();
     }
 
-    @Override
     @Transactional
     public void deleteComment(Long commentId) {
+        Long userId = UserContextHolder.getUserId();
 
-        long userId = UserContextHolder.getUserId();
-
-        Comment comment = commentRepository.findByIdAndUser_Id(commentId, userId)
+        Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() ->
-                        new CommentNotFoundException("Not found or not allowed")
+                        new CommentNotFoundException("Comment not found")
                 );
+
+        boolean isCommentOwner =
+                comment.getUser().getId().equals(userId);
+
+        boolean isPostOwner =
+                comment.getPost()
+                        .getUser()
+                        .getId()
+                        .equals(userId);
+
+        if (!isCommentOwner && !isPostOwner) {
+            throw new AccessDeniedException(
+                    "You don't have permission to delete this comment"
+            );
+        }
+
         notificationService.delete(
                 comment.getPost().getUser().getId(),
-                userId,
+                comment.getUser().getId(),
                 EntityType.POST,
                 comment.getPost().getId(),
                 NotificationType.POST_COMMENT
         );
+
         commentRepository.delete(comment);
     }
 

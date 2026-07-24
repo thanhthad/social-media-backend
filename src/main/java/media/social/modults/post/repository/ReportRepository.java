@@ -28,6 +28,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     @Query("""
         SELECT new media.social.modults.post.dto.response.report.ReportDetailResponse(
+            r.id,
             p.id,
             reporter.id,
             reporter.username,
@@ -50,6 +51,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     @Query("""
         SELECT new media.social.modults.post.dto.response.report.ReportDetailResponse(
+            r.id,
             p.id,
             reporter.id,
             reporter.username,

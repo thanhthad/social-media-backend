@@ -5,7 +5,6 @@ import media.social.modults.notification.dto.response.NotificationResponse;
 import media.social.modults.notification.entity.Notification;
 import media.social.modults.notification.enums.EntityType;
 import media.social.modults.notification.enums.NotificationType;
-import media.social.modults.notification.exception.NotificationAlreadyExistsException;
 import media.social.modults.notification.exception.NotificationNotFoundException;
 import media.social.modults.notification.repository.NotificationRepository;
 import media.social.modults.notification.service.NotificationService;
@@ -16,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
@@ -35,30 +36,25 @@ public class NotificationServiceImpl implements NotificationService {
     ) {
         if (sender != null
                 && receiver.getId().equals(sender.getId())) {
-            throw new IllegalArgumentException(
-                    "Cannot create notification for yourself"
-            );
+            return;
         }
-        boolean exists = notificationRepository
-                .existsByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+        Notification notification = notificationRepository
+                .findByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
                         receiver.getId(),
                         sender.getId(),
                         entityType,
                         entityId,
                         type
-                );
-        if (exists) {
-            throw new NotificationAlreadyExistsException(
-                    "Notification already exists"
-            );
-        }
-        Notification notification = Notification.builder()
-                .receiver(receiver)
-                .sender(sender)
-                .entityType(entityType)
-                .entityId(entityId)
-                .type(type)
-                .build();
+                )
+                .orElseGet(() -> Notification.builder()
+                        .receiver(receiver)
+                        .sender(sender)
+                        .entityType(entityType)
+                        .entityId(entityId)
+                        .type(type)
+                        .build());
+        notification.setCreatedAt(LocalDateTime.now());
+        notification.setIsRead(false);
 
         Notification saved =
                 notificationRepository.save(notification);
@@ -100,9 +96,7 @@ public class NotificationServiceImpl implements NotificationService {
                         type
                 );
         if (!exists) {
-            throw new NotificationNotFoundException(
-                    "Notification not found"
-            );
+            return;
         }
         notificationRepository
                 .deleteByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(

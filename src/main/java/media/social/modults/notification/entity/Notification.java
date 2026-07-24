@@ -63,18 +63,9 @@ public class Notification {
 
     @Column(
             name = "created_at",
-            nullable = false,
-            updatable = false
+            nullable = false
     )
     private LocalDateTime createdAt;
 
-    @PrePersist
-    public void prePersist() {
 
-        createdAt = LocalDateTime.now();
-
-        if (isRead == null) {
-            isRead = false;
-        }
-    }
 }

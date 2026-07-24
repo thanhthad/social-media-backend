@@ -29,11 +29,9 @@ public class Comment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Comment parent;
-
 
     @Builder.Default
     @OneToMany(

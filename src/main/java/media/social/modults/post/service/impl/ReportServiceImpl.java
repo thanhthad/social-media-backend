@@ -89,6 +89,9 @@ public class ReportServiceImpl implements ReportService {
         User user = userServiceDomain.getByUserId(UserContextHolder.getUserId());
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("Report not found"));
+        if(request.getReportStatus().equals(ReportStatus.PENDING)){
+            throw new ReportAlreadyExistsException("Report already PENDING status");
+        }
         if (report.getStatus() != ReportStatus.PENDING) {
             throw new ReportAlreadyReviewedException("Report has already been reviewed.");
         }
