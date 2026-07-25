@@ -15,6 +15,17 @@ import java.util.Optional;
 public interface ReactionRepository
         extends JpaRepository<Reaction, Long> {
 
+    @Query("""
+SELECT r
+FROM Reaction r
+WHERE r.user.id = :userId
+AND r.post.id IN :postIds
+""")
+    List<Reaction> findMyReactions(
+            @Param("userId") Long userId,
+            @Param("postIds") List<Long> postIds
+    );
+
     Optional<Reaction> findByUserIdAndPostId(
             Long userId,
             Long postId
@@ -30,8 +41,12 @@ public interface ReactionRepository
     FROM Reaction r
     WHERE r.post.id = :postId
     GROUP BY r.type
-    """)
-    List<Object[]> countReactionsByPostId(@Param("postId") Long postId);
+""")
+    List<Object[]> countReactionTypesByPostId(
+            @Param("postId") Long postId
+    );
+
+    long countByPostId(Long postId);
 
     void deleteByUserIdAndPostId(
             Long userId,

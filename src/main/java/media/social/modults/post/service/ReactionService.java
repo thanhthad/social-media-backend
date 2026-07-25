@@ -23,6 +23,8 @@ public interface ReactionService {
             Long postId
     );
 
+    long getTotalReaction(Long postId);
+
     ReactionCountResponse countReaction(
             Long postId
     );

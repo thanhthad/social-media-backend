@@ -132,6 +132,11 @@ public class ReactionServiceImpl implements ReactionService {
     }
 
     @Override
+    public long getTotalReaction(Long postId) {
+        return reactionRepository.countByPostId(postId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public ReactionCountResponse countReaction(Long postId) {
 
@@ -144,7 +149,7 @@ public class ReactionServiceImpl implements ReactionService {
         }
 
         List<Object[]> results =
-                reactionRepository.countReactionsByPostId(postId);
+                reactionRepository.countReactionTypesByPostId(postId);
 
         for (Object[] row : results) {
 

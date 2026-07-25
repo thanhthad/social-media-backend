@@ -15,6 +15,7 @@ import java.util.Optional;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
+
     @Query("""
     SELECT p
     FROM Post p
@@ -25,27 +26,36 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-                SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
-            p.id,
-            p.content,
-            p.visibility,
-            p.createdAt,
-            u.id,
-            u.username,
-            pr.avatarUrl
-        )
-    FROM Post p
-    JOIN p.user u
-    LEFT JOIN u.profile pr
-    WHERE u.id = :userId
-        AND u.status = media.social.modults.user.Enum.Status.ACTIVE
-        AND NOT EXISTS (
-            SELECT 1
-            FROM Report r
-            WHERE r.post.id = p.id
-              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
-        )
-    ORDER BY p.createdAt DESC
+    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+        p.id,
+        p.content,
+        p.visibility,
+        p.createdAt,
+    
+        u.id,
+        u.username,
+        pr.avatarUrl,
+    
+        (SELECT COUNT(c.id)
+         FROM Comment c
+         WHERE c.post.id = p.id),
+    
+        (SELECT COUNT(r.id)
+         FROM Reaction r
+         WHERE r.post.id = p.id)
+    )
+        FROM Post p
+        JOIN p.user u
+        LEFT JOIN u.profile pr
+        WHERE u.id = :userId
+            AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+            AND NOT EXISTS (
+                SELECT 1
+                FROM Report report
+                WHERE report.post.id = p.id
+                AND report.status = media.social.modults.post.enums.ReportStatus.APPROVED
+            )
+        ORDER BY p.createdAt DESC
     """)
     Page<PostFlatResponse> findAllPostMe(
             @Param("userId") Long userId,
@@ -60,7 +70,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         p.createdAt,
         u.id,
         u.username,
-        pr.avatarUrl
+        pr.avatarUrl,
+    
+        (SELECT COUNT(c.id)
+         FROM Comment c
+         WHERE c.post.id = p.id),
+    
+        (SELECT COUNT(r.id)
+         FROM Reaction r
+         WHERE r.post.id = p.id)
+            
     )
     FROM Post p
     JOIN p.user u
@@ -90,7 +109,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         p.createdAt,
         u.id,
         u.username,
-        pr.avatarUrl
+        pr.avatarUrl,
+            
+        (SELECT COUNT(c.id)
+         FROM Comment c
+         WHERE c.post.id = p.id),
+        
+        (SELECT COUNT(r.id)
+         FROM Reaction r
+         WHERE r.post.id = p.id)
+          
     )
     FROM Post p
     JOIN p.user u
@@ -119,7 +147,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         p.createdAt,
         u.id,
         u.username,
-        pr.avatarUrl
+        pr.avatarUrl,
+              
+        (SELECT COUNT(c.id)
+         FROM Comment c
+         WHERE c.post.id = p.id),
+        
+        (SELECT COUNT(r.id)
+         FROM Reaction r
+         WHERE r.post.id = p.id)
     )
     FROM Post p
     JOIN p.user u
@@ -165,7 +201,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         p.createdAt,
         u.id,
         u.username,
-        pr.avatarUrl
+        pr.avatarUrl,
+            
+        (SELECT COUNT(c.id)
+         FROM Comment c
+         WHERE c.post.id = p.id),
+        
+        (SELECT COUNT(r.id)
+         FROM Reaction r
+         WHERE r.post.id = p.id)
     )
     FROM Post p
     JOIN p.user u
@@ -213,7 +257,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         p.createdAt,
         u.id,
         u.username,
-        pr.avatarUrl
+        pr.avatarUrl,
+            
+        (SELECT COUNT(c.id)
+         FROM Comment c
+         WHERE c.post.id = p.id),
+        
+        (SELECT COUNT(r.id)
+         FROM Reaction r
+         WHERE r.post.id = p.id)
     )
     FROM PostHashtag ph
     JOIN ph.post p
@@ -262,7 +314,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         p.createdAt,
         u.id,
         u.username,
-        pr.avatarUrl
+        pr.avatarUrl,
+            
+        (SELECT COUNT(c.id)
+         FROM Comment c
+         WHERE c.post.id = p.id),
+        
+        (SELECT COUNT(r.id)
+         FROM Reaction r
+         WHERE r.post.id = p.id)
     )
     FROM SavedPost sp
     JOIN sp.post p

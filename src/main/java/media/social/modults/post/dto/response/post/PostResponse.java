@@ -1,6 +1,7 @@
 package media.social.modults.post.dto.response.post;
 
 import lombok.*;
+import media.social.modults.post.enums.ReactionType;
 import media.social.modults.post.enums.Visibility;
 
 import java.time.LocalDateTime;
@@ -29,4 +30,12 @@ public class PostResponse {
     private String username;
 
     private String avatarUrl;
+
+    private long commentCount;
+
+    private long reactionCount;
+
+    private boolean reacted;
+
+    private ReactionType myReactionType;
 }

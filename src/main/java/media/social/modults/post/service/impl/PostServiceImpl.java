@@ -2,8 +2,7 @@ package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import media.social.modults.post.entity.Hashtag;
-import media.social.modults.post.entity.PostHashtag;
+import media.social.modults.post.entity.*;
 import media.social.modults.post.enums.MediaType;
 import media.social.modults.post.dto.request.post.CreatePostRequest;
 import media.social.modults.post.dto.request.post.UpdatePostContent;
@@ -12,18 +11,13 @@ import media.social.modults.post.dto.response.post.PostFlatResponse;
 import media.social.modults.post.dto.response.post.PostMediaResponse;
 import media.social.modults.post.dto.response.post.PostResponse;
 import media.social.modults.file.image.dto.response.UploadFileResponse;
-import media.social.modults.post.entity.Post;
-import media.social.modults.post.entity.PostMedia;
 import media.social.modults.post.enums.Visibility;
 import media.social.modults.post.exception.post_media.InvalidImageException;
 import media.social.modults.post.exception.post_media.MediaNotFoundException;
-import media.social.modults.post.repository.HashtagRepository;
-import media.social.modults.post.repository.PostHashtagRepository;
-import media.social.modults.post.repository.PostMediaRepository;
+import media.social.modults.post.repository.*;
 import media.social.modults.post.service.PostServiceDomain;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.post.PostNotFoundException;
-import media.social.modults.post.repository.PostRepository;
 import media.social.modults.user.exception.block.UserBlockedException;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.file.image.service.CloudinaryService;
@@ -41,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -57,6 +52,7 @@ public class PostServiceImpl implements PostService {
     private final BlockPolicyService blockPolicyService;
     private final FollowService followService;
     private final PostServiceDomain postServiceDomain;
+    private final ReactionRepository reactionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -229,6 +225,7 @@ public class PostServiceImpl implements PostService {
             Page<PostFlatResponse> flatPage,
             Pageable pageable
     ) {
+
         if (flatPage.isEmpty()) {
             return new PageImpl<>(
                     Collections.emptyList(),
@@ -236,6 +233,7 @@ public class PostServiceImpl implements PostService {
                     flatPage.getTotalElements()
             );
         }
+
         List<Long> postIds = flatPage.getContent()
                 .stream()
                 .map(PostFlatResponse::getId)
@@ -247,38 +245,68 @@ public class PostServiceImpl implements PostService {
         Map<Long, List<PostMediaResponse>> mediaMap = new HashMap<>();
 
         for (PostMedia m : mediaList) {
-
             mediaMap
                     .computeIfAbsent(
                             m.getPost().getId(),
                             k -> new ArrayList<>()
                     )
-                    .add(PostMediaResponse.builder()
-                            .url(m.getUrl())
-                            .postMediaId(m.getId())
-                            .type(m.getMediaType())
-                            .build());
+                    .add(
+                            PostMediaResponse.builder()
+                                    .url(m.getUrl())
+                                    .postMediaId(m.getId())
+                                    .type(m.getMediaType())
+                                    .build()
+                    );
         }
 
-        List<PostResponse> result = flatPage.getContent()
-                .stream()
-                .map(row -> PostResponse.builder()
-                        .id(row.getId())
-                        .content(row.getContent())
-                        .visibility(row.getVisibility())
-                        .createdAt(row.getCreatedAt())
-                        .userId(row.getUserId())
-                        .username(row.getUsername())
-                        .avatarUrl(row.getAvatarUrl())
-                        .postMediaResponses(
-                                mediaMap.getOrDefault(
-                                        row.getId(),
-                                        Collections.emptyList()
-                                )
-                        )
-                        .build())
-                .toList();
+        Long userId = UserContextHolder.getUserId();
 
+        List<Reaction> reactions =
+                reactionRepository.findMyReactions(
+                        userId,
+                        postIds
+                );
+
+        Map<Long, Reaction> reactionMap =
+                reactions.stream()
+                        .collect(Collectors.toMap(
+                                r -> r.getPost().getId(),
+                                r -> r
+                        ));
+
+        List<PostResponse> result =
+                flatPage.getContent()
+                        .stream()
+                        .map(row -> {
+                            Reaction reaction =
+                                    reactionMap.get(row.getId());
+                            return PostResponse.builder()
+                                    .id(row.getId())
+                                    .content(row.getContent())
+                                    .visibility(row.getVisibility())
+                                    .createdAt(row.getCreatedAt())
+
+                                    .userId(row.getUserId())
+                                    .username(row.getUsername())
+                                    .avatarUrl(row.getAvatarUrl())
+                                    .commentCount(row.getCommentCount())
+                                    .reactionCount(row.getReactionCount())
+                                    .reacted(reaction != null)
+                                    .myReactionType(
+                                            reaction != null
+                                                    ? reaction.getType()
+                                                    : null
+                                    )
+                                    .postMediaResponses(
+                                            mediaMap.getOrDefault(
+                                                    row.getId(),
+                                                    Collections.emptyList()
+                                            )
+                                    )
+                                    .build();
+
+                        })
+                        .toList();
         return new PageImpl<>(
                 result,
                 pageable,
