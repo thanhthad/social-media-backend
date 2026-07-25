@@ -1,6 +1,7 @@
 package media.social.modults.user.repository;
 
 import media.social.modults.user.Enum.Status;
+import media.social.modults.user.dto.response.user.AdminUserResponse;
 import media.social.modults.user.dto.response.user.UserSearchResponse;
 import media.social.modults.user.entity.User;
 import org.springframework.data.domain.Page;
@@ -45,6 +46,47 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<UserSearchResponse> searchUsers(
             @Param("username") String username,
             @Param("status") Status status,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new media.social.modults.user.dto.response.user.AdminUserResponse(
+        u.id,
+        u.username,
+        u.status,
+        p.avatarUrl,
+        u.createdAt,
+        u.lastLoginAt,
+        u.lastActiveAt
+    )
+    FROM User u
+    LEFT JOIN u.profile p
+    WHERE (:status IS NULL OR u.status = :status)
+    ORDER BY u.createdAt DESC
+    """)
+    Page<AdminUserResponse> findAllAdminUsers(
+            @Param("status") Status status,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new media.social.modults.user.dto.response.user.AdminUserResponse(
+        u.id,
+        u.username,
+        u.status,
+        p.avatarUrl,
+        u.createdAt,
+        u.lastLoginAt,
+        u.lastActiveAt
+    )
+    FROM User u
+    LEFT JOIN u.profile p
+    WHERE LOWER(u.username)
+    LIKE LOWER(CONCAT('%', :username, '%'))
+    ORDER BY u.createdAt DESC
+    """)
+    Page<AdminUserResponse> searchAdminUsers(
+            @Param("username") String username,
             Pageable pageable
     );
 }

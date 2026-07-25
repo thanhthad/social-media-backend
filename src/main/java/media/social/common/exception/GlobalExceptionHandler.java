@@ -44,6 +44,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -120,6 +121,16 @@ public class GlobalExceptionHandler {
 
         return ResponseData.fail(
                 "You do not have permission to access this resource.",
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDisabledException(
+            DisabledException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
                 HttpStatus.FORBIDDEN
         );
     }

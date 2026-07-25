@@ -55,58 +55,6 @@ public class FollowController {
         );
     }
 
-    // ==================================================
-    // STATUS
-    // ==================================================
-
-    @GetMapping("/{userId}/status")
-    @Operation(summary = "Check if current user is following")
-    public ResponseEntity<?> isFollowing(
-            @PathVariable Long userId
-    ) {
-
-        boolean result = followService.isFollowing(userId);
-
-        return ResponseData.success(
-                result,
-                "Check follow status successfully",
-                HttpStatus.OK
-        );
-    }
-
-    // ==================================================
-    // COUNT
-    // ==================================================
-
-    @GetMapping("/{userId}/count")
-    @Operation(summary = "Get follow counts of a user")
-    public ResponseEntity<?> getFollowCount(
-            @PathVariable Long userId
-    ) {
-
-        FollowCountResponse response =
-                followService.getProfile(userId);
-
-        return ResponseData.success(
-                response,
-                "Get follow count successfully",
-                HttpStatus.OK
-        );
-    }
-
-    @GetMapping("/me/count")
-    @Operation(summary = "Get my follow counts")
-    public ResponseEntity<?> getMyFollowCount() {
-
-        FollowCountResponse response =
-                followService.geMytProfile();
-
-        return ResponseData.success(
-                response,
-                "Get my follow count successfully",
-                HttpStatus.OK
-        );
-    }
 
     // ==================================================
     // LIST FOLLOWERS / FOLLOWING (PUBLIC)
