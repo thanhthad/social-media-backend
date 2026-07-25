@@ -18,4 +18,9 @@ public class UserProfileResponse {
     private String email;
 
     private ProfileResponse profile;
+
+    private Long totalFollower;
+
+    private Long totalFollowing;
+
 }

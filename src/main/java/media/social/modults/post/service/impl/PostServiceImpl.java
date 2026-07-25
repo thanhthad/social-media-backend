@@ -160,6 +160,10 @@ public class PostServiceImpl implements PostService {
                         new PostNotFoundException("Post not found with id: " + postId)
                 );
 
+        Reaction reaction = reactionRepository
+                .findByUserIdAndPostId(viewerId, postId)
+                .orElse(null);
+
         return PostResponse.builder()
                 .id(flat.getId())
                 .content(flat.getContent())
@@ -170,6 +174,14 @@ public class PostServiceImpl implements PostService {
                 .avatarUrl(flat.getAvatarUrl())
                 .postMediaResponses(
                         postMediaRepository.findMediaResponseByPostId(postId)
+                )
+                .commentCount(flat.getCommentCount())
+                .reactionCount(flat.getReactionCount())
+                .reacted(reaction != null)
+                .myReactionType(
+                        reaction != null
+                                ? reaction.getType()
+                                : null
                 )
                 .build();
     }

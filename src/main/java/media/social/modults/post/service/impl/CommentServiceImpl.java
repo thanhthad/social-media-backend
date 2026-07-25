@@ -133,44 +133,6 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentResponse replyComment(ReplyCommentRequest request) {
-
-        long userId = UserContextHolder.getUserId();
-        User user = userServiceDomain.getByUserId(userId);
-
-        Comment parent = commentRepository.findById(request.getParentId())
-                .orElseThrow(() ->
-                        new CommentNotFoundException("Parent comment not found")
-                );
-        Post post = postServiceDomain.getByPostId(parent.getPost().getId());
-
-        Comment saved = commentRepository.save(
-                Comment.builder()
-                        .post(post)
-                        .user(user)
-                        .parent(parent)
-                        .content(request.getContent())
-                        .build()
-        );
-
-        return CommentResponse.builder()
-                .commentId(saved.getId())
-                .userId(user.getId())
-                .username(user.getUsername())
-                .avatarUrl(user.getProfile() != null
-                        ? user.getProfile().getAvatarUrl()
-                        : null)
-                .parentId(parent.getId())
-                .content(saved.getContent())
-                .createdAt(saved.getCreatedAt())
-                .totalReplies(0L)
-                .totalReactions(0L)
-                .myReaction(null)
-                .build();
-    }
-
-    @Override
-    @Transactional
     public CommentResponse updateComment(Long commentId, UpdateCommentContent request) {
 
         long userId = UserContextHolder.getUserId();
@@ -242,9 +204,4 @@ public class CommentServiceImpl implements CommentService {
         );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public long countCommentsByPost(Long postId) {
-        return commentRepository.countByPost_Id(postId);
-    }
 }

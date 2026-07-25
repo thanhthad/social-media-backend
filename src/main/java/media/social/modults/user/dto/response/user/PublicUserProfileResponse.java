@@ -32,4 +32,10 @@ public class PublicUserProfileResponse {
 
     private LocalDateTime lastLoginAt;
 
+    private Long totalFollower;
+
+    private Long totalFollowing;
+
+    private Boolean following;
+
 }

@@ -31,11 +31,6 @@ AND r.post.id IN :postIds
             Long postId
     );
 
-    boolean existsByUserIdAndPostId(
-            Long userId,
-            Long postId
-    );
-
     @Query("""
     SELECT r.type, COUNT(r)
     FROM Reaction r
@@ -44,13 +39,6 @@ AND r.post.id IN :postIds
 """)
     List<Object[]> countReactionTypesByPostId(
             @Param("postId") Long postId
-    );
-
-    long countByPostId(Long postId);
-
-    void deleteByUserIdAndPostId(
-            Long userId,
-            Long postId
     );
 
     @Query("""

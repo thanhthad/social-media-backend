@@ -33,19 +33,6 @@ public class CommentController {
         );
     }
 
-    // ================= REPLY COMMENT =================
-    @PostMapping("/reply")
-    @Operation(summary = "Reply to a comment")
-    public ResponseEntity<?> replyComment(
-            @RequestBody @Valid ReplyCommentRequest request
-    ) {
-        return ResponseData.success(
-                commentService.replyComment(request),
-                "Reply comment successfully",
-                HttpStatus.CREATED
-        );
-    }
-
     // ================= UPDATE COMMENT =================
     @PatchMapping("/{commentId}")
     @Operation(summary = "Update comment content")
@@ -103,16 +90,4 @@ public class CommentController {
         );
     }
 
-    // ================= COUNT COMMENTS =================
-    @GetMapping("/post/{postId}/count")
-    @Operation(summary = "Count total comments of a post")
-    public ResponseEntity<?> countComments(
-            @PathVariable Long postId
-    ) {
-        return ResponseData.success(
-                commentService.countCommentsByPost(postId),
-                "Count comments successfully",
-                HttpStatus.OK
-        );
-    }
 }

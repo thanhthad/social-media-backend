@@ -11,8 +11,6 @@ public interface CommentService {
 
     CommentResponse createComment(CreateCommentRequest request);
 
-    CommentResponse replyComment(ReplyCommentRequest request);
-
     CommentResponse updateComment(Long commentId, UpdateCommentContent request);
 
     void deleteComment(Long commentId);
@@ -26,7 +24,5 @@ public interface CommentService {
             Long parentId,
             Pageable pageable
     );
-
-    long countCommentsByPost(Long postId);
 
 }

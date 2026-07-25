@@ -107,37 +107,6 @@ public class ReactionServiceImpl implements ReactionService {
 
     @Override
     @Transactional(readOnly = true)
-    public ReactionResponse getMyReaction(Long postId) {
-
-        Long userId = UserContextHolder.getUserId();
-
-        getPost(postId);
-
-        Reaction reaction = reactionRepository
-                .findByUserIdAndPostId(userId, postId)
-                .orElse(null);
-
-        if (reaction == null) {
-
-            return ReactionResponse.builder()
-                    .reacted(false)
-                    .type(null)
-                    .build();
-        }
-
-        return ReactionResponse.builder()
-                .reacted(true)
-                .type(reaction.getType())
-                .build();
-    }
-
-    @Override
-    public long getTotalReaction(Long postId) {
-        return reactionRepository.countByPostId(postId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ReactionCountResponse countReaction(Long postId) {
 
         getPost(postId);

@@ -58,20 +58,6 @@ public class ReactionController {
     }
 
 
-    // ================= GET MY REACTION =================
-    @GetMapping("/{postId}/reaction/me")
-    @Operation(summary = "Get current user's reaction")
-    public ResponseEntity<?> getMyReaction(
-            @PathVariable Long postId
-    ) {
-
-        return ResponseData.success(
-                reactionService.getMyReaction(postId),
-                "Get my reaction successfully",
-                HttpStatus.OK
-        );
-    }
-
 
     // ================= COUNT REACTION =================
     @GetMapping("/{postId}/reactions/count")

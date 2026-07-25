@@ -1,7 +1,8 @@
 package media.social.modults.user.service.impl;
 import media.social.modults.post.enums.MediaType;
 import media.social.modults.user.Enum.RoleName;
-import media.social.modults.user.dto.response.role.RoleResponse;
+import media.social.modults.user.dto.response.user.FollowCountResponse;
+import media.social.modults.user.service.FollowService;
 import media.social.modults.user.service.domain.UserRoleServiceDomain;
 import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
@@ -46,6 +47,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRoleServiceDomain userRoleServiceDomain;
     private final UserServiceDomain userServiceDomain;
+    private final FollowService followService;
 
     private User getCurrentUser() {
         Long userId = UserContextHolder.getUserId();
@@ -69,7 +71,9 @@ public class UserServiceImpl implements UserService {
 
     private PublicUserProfileResponse buildPublicProfileResponse(
             User user,
-            Profile profile
+            Profile profile,
+            FollowCountResponse followCount,
+            Boolean following
     ) {
 
         return PublicUserProfileResponse.builder()
@@ -83,6 +87,9 @@ public class UserServiceImpl implements UserService {
                 .location(profile.getLocation())
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())
+                .totalFollower(followCount.getTotal_follower())
+                .totalFollowing(followCount.getTotal_following())
+                .following(following)
                 .build();
     }
 
@@ -93,7 +100,10 @@ public class UserServiceImpl implements UserService {
         User user = getCurrentUser();
         Profile profile = getCurrentProfile(user.getId());
 
-        return userMapper.toUserProfileResponse(user, profile);
+        FollowCountResponse count =
+                followService.geMytProfile();
+
+        return userMapper.toUserProfileResponse(user, profile,count);
     }
 
     @Override
@@ -107,7 +117,10 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        return userMapper.toUserProfileResponse(user, profile);
+        FollowCountResponse count =
+                followService.geMytProfile();
+
+        return userMapper.toUserProfileResponse(user, profile,count);
     }
 
     @Override
@@ -141,7 +154,10 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        return userMapper.toUserProfileResponse(user, profile);
+        FollowCountResponse count =
+                followService.geMytProfile();
+
+        return userMapper.toUserProfileResponse(user, profile,count);
     }
 
     @Override
@@ -193,9 +209,17 @@ public class UserServiceImpl implements UserService {
 
         Profile profile = getCurrentProfile(userId);
 
+        FollowCountResponse count =
+                followService.getProfile(userId);
+
+        Boolean following =
+                followService.isFollowing(userId);
+
         return buildPublicProfileResponse(
                 targetUser,
-                profile
+                profile,
+                count,
+                following
         );
     }
     private void validateCanViewProfile(

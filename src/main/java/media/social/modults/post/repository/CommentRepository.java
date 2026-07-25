@@ -11,9 +11,6 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    /*
-     * ROOT COMMENTS
-     */
     @Query("""
     SELECT new media.social.modults.post.dto.response.comment.CommentResponse(
         c.id,
@@ -52,10 +49,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             Pageable pageable
     );
 
-
-    /*
-     * REPLIES
-     */
     @Query("""
     SELECT new media.social.modults.post.dto.response.comment.CommentResponse(
         c.id,
@@ -93,21 +86,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             Pageable pageable
     );
 
-
-    /*
-     * COUNT ALL COMMENTS (post)
-     */
-    long countByPost_Id(Long postId);
-
-
-    /*
-     * FIND BY ID + OWNER (BEST PRACTICE)
-     */
     Optional<Comment> findByIdAndUser_Id(Long commentId, Long userId);
 
-
-    /*
-     * COUNT DIRECT REPLIES
-     */
     long countByParent_Id(Long parentId);
 }

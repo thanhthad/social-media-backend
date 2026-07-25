@@ -19,12 +19,6 @@ public interface ReactionService {
             Long postId
     );
 
-    ReactionResponse getMyReaction(
-            Long postId
-    );
-
-    long getTotalReaction(Long postId);
-
     ReactionCountResponse countReaction(
             Long postId
     );
