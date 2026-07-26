@@ -2,6 +2,7 @@ package media.social.modults.post.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import media.social.modults.post.dto.response.post.PostCacheDTO;
 import media.social.modults.post.entity.*;
 import media.social.modults.post.enums.MediaType;
 import media.social.modults.post.dto.request.post.CreatePostRequest;
@@ -16,6 +17,7 @@ import media.social.modults.post.exception.post_media.InvalidImageException;
 import media.social.modults.post.exception.post_media.MediaNotFoundException;
 import media.social.modults.post.repository.*;
 import media.social.modults.post.service.PostServiceDomain;
+import media.social.modults.post.service.cache.PostCacheService;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.user.exception.block.UserBlockedException;
@@ -53,6 +55,7 @@ public class PostServiceImpl implements PostService {
     private final FollowService followService;
     private final PostServiceDomain postServiceDomain;
     private final ReactionRepository reactionRepository;
+    private final PostCacheService postCacheService;
 
     @Override
     @Transactional(readOnly = true)
@@ -100,7 +103,10 @@ public class PostServiceImpl implements PostService {
             );
         }
 
-        return getAllPost(targetUserId, visibilities, pageable);
+        Page<PostFlatResponse> flatPage =
+                postRepository.findAllVisiblePost(targetUserId,visibilities, pageable);
+
+        return buildPostResponse(flatPage,pageable);
     }
 
 
@@ -109,14 +115,6 @@ public class PostServiceImpl implements PostService {
 
         Page<PostFlatResponse> flatPage =
                 postRepository.findAllPostMe(userId, pageable);
-
-        return buildPostResponse(flatPage,pageable);
-    }
-    @Transactional(readOnly = true)
-    private Page<PostResponse> getAllPost(Long userId,List<Visibility> visibilities, Pageable pageable) {
-
-        Page<PostFlatResponse> flatPage =
-                postRepository.findAllVisiblePost(userId,visibilities, pageable);
 
         return buildPostResponse(flatPage,pageable);
     }
@@ -155,9 +153,10 @@ public class PostServiceImpl implements PostService {
             );
         }
 
-        PostFlatResponse flat = postRepository.findPostDetailById(postId,visibilities)
-                .orElseThrow(() ->
-                        new PostNotFoundException("Post not found with id: " + postId)
+        PostCacheDTO flat =
+                postCacheService.getPost(
+                        postId,
+                        visibilities
                 );
 
         Reaction reaction = reactionRepository
