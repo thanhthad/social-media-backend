@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface UserService {
 
-    // USER SELF APIs (JWT / SecurityContext)
     public UserProfileResponse getMe();
 
     public UserProfileResponse updateMe(UpdateProfileRequest request);
@@ -20,7 +19,6 @@ public interface UserService {
 
     public void updatePassword(ChangePasswordRequest request);
 
-    // PUBLIC USER APIs
     public PublicUserProfileResponse getUserById(Long id);
 
     public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable);

@@ -1,10 +1,11 @@
 package media.social.modults.user.service.impl;
 import media.social.modults.post.enums.MediaType;
 import media.social.modults.user.Enum.RoleName;
-import media.social.modults.user.dto.response.user.FollowCountResponse;
+import media.social.modults.user.dto.response.user.*;
 import media.social.modults.user.service.FollowService;
+import media.social.modults.user.service.cache.UserCacheService;
+import media.social.modults.user.service.cache.UserProfileCacheService;
 import media.social.modults.user.service.domain.UserRoleServiceDomain;
-import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
@@ -14,9 +15,6 @@ import media.social.modults.user.Enum.Status;
 import media.social.modults.user.dto.request.user.ChangePasswordRequest;
 import media.social.modults.user.dto.request.user.UpdateAvatarRequest;
 import media.social.modults.user.dto.request.user.UpdateProfileRequest;
-import media.social.modults.user.dto.response.user.PublicUserProfileResponse;
-import media.social.modults.user.dto.response.user.UserSearchResponse;
-import media.social.modults.user.dto.response.user.UserProfileResponse;
 import media.social.modults.user.entity.Profile;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.profile.ProfileNotFoundException;
@@ -33,7 +31,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -46,8 +44,9 @@ public class UserServiceImpl implements UserService {
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
     private final UserRoleServiceDomain userRoleServiceDomain;
-    private final UserServiceDomain userServiceDomain;
     private final FollowService followService;
+    private final UserProfileCacheService userProfileCacheService;
+    private final UserCacheService userCacheService;
 
     private User getCurrentUser() {
         Long userId = UserContextHolder.getUserId();
@@ -67,30 +66,6 @@ public class UserServiceImpl implements UserService {
                                 "Profile not found "
                         )
                 );
-    }
-
-    private PublicUserProfileResponse buildPublicProfileResponse(
-            User user,
-            Profile profile,
-            FollowCountResponse followCount,
-            Boolean following
-    ) {
-
-        return PublicUserProfileResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .fullName(profile.getFullName())
-                .avatarUrl(profile.getAvatarUrl())
-                .bio(profile.getBio())
-                .dateOfBirth(profile.getDateOfBirth())
-                .gender(profile.getGender())
-                .location(profile.getLocation())
-                .createdAt(user.getCreatedAt())
-                .lastLoginAt(user.getLastLoginAt())
-                .totalFollower(followCount.getTotal_follower())
-                .totalFollowing(followCount.getTotal_following())
-                .following(following)
-                .build();
     }
 
     @Override
@@ -116,6 +91,8 @@ public class UserServiceImpl implements UserService {
         profileMapper.updateProfileFromRequest(request, profile);
 
         profileRepository.save(profile);
+
+        userCacheService.evictProfile(user.getId());
 
         FollowCountResponse count =
                 followService.geMytProfile();
@@ -154,6 +131,8 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
+        userCacheService.evictProfile(user.getId());
+
         FollowCountResponse count =
                 followService.geMytProfile();
 
@@ -189,39 +168,38 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    @Transactional(readOnly = true)
     @Override
+    @Transactional(readOnly = true)
     public PublicUserProfileResponse getUserById(Long userId) {
-
-        User targetUser = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new UserNotFoundException("User not found")
-                );
-
-        Long currentUserId = UserContextHolder.getUserId();
-
-        User currentUser = userServiceDomain.getByUserId(currentUserId);
+        Long currentUserId =
+                UserContextHolder.getUserId();
 
         validateCanViewProfile(
                 currentUserId,
                 userId
         );
 
-        Profile profile = getCurrentProfile(userId);
-
-        FollowCountResponse count =
-                followService.getProfile(userId);
+        PublicUserProfileCacheResponse cache =
+                userProfileCacheService.getProfile(userId);
 
         Boolean following =
                 followService.isFollowing(userId);
 
-        return buildPublicProfileResponse(
-                targetUser,
-                profile,
-                count,
-                following
-        );
+        return PublicUserProfileResponse.builder()
+                .id(cache.getId())
+                .username(cache.getUsername())
+                .avatarUrl(cache.getAvatarUrl())
+                .bio(cache.getBio())
+                .fullName(cache.getFullName())
+                .dateOfBirth(cache.getDateOfBirth())
+                .gender(cache.getGender())
+                .location(cache.getLocation())
+                .totalFollower(cache.getTotalFollower())
+                .totalFollowing(cache.getTotalFollowing())
+                .following(following)
+                .build();
     }
+
     private void validateCanViewProfile(
             Long currentUserId,
             Long targetUserId
