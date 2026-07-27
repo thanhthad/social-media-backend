@@ -13,9 +13,9 @@ public interface UserService {
 
     public UserProfileResponse getMe();
 
-    public UserProfileResponse updateMe(UpdateProfileRequest request);
+    public void updateMe(UpdateProfileRequest request);
 
-    public UserProfileResponse updateAvatar(UpdateAvatarRequest request);
+    public void updateAvatar(UpdateAvatarRequest request);
 
     public void updatePassword(ChangePasswordRequest request);
 

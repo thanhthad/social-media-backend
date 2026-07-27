@@ -1,7 +1,10 @@
 package media.social.modults.user.service.impl;
 import media.social.modults.post.enums.MediaType;
 import media.social.modults.user.Enum.RoleName;
+import media.social.modults.user.dto.response.cache.PublicUserProfileCacheResponse;
+import media.social.modults.user.dto.response.cache.UserCacheResponse;
 import media.social.modults.user.dto.response.user.*;
+import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.service.FollowService;
 import media.social.modults.user.service.cache.UserCacheService;
 import media.social.modults.user.service.cache.UserProfileCacheService;
@@ -18,7 +21,6 @@ import media.social.modults.user.dto.request.user.UpdateProfileRequest;
 import media.social.modults.user.entity.Profile;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.exception.profile.ProfileNotFoundException;
-import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.mapper.ProfileMapper;
 import media.social.modults.user.mapper.UserMapper;
 import media.social.modults.user.repository.ProfileRepository;
@@ -32,6 +34,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+
 
 @Service
 @AllArgsConstructor
@@ -48,64 +51,52 @@ public class UserServiceImpl implements UserService {
     private final UserProfileCacheService userProfileCacheService;
     private final UserCacheService userCacheService;
 
-    private User getCurrentUser() {
+    private UserCacheResponse getCurrentUser() {
         Long userId = UserContextHolder.getUserId();
 
-        return userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new UserNotFoundException(
-                                "User not found  "
-                        )
-                );
-    }
-
-    private Profile getCurrentProfile(Long userId) {
-        return profileRepository.findByUserId(userId)
-                .orElseThrow(() ->
-                        new ProfileNotFoundException(
-                                "Profile not found "
-                        )
-                );
+        return userCacheService.getUser(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public UserProfileResponse getMe() {
+        
+        Long userId = UserContextHolder.getUserId();
+        
+        PublicUserProfileCacheResponse user = userProfileCacheService.getUserProfile(userId);
 
-        User user = getCurrentUser();
-        Profile profile = getCurrentProfile(user.getId());
-
-        FollowCountResponse count =
-                followService.geMytProfile();
-
-        return userMapper.toUserProfileResponse(user, profile,count);
+        return userMapper.toUserProfileResponse(user);
     }
 
     @Override
     @Transactional
-    public UserProfileResponse updateMe(UpdateProfileRequest request) {
+    public void updateMe(UpdateProfileRequest request) {
 
-        User user = getCurrentUser();
-        Profile profile = getCurrentProfile(user.getId());
+        Long userId = UserContextHolder.getUserId();
 
-        profileMapper.updateProfileFromRequest(request, profile);
+        User user = userRepository.findByIdWithProfile(userId).orElseThrow(
+                () -> new UserNotFoundException("User not found")
+        );
 
-        profileRepository.save(profile);
+        profileMapper.updateProfileFromRequest(request, user.getProfile());
+
+        profileRepository.save(user.getProfile());
 
         userCacheService.evictProfile(user.getId());
 
-        FollowCountResponse count =
-                followService.geMytProfile();
-
-        return userMapper.toUserProfileResponse(user, profile,count);
     }
 
     @Override
     @Transactional
-    public UserProfileResponse updateAvatar(UpdateAvatarRequest request) {
+    public void updateAvatar(UpdateAvatarRequest request) {
 
-        User user = getCurrentUser();
-        Profile profile = getCurrentProfile(user.getId());
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId).orElseThrow(
+                () -> new UserNotFoundException("User not found")
+        );
+
+        Profile profile = user.getProfile();
 
         cloudinaryService.validateFile(
                 request.getFile(),
@@ -133,17 +124,15 @@ public class UserServiceImpl implements UserService {
 
         userCacheService.evictProfile(user.getId());
 
-        FollowCountResponse count =
-                followService.geMytProfile();
-
-        return userMapper.toUserProfileResponse(user, profile,count);
     }
 
     @Override
     @Transactional
     public void updatePassword(ChangePasswordRequest request) {
 
-        User user = getCurrentUser();
+        User user = userRepository.findById(UserContextHolder.getUserId()).orElseThrow(
+                () -> new UserNotFoundException("User not found")
+        );
 
         if(request.getNewPassword().equals(request.getOldPassword())){
             throw new BadCredentialsException(
@@ -173,6 +162,9 @@ public class UserServiceImpl implements UserService {
     public PublicUserProfileResponse getUserById(Long userId) {
         Long currentUserId =
                 UserContextHolder.getUserId();
+        if(Objects.equals(userId, currentUserId)){
+            getMe();
+        }
 
         validateCanViewProfile(
                 currentUserId,
@@ -180,7 +172,7 @@ public class UserServiceImpl implements UserService {
         );
 
         PublicUserProfileCacheResponse cache =
-                userProfileCacheService.getProfile(userId);
+                userProfileCacheService.getUserProfile(userId);
 
         Boolean following =
                 followService.isFollowing(userId);

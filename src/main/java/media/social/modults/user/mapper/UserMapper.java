@@ -1,5 +1,6 @@
 package media.social.modults.user.mapper;
 
+import media.social.modults.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modults.user.dto.response.user.FollowCountResponse;
 import media.social.modults.user.dto.response.user.UserSearchResponse;
 import media.social.modults.user.dto.response.user.ProfileResponse;
@@ -12,34 +13,28 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
 
     public UserProfileResponse toUserProfileResponse(
-            User user,
-            Profile profile,
-            FollowCountResponse followCount
+            PublicUserProfileCacheResponse user
     ) {
 
-        ProfileResponse profileResponse = null;
-
-        if (profile != null) {
-            profileResponse = ProfileResponse.builder()
-                    .fullName(profile.getFullName())
-                    .avatarUrl(profile.getAvatarUrl())
-                    .bio(profile.getBio())
-                    .phone(profile.getPhone())
-                    .dateOfBirth(profile.getDateOfBirth())
-                    .gender(profile.getGender())
-                    .location(profile.getLocation())
-                    .createdAt(profile.getCreatedAt())
-                    .updatedAt(profile.getUpdatedAt())
-                    .build();
-        }
+        ProfileResponse profileResponse = profileResponse = ProfileResponse.builder()
+                .fullName(user.getFullName())
+                .avatarUrl(user.getAvatarUrl())
+                .bio(user.getBio())
+                .phone(user.getPhone())
+                .dateOfBirth(user.getDateOfBirth())
+                .gender(user.getGender())
+                .location(user.getLocation())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();;
 
         return UserProfileResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .profile(profileResponse)
-                .totalFollower(followCount.getTotal_follower())
-                .totalFollowing(followCount.getTotal_following())
+                .totalFollower(user.getTotalFollower())
+                .totalFollowing(user.getTotalFollowing())
                 .build();
     }
 
