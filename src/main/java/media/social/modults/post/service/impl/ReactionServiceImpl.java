@@ -5,7 +5,6 @@ import media.social.modults.notification.enums.EntityType;
 import media.social.modults.notification.enums.NotificationType;
 import media.social.modults.notification.service.NotificationService;
 import media.social.modults.post.dto.response.reaction.ReactionCountResponse;
-import media.social.modults.post.dto.response.reaction.ReactionResponse;
 import media.social.modults.post.dto.response.reaction.UserReactionResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.entity.Reaction;
@@ -15,6 +14,7 @@ import media.social.modults.post.exception.reaction.ReactionNotFoundException;
 import media.social.modults.post.repository.PostRepository;
 import media.social.modults.post.repository.ReactionRepository;
 import media.social.modults.post.service.ReactionService;
+import media.social.modults.post.service.domain.PostDomainService;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.domain.UserServiceDomain;
@@ -32,14 +32,9 @@ import java.util.Map;
 public class ReactionServiceImpl implements ReactionService {
 
     private final ReactionRepository reactionRepository;
-    private final PostRepository postRepository;
+    private final PostDomainService postDomainService;
     private final UserServiceDomain userServiceDomain;
     private final NotificationService notificationService;
-
-    private Post getPost(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException("Post Not Found"));
-    }
 
     @Override
     @Transactional
@@ -47,7 +42,7 @@ public class ReactionServiceImpl implements ReactionService {
 
         Long userId = UserContextHolder.getUserId();
 
-        Post post = getPost(postId);
+        Post post = postDomainService.getByPostId(postId);
 
         User user = userServiceDomain.getByUserId(userId);
 
@@ -64,6 +59,9 @@ public class ReactionServiceImpl implements ReactionService {
                     .build();
 
             reactionRepository.save(reaction);
+
+            postDomainService.increaseReactionCount(postId);
+
             notificationService.create(
                     post.getUser(),
                     user,
@@ -86,7 +84,7 @@ public class ReactionServiceImpl implements ReactionService {
 
         Long userId = UserContextHolder.getUserId();
 
-        Post post = getPost(postId);
+        Post post = postDomainService.getByPostId(postId);
 
         Reaction reaction = reactionRepository
                 .findByUserIdAndPostId(userId, postId)
@@ -95,7 +93,7 @@ public class ReactionServiceImpl implements ReactionService {
                 );
 
         reactionRepository.delete(reaction);
-
+        postDomainService.decreaseReactionCount(postId);
         notificationService.delete(
                 post.getUser().getId(),
                 userId,
@@ -109,7 +107,7 @@ public class ReactionServiceImpl implements ReactionService {
     @Transactional(readOnly = true)
     public ReactionCountResponse countReaction(Long postId) {
 
-        getPost(postId);
+        postDomainService.getByPostId(postId);
 
         Map<ReactionType, Long> counts = new EnumMap<>(ReactionType.class);
 
@@ -142,7 +140,7 @@ public class ReactionServiceImpl implements ReactionService {
             Pageable pageable
     ) {
 
-        getPost(postId);
+        postDomainService.getByPostId(postId);
 
         return reactionRepository.findUsersReacted(
                 postId,

@@ -5,6 +5,7 @@ import media.social.modults.user.dto.response.cache.PublicUserProfileCacheRespon
 import media.social.modults.user.dto.response.cache.UserCacheResponse;
 import media.social.modults.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modults.user.dto.response.user.*;
+import media.social.modults.user.exception.user.UserAlreadyExistsException;
 import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.service.FollowService;
 import media.social.modults.user.service.cache.UserCacheService;
@@ -175,8 +176,11 @@ public class UserServiceImpl implements UserService {
     public PublicUserProfileResponse getUserById(Long userId) {
         Long currentUserId =
                 UserContextHolder.getUserId();
-        if(Objects.equals(userId, currentUserId)){
-            getMe();
+
+        if (Objects.equals(userId, currentUserId)) {
+            throw new UserAlreadyExistsException(
+                    "Please use /me endpoint"
+            );
         }
 
         validateCanViewProfile(

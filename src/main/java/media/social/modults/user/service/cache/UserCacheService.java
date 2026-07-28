@@ -8,4 +8,6 @@ public interface UserCacheService {
     UserCacheResponse getUser(Long userId);
 
     void evictProfile(Long id);
+
+    void evict(Long userId);
 }

@@ -5,7 +5,6 @@ import media.social.modults.notification.enums.EntityType;
 import media.social.modults.notification.enums.NotificationType;
 import media.social.modults.notification.service.NotificationService;
 import media.social.modults.post.dto.request.comment.CreateCommentRequest;
-import media.social.modults.post.dto.request.comment.ReplyCommentRequest;
 import media.social.modults.post.dto.request.comment.UpdateCommentContent;
 import media.social.modults.post.dto.response.comment.CommentResponse;
 import media.social.modults.post.entity.Comment;
@@ -13,8 +12,9 @@ import media.social.modults.post.entity.Post;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.repository.CommentReactionRepository;
 import media.social.modults.post.repository.CommentRepository;
+import media.social.modults.post.repository.PostRepository;
 import media.social.modults.post.service.CommentService;
-import media.social.modults.post.service.PostServiceDomain;
+import media.social.modults.post.service.domain.PostDomainService;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.domain.UserServiceDomain;
@@ -29,10 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-    private final PostServiceDomain postServiceDomain;
+    private final PostDomainService postDomainService;
     private final UserServiceDomain userServiceDomain;
     private final CommentReactionRepository commentReactionRepository;
     private final NotificationService notificationService;
+
 
     @Override
     @Transactional
@@ -40,7 +41,7 @@ public class CommentServiceImpl implements CommentService {
 
         long userId = UserContextHolder.getUserId();
 
-        Post post = postServiceDomain.getByPostId(request.getPostId());
+        Post post = postDomainService.getByPostId(request.getPostId());
 
         User user = userServiceDomain.getByUserId(userId);
 
@@ -62,6 +63,9 @@ public class CommentServiceImpl implements CommentService {
                         .content(request.getContent())
                         .build()
         );
+
+        postDomainService.increaseCommentCount(post.getId());
+
         if (parent != null) {
             notificationService.create(
                     parent.getUser(),
@@ -105,6 +109,8 @@ public class CommentServiceImpl implements CommentService {
                         new CommentNotFoundException("Comment not found")
                 );
 
+        Long postId = comment.getPost().getId();
+
         boolean isCommentOwner =
                 comment.getUser().getId().equals(userId);
 
@@ -129,6 +135,8 @@ public class CommentServiceImpl implements CommentService {
         );
 
         commentRepository.delete(comment);
+
+        postDomainService.decreaseCommentCount(postId);
     }
 
     @Override

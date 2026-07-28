@@ -6,6 +6,7 @@ import media.social.modults.post.enums.Visibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,46 +17,100 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-    SELECT p
-    FROM Post p
+    UPDATE Post p
+    SET p.commentCount = p.commentCount + 1
     WHERE p.id = :postId
-""")
+    """)
+    void increaseCommentCount(Long postId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    UPDATE Post p
+    SET p.commentCount =
+        CASE
+            WHEN p.commentCount > 0
+            THEN p.commentCount - 1
+            ELSE 0
+        END
+    WHERE p.id = :postId
+    """)
+    void decreaseCommentCount(Long postId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    UPDATE Post p
+    SET p.reactionCount = p.reactionCount + 1
+    WHERE p.id = :postId
+    """)
+    void increaseReactionCount(Long postId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    UPDATE Post p
+    SET p.reactionCount =
+        CASE
+            WHEN p.reactionCount > 0
+            THEN p.reactionCount - 1
+            ELSE 0
+        END
+    WHERE p.id = :postId
+    """)
+    void decreaseReactionCount(Long postId);
+
+    @Query("""
+        SELECT p
+        FROM Post p
+        WHERE p.id = :postId
+    """)
     Optional<Post> findByIdWithUser(
             @Param("postId") Long postId
     );
 
     @Query("""
     SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    
         p.id,
         p.content,
         p.visibility,
         p.createdAt,
-    
         u.id,
         u.username,
         pr.avatarUrl,
     
-        (SELECT COUNT(c.id)
-         FROM Comment c
-         WHERE c.post.id = p.id),
-    
-        (SELECT COUNT(r.id)
-         FROM Reaction r
-         WHERE r.post.id = p.id)
+        COUNT(DISTINCT c.id),
+        COUNT(DISTINCT r.id)
     )
-        FROM Post p
-        JOIN p.user u
-        LEFT JOIN u.profile pr
-        WHERE u.id = :userId
-            AND u.status = media.social.modults.user.Enum.Status.ACTIVE
-            AND NOT EXISTS (
-                SELECT 1
-                FROM Report report
-                WHERE report.post.id = p.id
-                AND report.status = media.social.modults.post.enums.ReportStatus.APPROVED
-            )
-        ORDER BY p.createdAt DESC
+    
+    FROM Post p
+    JOIN p.user u
+    LEFT JOIN u.profile pr
+    LEFT JOIN Comment c
+    ON c.post.id = p.id
+    LEFT JOIN Reaction r
+    ON r.post.id = p.id
+    
+    WHERE u.id = :userId
+    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND NOT EXISTS (
+        SELECT 1
+        FROM Report report
+        WHERE report.post.id = p.id
+        AND report.status =
+            media.social.modults.post.enums.ReportStatus.APPROVED
+    )
+    GROUP BY
+        p.id,
+        p.content,
+        p.visibility,
+        p.createdAt,
+        u.id,
+        u.username,
+        pr.avatarUrl
+    
+    ORDER BY p.createdAt DESC
+    
     """)
     Page<PostFlatResponse> findAllPostMe(
             @Param("userId") Long userId,

@@ -16,6 +16,7 @@ import media.social.modults.user.repository.FollowRepository;
 import media.social.modults.user.repository.UserRepository;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.FollowService;
+import media.social.modults.user.service.cache.UserCacheService;
 import media.social.modults.user.service.domain.UserRoleServiceDomain;
 import media.social.modults.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
@@ -33,6 +34,7 @@ public class FollowServiceImpl implements FollowService {
     private final UserServiceDomain userServiceDomain;
     private final NotificationService notificationService;
     private final UserRoleServiceDomain userRoleServiceDomain;
+    private final UserCacheService followCacheService;
 
     @Override
     @Transactional
@@ -72,6 +74,9 @@ public class FollowServiceImpl implements FollowService {
 
         followRepository.save(follow);
 
+        followCacheService.evict(currentUserId);
+        followCacheService.evict(targetUserId);
+
         notificationService.create(
                 following,
                 follower,
@@ -96,6 +101,10 @@ public class FollowServiceImpl implements FollowService {
         if (deleted == 0) {
             throw new FollowNotFoundException("You are not following this user");
         }
+
+        followCacheService.evict(currentUserId);
+        followCacheService.evict(targetUserId);
+
         notificationService.delete(
                 targetUserId,
                 currentUserId,

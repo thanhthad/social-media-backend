@@ -4,7 +4,7 @@ import media.social.modults.post.dto.request.post.CreatePostRequest;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.enums.Visibility;
 import media.social.modults.post.repository.*;
-import media.social.modults.post.service.PostServiceDomain;
+import media.social.modults.post.service.domain.PostDomainService;
 import media.social.modults.post.service.impl.PostServiceImpl;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.security.context.UserContextHolder;
@@ -30,7 +30,7 @@ public class PostServiceImplTest {
     @Mock private PostMediaRepository postMediaRepository;
     @Mock private UserServiceDomain userServiceDomain;
     @Mock private HashtagRepository hashtagRepository;
-    @Mock private PostServiceDomain postServiceDomain;
+    @Mock private PostDomainService postDomainService;
 
     @InjectMocks
     private PostServiceImpl postService;
@@ -75,7 +75,7 @@ public class PostServiceImplTest {
 
             postService.deleteByPostId(100L);
 
-            verify(postServiceDomain).checkOwner(post);
+            verify(postDomainService).checkOwner(post);
             verify(postRepository).delete(post);
             verify(postMediaRepository).deleteByPostId(100L);
         }

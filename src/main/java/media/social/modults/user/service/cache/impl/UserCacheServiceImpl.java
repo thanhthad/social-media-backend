@@ -31,6 +31,20 @@ public class UserCacheServiceImpl implements UserCacheService {
     }
 
     @Override
+    public void evict(Long userId){
+
+        Cache cache =
+                cacheManager.getCache(
+                        "userFollowStat"
+                );
+
+
+        if(cache != null){
+            cache.evict(userId);
+        }
+    }
+
+    @Override
     @Cacheable(
             value = "users",
             key = "#userId"

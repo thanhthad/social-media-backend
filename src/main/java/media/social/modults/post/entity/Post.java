@@ -52,6 +52,20 @@ public class Post {
     private List<PostHashtag> postHashtags = new ArrayList<>();
 
     @Column(
+            name = "comment_count",
+            nullable = false
+    )
+    @Builder.Default
+    private Long commentCount = 0L;
+
+    @Column(
+            name = "reaction_count",
+            nullable = false
+    )
+    @Builder.Default
+    private Long reactionCount = 0L;
+
+    @Column(
             name = "created_at",
             nullable = false,
             updatable = false

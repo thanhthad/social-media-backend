@@ -16,7 +16,7 @@ import media.social.modults.post.enums.Visibility;
 import media.social.modults.post.exception.post_media.InvalidImageException;
 import media.social.modults.post.exception.post_media.MediaNotFoundException;
 import media.social.modults.post.repository.*;
-import media.social.modults.post.service.PostServiceDomain;
+import media.social.modults.post.service.domain.PostDomainService;
 import media.social.modults.post.service.cache.PostCacheService;
 import media.social.modults.user.entity.User;
 import media.social.modults.post.exception.post.PostNotFoundException;
@@ -53,7 +53,7 @@ public class PostServiceImpl implements PostService {
     private final PostHashtagRepository postHashtagRepository;
     private final BlockPolicyService blockPolicyService;
     private final FollowService followService;
-    private final PostServiceDomain postServiceDomain;
+    private final PostDomainService postDomainService;
     private final ReactionRepository reactionRepository;
     private final PostCacheService postCacheService;
 
@@ -363,7 +363,7 @@ public class PostServiceImpl implements PostService {
                         )
                 );
 
-        postServiceDomain.checkOwner(post);
+        postDomainService.checkOwner(post);
 
         boolean emptyContent =
                 request.getContent() == null ||
@@ -396,7 +396,7 @@ public class PostServiceImpl implements PostService {
                         )
                 );
 
-        postServiceDomain.checkOwner(post);
+        postDomainService.checkOwner(post);
 
         postMediaRepository.findByPostId(postId)
                 .forEach(media ->
@@ -433,7 +433,7 @@ public class PostServiceImpl implements PostService {
                         )
                 );
 
-        postServiceDomain.checkOwner(post);
+        postDomainService.checkOwner(post);
 
         savePostMedia(post, request.getFiles());
     }
@@ -449,7 +449,7 @@ public class PostServiceImpl implements PostService {
 
         Post post = media.getPost();
 
-        postServiceDomain.checkOwner(post);
+        postDomainService.checkOwner(post);
 
         long totalMedia = postMediaRepository.countByPostId(post.getId());
 
