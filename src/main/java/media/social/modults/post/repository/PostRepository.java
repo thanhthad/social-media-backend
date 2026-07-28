@@ -60,9 +60,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     void decreaseReactionCount(Long postId);
 
     @Query("""
-        SELECT p
-        FROM Post p
-        WHERE p.id = :postId
+    SELECT p
+    FROM Post p
+    JOIN FETCH p.user
+    WHERE p.id = :postId
     """)
     Optional<Post> findByIdWithUser(
             @Param("postId") Long postId
@@ -70,47 +71,36 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("""
     SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
-    
         p.id,
         p.content,
         p.visibility,
         p.createdAt,
+    
         u.id,
         u.username,
         pr.avatarUrl,
     
-        COUNT(DISTINCT c.id),
-        COUNT(DISTINCT r.id)
+        p.commentCount,
+        p.reactionCount
+    
     )
     
     FROM Post p
     JOIN p.user u
     LEFT JOIN u.profile pr
-    LEFT JOIN Comment c
-    ON c.post.id = p.id
-    LEFT JOIN Reaction r
-    ON r.post.id = p.id
     
     WHERE u.id = :userId
     AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    
     AND NOT EXISTS (
         SELECT 1
         FROM Report report
         WHERE report.post.id = p.id
-        AND report.status =
-            media.social.modults.post.enums.ReportStatus.APPROVED
+          AND report.status =
+          media.social.modults.post.enums.ReportStatus.APPROVED
     )
-    GROUP BY
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl
     
     ORDER BY p.createdAt DESC
-    
     """)
     Page<PostFlatResponse> findAllPostMe(
             @Param("userId") Long userId,
@@ -127,13 +117,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         u.username,
         pr.avatarUrl,
     
-        (SELECT COUNT(c.id)
-         FROM Comment c
-         WHERE c.post.id = p.id),
-    
-        (SELECT COUNT(r.id)
-         FROM Reaction r
-         WHERE r.post.id = p.id)
+        p.commentCount,
+        p.reactionCount
             
     )
     FROM Post p
@@ -166,13 +151,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         u.username,
         pr.avatarUrl,
             
-        (SELECT COUNT(c.id)
-         FROM Comment c
-         WHERE c.post.id = p.id),
-        
-        (SELECT COUNT(r.id)
-         FROM Reaction r
-         WHERE r.post.id = p.id)
+        p.commentCount,
+        p.reactionCount
           
     )
     FROM Post p
@@ -204,13 +184,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         u.username,
         pr.avatarUrl,
               
-        (SELECT COUNT(c.id)
-         FROM Comment c
-         WHERE c.post.id = p.id),
-        
-        (SELECT COUNT(r.id)
-         FROM Reaction r
-         WHERE r.post.id = p.id)
+        p.commentCount,
+        p.reactionCount
     )
     FROM Post p
     JOIN p.user u
@@ -258,13 +233,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         u.username,
         pr.avatarUrl,
             
-        (SELECT COUNT(c.id)
-         FROM Comment c
-         WHERE c.post.id = p.id),
-        
-        (SELECT COUNT(r.id)
-         FROM Reaction r
-         WHERE r.post.id = p.id)
+        p.commentCount,
+        p.reactionCount
     )
     FROM Post p
     JOIN p.user u
@@ -314,13 +284,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         u.username,
         pr.avatarUrl,
             
-        (SELECT COUNT(c.id)
-         FROM Comment c
-         WHERE c.post.id = p.id),
-        
-        (SELECT COUNT(r.id)
-         FROM Reaction r
-         WHERE r.post.id = p.id)
+        p.commentCount,
+        p.reactionCount
     )
     FROM PostHashtag ph
     JOIN ph.post p
@@ -371,13 +336,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         u.username,
         pr.avatarUrl,
             
-        (SELECT COUNT(c.id)
-         FROM Comment c
-         WHERE c.post.id = p.id),
-        
-        (SELECT COUNT(r.id)
-         FROM Reaction r
-         WHERE r.post.id = p.id)
+        p.commentCount,
+        p.reactionCount
     )
     FROM SavedPost sp
     JOIN sp.post p

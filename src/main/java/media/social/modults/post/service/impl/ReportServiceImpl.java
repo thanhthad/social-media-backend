@@ -7,7 +7,6 @@ import media.social.modults.post.dto.response.report.ReportDetailResponse;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.entity.Report;
 import media.social.modults.post.enums.ReportStatus;
-import media.social.modults.post.exception.post.CannotSaveOwnPostException;
 import media.social.modults.post.exception.post.PostFollowersOnlyException;
 import media.social.modults.post.exception.post.PostNotFoundException;
 import media.social.modults.post.exception.post.PostPrivateException;

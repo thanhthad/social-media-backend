@@ -12,8 +12,6 @@ public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
 
     Optional<Hashtag> findByName(String name);
 
-    boolean existsByName(String name);
-
     List<Hashtag> findByNameStartingWithIgnoreCase(String keyword);
 
     @Modifying
