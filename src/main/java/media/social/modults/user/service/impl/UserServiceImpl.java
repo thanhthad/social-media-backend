@@ -3,6 +3,7 @@ import media.social.modults.post.enums.MediaType;
 import media.social.modults.user.Enum.RoleName;
 import media.social.modults.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modults.user.dto.response.cache.UserCacheResponse;
+import media.social.modults.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modults.user.dto.response.user.*;
 import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.service.FollowService;
@@ -51,11 +52,6 @@ public class UserServiceImpl implements UserService {
     private final UserProfileCacheService userProfileCacheService;
     private final UserCacheService userCacheService;
 
-    private UserCacheResponse getCurrentUser() {
-        Long userId = UserContextHolder.getUserId();
-
-        return userCacheService.getUser(userId);
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -63,14 +59,18 @@ public class UserServiceImpl implements UserService {
         
         Long userId = UserContextHolder.getUserId();
         
-        PublicUserProfileCacheResponse user = userProfileCacheService.getUserProfile(userId);
+        PublicUserProfileCacheResponse userProfile =
+                userProfileCacheService.getUserProfile(userId);
 
-        return userMapper.toUserProfileResponse(user);
+        UserFollowStatCacheResponse userFollowStatCacheResponse =
+                userProfileCacheService.getFollowStat(userId);
+
+        return userMapper.toUserProfileResponse(userProfile,userFollowStatCacheResponse);
     }
 
     @Override
     @Transactional
-    public void updateMe(UpdateProfileRequest request) {
+    public ProfileResponse updateMe(UpdateProfileRequest request) {
 
         Long userId = UserContextHolder.getUserId();
 
@@ -84,11 +84,20 @@ public class UserServiceImpl implements UserService {
 
         userCacheService.evictProfile(user.getId());
 
+        return ProfileResponse.builder()
+                .fullName(request.getFullName())
+                .bio(request.getBio())
+                .phone(request.getPhone())
+                .dateOfBirth(request.getDateOfBirth())
+                .gender(request.getGender())
+                .location(request.getLocation())
+                .build();
+
     }
 
     @Override
     @Transactional
-    public void updateAvatar(UpdateAvatarRequest request) {
+    public ProfileResponse updateAvatar(UpdateAvatarRequest request) {
 
         Long userId = UserContextHolder.getUserId();
 
@@ -123,6 +132,10 @@ public class UserServiceImpl implements UserService {
         profileRepository.save(profile);
 
         userCacheService.evictProfile(user.getId());
+
+        return ProfileResponse.builder()
+                .avatarUrl(upload.getFileUrl())
+                .build();
 
     }
 
@@ -174,6 +187,9 @@ public class UserServiceImpl implements UserService {
         PublicUserProfileCacheResponse cache =
                 userProfileCacheService.getUserProfile(userId);
 
+        UserFollowStatCacheResponse userFollowStatCacheResponse =
+                userProfileCacheService.getFollowStat(userId);
+
         Boolean following =
                 followService.isFollowing(userId);
 
@@ -186,8 +202,8 @@ public class UserServiceImpl implements UserService {
                 .dateOfBirth(cache.getDateOfBirth())
                 .gender(cache.getGender())
                 .location(cache.getLocation())
-                .totalFollower(cache.getTotalFollower())
-                .totalFollowing(cache.getTotalFollowing())
+                .totalFollower(userFollowStatCacheResponse.getTotalFollower())
+                .totalFollowing(userFollowStatCacheResponse.getTotalFollowing())
                 .following(following)
                 .build();
     }
@@ -196,7 +212,6 @@ public class UserServiceImpl implements UserService {
             Long currentUserId,
             Long targetUserId
     ) {
-
 
         boolean currentIsAdmin =
                 userRoleServiceDomain.hasRole(

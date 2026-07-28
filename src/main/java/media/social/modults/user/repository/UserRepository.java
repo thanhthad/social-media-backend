@@ -2,6 +2,7 @@ package media.social.modults.user.repository;
 
 import media.social.modults.user.Enum.Status;
 import media.social.modults.user.dto.response.cache.PublicUserProfileCacheResponse;
+import media.social.modults.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modults.user.dto.response.user.AdminUserResponse;
 import media.social.modults.user.dto.response.user.UserSearchResponse;
 import media.social.modults.user.entity.User;
@@ -18,8 +19,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("""
-    SELECT new media.social.modults.user.dto.response.cache.CurrentUserProfileCacheResponse(
-    
+    SELECT new media.social.modults.user.dto.response.cache.PublicUserProfileCacheResponse(
         u.id,
         u.username,
         u.email,
@@ -30,39 +30,41 @@ public interface UserRepository extends JpaRepository<User, Long> {
         p.dateOfBirth,
         p.gender,
         p.location,
+    
         u.createdAt,
-        u.updatedAt,
+        u.updatedAt
+    )
+    
+    FROM User u
+    
+    LEFT JOIN Profile p
+    ON p.user.id = u.id
+    
+    WHERE u.id = :userId
+    """)
+    Optional<PublicUserProfileCacheResponse> findCurrentUserProfileCache(
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+    SELECT new media.social.modults.user.dto.response.cache.UserFollowStatCacheResponse(
         COUNT(DISTINCT follower.id),
         COUNT(DISTINCT following.id)
     )
     
     FROM User u
-    LEFT JOIN Profile p
-    ON p.user.id = u.id
     
     LEFT JOIN Follow follower
     ON follower.following.id = u.id
     
     LEFT JOIN Follow following
     ON following.follower.id = u.id
+    
     WHERE u.id = :userId
     
-    GROUP BY
-        u.id,
-        u.username,
-        u.email,
-        p.avatarUrl,
-        p.bio,
-        p.fullName,
-        p.phone,
-        p.dateOfBirth,
-        p.gender,
-        p.location,
-        u.createdAt,
-        u.updatedAt
-    
+    GROUP BY u.id
     """)
-    Optional<PublicUserProfileCacheResponse> findCurrentUserProfileCache(
+    Optional<UserFollowStatCacheResponse> findFollowStat(
             @Param("userId") Long userId
     );
 

@@ -3,6 +3,7 @@ package media.social.modults.user.service;
 import media.social.modults.user.dto.request.user.UpdateAvatarRequest;
 import media.social.modults.user.dto.request.user.ChangePasswordRequest;
 import media.social.modults.user.dto.request.user.UpdateProfileRequest;
+import media.social.modults.user.dto.response.user.ProfileResponse;
 import media.social.modults.user.dto.response.user.PublicUserProfileResponse;
 import media.social.modults.user.dto.response.user.UserSearchResponse;
 import media.social.modults.user.dto.response.user.UserProfileResponse;
@@ -13,9 +14,9 @@ public interface UserService {
 
     public UserProfileResponse getMe();
 
-    public void updateMe(UpdateProfileRequest request);
+    public ProfileResponse updateMe(UpdateProfileRequest request);
 
-    public void updateAvatar(UpdateAvatarRequest request);
+    public ProfileResponse updateAvatar(UpdateAvatarRequest request);
 
     public void updatePassword(ChangePasswordRequest request);
 

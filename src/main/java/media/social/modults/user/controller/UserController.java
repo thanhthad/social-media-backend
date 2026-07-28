@@ -8,6 +8,7 @@ import media.social.common.response.ResponseData;
 import media.social.modults.user.dto.request.user.ChangePasswordRequest;
 import media.social.modults.user.dto.request.user.UpdateAvatarRequest;
 import media.social.modults.user.dto.request.user.UpdateProfileRequest;
+import media.social.modults.user.dto.response.user.ProfileResponse;
 import media.social.modults.user.dto.response.user.PublicUserProfileResponse;
 import media.social.modults.user.dto.response.user.UserSearchResponse;
 import media.social.modults.user.dto.response.user.UserProfileResponse;
@@ -50,11 +51,10 @@ public class UserController {
             @Valid @RequestBody UpdateProfileRequest request
     ) {
 
-        UserProfileResponse response =
-                userService.updateMe(request);
+        ProfileResponse profileResponse =  userService.updateMe(request);
 
         return ResponseData.success(
-                response,
+                profileResponse,
                 "Update profile successfully",
                 HttpStatus.OK
         );
@@ -64,7 +64,13 @@ public class UserController {
     public ResponseEntity<?> updateAvatar(
             @Valid @ModelAttribute UpdateAvatarRequest request
     ) {
-        return ResponseEntity.ok(userService.updateAvatar(request));
+        ProfileResponse profileResponse =  userService.updateAvatar(request);
+
+        return ResponseData.success(
+                profileResponse,
+                "Update avatar successfully",
+                HttpStatus.OK
+        );
     }
 
     @PutMapping("/me/password")

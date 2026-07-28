@@ -34,7 +34,4 @@ public class PublicUserProfileCacheResponse {
 
     private LocalDateTime updatedAt;
 
-    private Long totalFollower;
-
-    private Long totalFollowing;
 }

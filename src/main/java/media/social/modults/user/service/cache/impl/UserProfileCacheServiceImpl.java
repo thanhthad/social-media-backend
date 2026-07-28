@@ -2,6 +2,7 @@ package media.social.modults.user.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
 import media.social.modults.user.dto.response.cache.PublicUserProfileCacheResponse;
+import media.social.modults.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modults.user.exception.user.UserNotFoundException;
 import media.social.modults.user.repository.UserRepository;
 import media.social.modults.user.service.cache.UserProfileCacheService;
@@ -41,9 +42,23 @@ public class UserProfileCacheServiceImpl implements UserProfileCacheService {
                 .location(user.getLocation())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
-                .totalFollower(user.getTotalFollower())
-                .totalFollowing(user.getTotalFollowing())
                 .build();
 
+    }
+
+    @Cacheable(
+            value = "userFollowStat",
+            key = "#userId"
+    )
+    @Transactional(readOnly = true)
+    public UserFollowStatCacheResponse getFollowStat(
+            Long userId
+    ){
+        return userRepository.findFollowStat(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException(
+                                "User not found"
+                        )
+                );
     }
 }

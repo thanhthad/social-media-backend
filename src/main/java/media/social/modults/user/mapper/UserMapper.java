@@ -1,6 +1,7 @@
 package media.social.modults.user.mapper;
 
 import media.social.modults.user.dto.response.cache.PublicUserProfileCacheResponse;
+import media.social.modults.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modults.user.dto.response.user.FollowCountResponse;
 import media.social.modults.user.dto.response.user.UserSearchResponse;
 import media.social.modults.user.dto.response.user.ProfileResponse;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
 
     public UserProfileResponse toUserProfileResponse(
-            PublicUserProfileCacheResponse user
+            PublicUserProfileCacheResponse user,
+            UserFollowStatCacheResponse userFollowStat
+
     ) {
 
         ProfileResponse profileResponse = profileResponse = ProfileResponse.builder()
@@ -33,8 +36,8 @@ public class UserMapper {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .profile(profileResponse)
-                .totalFollower(user.getTotalFollower())
-                .totalFollowing(user.getTotalFollowing())
+                .totalFollower(userFollowStat.getTotalFollower())
+                .totalFollowing(userFollowStat.getTotalFollowing())
                 .build();
     }
 
