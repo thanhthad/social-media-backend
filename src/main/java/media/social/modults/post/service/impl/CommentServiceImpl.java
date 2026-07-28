@@ -12,7 +12,6 @@ import media.social.modults.post.entity.Post;
 import media.social.modults.post.exception.comment.CommentNotFoundException;
 import media.social.modults.post.repository.CommentReactionRepository;
 import media.social.modults.post.repository.CommentRepository;
-import media.social.modults.post.repository.PostRepository;
 import media.social.modults.post.service.CommentService;
 import media.social.modults.post.service.domain.PostDomainService;
 import media.social.modults.user.entity.User;
