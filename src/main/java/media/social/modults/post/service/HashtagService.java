@@ -9,10 +9,6 @@ import java.util.Optional;
 
 public interface HashtagService {
 
-    Optional<Hashtag> findByName(String name);
-
-    Hashtag findOrCreate(String name);
-
     List<HashtagResponse> search(String keyword);
 
     List<TrendingHashtagResponse> getTrending();

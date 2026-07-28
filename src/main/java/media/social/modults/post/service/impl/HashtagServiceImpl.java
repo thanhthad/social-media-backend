@@ -24,30 +24,6 @@ public class HashtagServiceImpl implements HashtagService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Hashtag> findByName(String name) {
-
-        return hashtagRepository.findByName(
-                name.toLowerCase(Locale.ROOT).trim()
-        );
-    }
-
-    @Override
-    public Hashtag findOrCreate(String name) {
-
-        String normalized = name.toLowerCase(Locale.ROOT).trim();
-
-        return hashtagRepository.findByName(normalized)
-                .orElseGet(() ->
-                        hashtagRepository.save(
-                                Hashtag.builder()
-                                        .name(normalized)
-                                        .build()
-                        )
-                );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<HashtagResponse> search(String keyword) {
 
         return hashtagRepository

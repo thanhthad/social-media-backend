@@ -101,23 +101,19 @@ public class CommentServiceImpl implements CommentService {
 
     @Transactional
     public void deleteComment(Long commentId) {
-        Long userId = UserContextHolder.getUserId();
-
-        Comment comment = commentRepository.findById(commentId)
+        Comment comment = commentRepository
+                .findByIdWithUserAndPost(commentId)
                 .orElseThrow(() ->
                         new CommentNotFoundException("Comment not found")
                 );
 
-        Long postId = comment.getPost().getId();
+        Long userId = UserContextHolder.getUserId();
 
         boolean isCommentOwner =
                 comment.getUser().getId().equals(userId);
 
         boolean isPostOwner =
-                comment.getPost()
-                        .getUser()
-                        .getId()
-                        .equals(userId);
+                comment.getPost().getUser().getId().equals(userId);
 
         if (!isCommentOwner && !isPostOwner) {
             throw new AccessDeniedException(
@@ -135,47 +131,34 @@ public class CommentServiceImpl implements CommentService {
 
         commentRepository.delete(comment);
 
-        postDomainService.decreaseCommentCount(postId);
+        postDomainService.decreaseCommentCount(comment.getPost().getId());
     }
 
     @Override
     @Transactional
-    public CommentResponse updateComment(Long commentId, UpdateCommentContent request) {
+    public CommentResponse updateComment(
+            Long commentId,
+            UpdateCommentContent request
+    ) {
 
-        long userId = UserContextHolder.getUserId();
+        Long userId = UserContextHolder.getUserId();
 
-        Comment comment = commentRepository.findByIdAndUser_Id(commentId, userId)
-                .orElseThrow(() ->
-                        new CommentNotFoundException("Not found or not allowed")
-                );
+        int updated = commentRepository.updateContent(
+                commentId,
+                userId,
+                request.getContent()
+        );
 
-        comment.setContent(request.getContent());
+        if (updated == 0) {
+            throw new CommentNotFoundException(
+                    "Not found or not allowed"
+            );
+        }
 
-        commentRepository.save(comment);
-
-        return CommentResponse.builder()
-                .commentId(comment.getId())
-                .userId(userId)
-                .username(comment.getUser().getUsername())
-                .avatarUrl(comment.getUser().getProfile() != null
-                        ? comment.getUser().getProfile().getAvatarUrl()
-                        : null)
-                .parentId(comment.getParent() != null
-                        ? comment.getParent().getId()
-                        : null)
-                .content(comment.getContent())
-                .createdAt(comment.getCreatedAt())
-                .totalReplies(commentRepository.countByParent_Id(comment.getId()))
-                .totalReactions(
-                        commentReactionRepository.countByCommentId(comment.getId())
-                )
-                .myReaction(
-                        commentReactionRepository.findReactionType(
-                                userId,
-                                comment.getId()
-                        )
-                )
-                .build();
+        return commentRepository.findCommentResponse(
+                commentId,
+                userId
+        ).orElseThrow();
     }
 
 
