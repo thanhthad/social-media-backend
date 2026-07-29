@@ -1,6 +1,7 @@
 package media.social.modults.conversation.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import media.social.modults.conversation.dto.projection.MessageProjection;
 import media.social.modults.conversation.dto.request.CreateMessageRequest;
 import media.social.modults.conversation.dto.response.MessageMediaResponse;
 import media.social.modults.conversation.dto.response.MessageResponse;
@@ -12,6 +13,7 @@ import media.social.modults.conversation.exception.InvalidMediaException;
 import media.social.modults.conversation.exception.MessageNotFoundException;
 import media.social.modults.conversation.repository.ConversationMemberRepository;
 import media.social.modults.conversation.repository.ConversationRepository;
+import media.social.modults.conversation.repository.MessageMediaRepository;
 import media.social.modults.conversation.repository.MessageRepository;
 import media.social.modults.conversation.service.MessageService;
 import media.social.modults.file.image.dto.response.UploadFileResponse;
@@ -29,6 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,11 +43,13 @@ public class MessageServiceImpl implements MessageService {
     private final ConversationMemberRepository conversationMemberRepository;
     private final UserServiceDomain userServiceDomain;
     private final CloudinaryService cloudinaryService;
+    private final MessageMediaRepository messageMediaRepository;
 
     @Override
     @Transactional
     public MessageResponse create(CreateMessageRequest request) {
         validateMessage(request);
+
         Long userId = UserContextHolder.getUserId();
 
         Conversation conversation = conversationRepository.findById(request.getConversationId())
@@ -121,12 +127,68 @@ public class MessageServiceImpl implements MessageService {
 
         checkMember(conversationId, userId);
 
-        return messageRepository
-                .findByConversationIdOrderByCreatedAtDesc(
+        Page<MessageProjection> messages =
+                messageRepository.findMessages(
                         conversationId,
                         pageable
-                )
-                .map(this::mapToResponse);
+                );
+
+        List<Long> messageIds =
+                messages.getContent()
+                        .stream()
+                        .map(MessageProjection::getId)
+                        .toList();
+
+        List<MessageMedia> medias =
+                messageMediaRepository.findByMessageIds(
+                        messageIds
+                );
+
+        Map<Long, List<MessageMediaResponse>> mediaMap =
+                medias.stream()
+                        .collect(Collectors.groupingBy(
+                                media -> media.getMessage().getId(),
+                                Collectors.mapping(
+                                        media -> MessageMediaResponse.builder()
+                                                .id(media.getId())
+                                                .url(media.getUrl())
+                                                .mediaType(
+                                                        media.getMediaType().name()
+                                                )
+                                                .build(),
+                                        Collectors.toList()
+                                )
+                        ));
+
+        return messages.map(message ->
+                MessageResponse.builder()
+                        .id(message.getId())
+                        .senderId(
+                                message.getSenderId()
+                        )
+                        .senderName(
+                                message.getSenderName()
+                        )
+                        .avatarUrl(
+                                message.getAvatarUrl()
+                        )
+                        .content(
+                                message.getContent()
+                        )
+                        .replyToMessageId(
+                                message.getReplyToMessageId()
+                        )
+                        .medias(
+                                mediaMap.getOrDefault(
+                                        message.getId(),
+                                        List.of()
+                                )
+                        )
+                        .createdAt(
+                                message.getCreatedAt()
+                        )
+                        .build()
+        );
     }
 
 
@@ -154,7 +216,7 @@ public class MessageServiceImpl implements MessageService {
 
         Long userId = UserContextHolder.getUserId();
 
-        Message message = messageRepository.findById(messageId)
+        Message message = messageRepository.findByIdWithSenderAndMedia(messageId)
                 .orElseThrow(() -> new MessageNotFoundException("Message not found"));
 
         if(!message.getSender().getId().equals(userId)) {
@@ -201,7 +263,6 @@ public class MessageServiceImpl implements MessageService {
 
         return MessageResponse.builder()
                 .id(message.getId())
-                .conversationId(message.getConversation().getId())
                 .senderId(message.getSender().getId())
                 .senderName(message.getSender().getUsername())
                 .content(message.getContent())
