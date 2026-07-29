@@ -43,6 +43,7 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     List<ConversationMemberResponse> findMembersByConversationId(
             @Param("conversationId") Long conversationId
     );
+
     @Query("""
     SELECT c
     FROM Conversation c

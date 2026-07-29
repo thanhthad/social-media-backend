@@ -11,35 +11,23 @@ import java.util.List;
 
 public interface ConversationMemberService {
 
-    ConversationResponse createPrivateConversation(Long targetUserId);
-
-    ConversationResponse getConversationDetail(
-            Long conversationId
-    );
-
-    void updateGroupAvatar(
+    void addMember(
             Long conversationId,
-            MultipartFile file
+            Long userId
     );
 
-    void updateGroupName(
+    void removeMember(
             Long conversationId,
-            UpdateGroupNameRequest request
+            Long userId
     );
 
-    void deleteConversation(Long conversationId);
+    boolean isMember(
+            Long conversationId,
+            Long userId
+    );
 
-    ConversationResponse createGroupConversation(CreateGroupRequest request);
-
-    List<ConversationListResponse> getMyConversations();
-
-    void addMember(Long conversationId, Long userId);
-
-    void removeMember(Long conversationId, Long userId);
-
-    boolean isMember(Long conversationId, Long userId);
-
-    List<ConversationMemberResponse> getMembers(Long conversationId);
-
-    void updateLastReadMessage(Long conversationId, Long messageId);
+    void updateLastReadMessage(
+            Long conversationId,
+            Long messageId
+    );
 }

@@ -1,16 +1,36 @@
 package media.social.modults.conversation.service;
 
+import media.social.modults.conversation.dto.request.CreateGroupRequest;
+import media.social.modults.conversation.dto.request.UpdateGroupNameRequest;
+import media.social.modults.conversation.dto.response.ConversationListResponse;
 import media.social.modults.conversation.dto.response.ConversationResponse;
-import media.social.modults.conversation.entity.Conversation;
-import media.social.modults.conversation.enums.ConversationType;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public interface ConversationService {
 
-    Conversation create(ConversationType type);
+    ConversationResponse createPrivateConversation(Long targetUserId);
 
-    ConversationResponse findById(Long conversationId);
+    ConversationResponse createGroupConversation(
+            CreateGroupRequest request
+    );
 
-    void delete(Long conversationId);
+    void updateGroupAvatar(
+            Long conversationId,
+            MultipartFile file
+    );
 
+    void updateGroupName(
+            Long conversationId,
+            UpdateGroupNameRequest request
+    );
 
+    void deleteConversation(Long conversationId);
+
+    ConversationResponse getConversationDetail(
+            Long conversationId
+    );
+
+    List<ConversationListResponse> getMyConversations();
 }
