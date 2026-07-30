@@ -33,6 +33,17 @@ public class PostController {
         );
     }
 
+    @GetMapping("/explore")
+    @Operation(summary = "Get news explore")
+    public ResponseEntity<?> getExplore(Pageable pageable) {
+
+        return ResponseData.success(
+                postService.getExplore(pageable),
+                "Get explore successfully",
+                HttpStatus.OK
+        );
+    }
+
     @GetMapping("/search")
     @Operation(summary = "Search posts by content")
     public ResponseEntity<?> searchByContent(

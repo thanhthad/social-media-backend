@@ -71,6 +71,18 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<PostResponse> getExplore(Pageable pageable) {
+
+        Long viewerId = UserContextHolder.getUserId();
+
+        Page<PostFlatResponse> flatPage =
+                postRepository.findExplore(viewerId, pageable);
+
+        return buildPostResponse(flatPage, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<PostResponse> getAllPostMe(Pageable pageable) {
         Long userId = UserContextHolder.getUserId();
         return getAllPost(userId,pageable);

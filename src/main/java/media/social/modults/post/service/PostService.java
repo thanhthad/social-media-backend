@@ -11,6 +11,8 @@ public interface PostService {
 
     Page<PostResponse> getFeed(Pageable pageable);
 
+    Page<PostResponse> getExplore(Pageable pageable);
+
     void createPost(CreatePostRequest request);
 
     Page<PostResponse> getAllPostMe(Pageable pageable);

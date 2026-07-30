@@ -183,7 +183,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         u.id,
         u.username,
         pr.avatarUrl,
-              
         p.commentCount,
         p.reactionCount
     )
@@ -196,29 +195,75 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
            OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
     )
-   AND u.status = media.social.modults.user.Enum.Status.ACTIVE
-   AND NOT EXISTS (
-            SELECT 1
-            FROM Report r
-            WHERE r.post.id = p.id
-              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
-        )
+    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND NOT EXISTS (
+        SELECT 1
+        FROM Report r
+        WHERE r.post.id = p.id
+          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+    )
     AND (
         u.id = :viewerId
-        OR p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
-        OR (
-            p.visibility = media.social.modults.post.enums.Visibility.FOLLOWERS
-            AND EXISTS (
-                SELECT 1
-                FROM Follow f
-                WHERE f.follower.id = :viewerId
-                  AND f.following.id = u.id
-            )
+        OR EXISTS (
+            SELECT 1
+            FROM Follow f
+            WHERE f.follower.id = :viewerId
+              AND f.following.id = u.id
+        )
+    )
+    AND (
+        u.id = :viewerId
+        OR p.visibility IN (
+            media.social.modults.post.enums.Visibility.PUBLIC,
+            media.social.modults.post.enums.Visibility.FOLLOWERS
         )
     )
     ORDER BY p.createdAt DESC
     """)
     Page<PostFlatResponse> findFeed(
+            @Param("viewerId") Long viewerId,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+        p.id,
+        p.content,
+        p.visibility,
+        p.createdAt,
+        u.id,
+        u.username,
+        pr.avatarUrl,
+        p.commentCount,
+        p.reactionCount
+    )
+    FROM Post p
+    JOIN p.user u
+    LEFT JOIN u.profile pr
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM Block b
+        WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
+           OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
+    )
+    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND NOT EXISTS (
+        SELECT 1
+        FROM Report r
+        WHERE r.post.id = p.id
+          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+    )
+    AND u.id <> :viewerId
+    AND p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
+    AND NOT EXISTS (
+        SELECT 1
+        FROM Follow f
+        WHERE f.follower.id = :viewerId
+          AND f.following.id = u.id
+    )
+    ORDER BY p.createdAt DESC
+    """)
+    Page<PostFlatResponse> findExplore(
             @Param("viewerId") Long viewerId,
             Pageable pageable
     );
