@@ -11,15 +11,12 @@ import org.springframework.stereotype.Component;
 
 import java.security.Principal;
 
-
 @Component
 @RequiredArgsConstructor
 public class WebSocketChannelInterceptor
         implements ChannelInterceptor {
 
-
     private final JwtUtil jwtUtil;
-
 
     @Override
     public Message<?> preSend(
@@ -28,6 +25,7 @@ public class WebSocketChannelInterceptor
     ) {
         StompHeaderAccessor accessor =
                 StompHeaderAccessor.wrap(message);
+
         if (StompCommand.CONNECT.equals(
                 accessor.getCommand()
         )) {
@@ -60,7 +58,6 @@ public class WebSocketChannelInterceptor
                     }
             );
         }
-
 
         return message;
     }

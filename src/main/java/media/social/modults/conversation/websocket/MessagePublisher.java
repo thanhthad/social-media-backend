@@ -1,35 +1,28 @@
-package media.social.modults.notification.websocket;
+package media.social.modults.conversation.websocket;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modults.notification.dto.response.NotificationResponse;
+import media.social.modults.conversation.dto.response.MessageResponse;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class NotificationPublisher {
+public class MessagePublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
 
+
     public void sendToUser(
             Long receiverId,
-            NotificationResponse response
+            MessageResponse response
     ) {
+
         messagingTemplate.convertAndSendToUser(
                 receiverId.toString(),
-                "/queue/notifications",
+                "/queue/messages",
                 response
         );
 
-    }
-
-    public void sendGlobalNotification(
-            String message
-    ){
-        messagingTemplate.convertAndSend(
-                "/topic/system",
-                message
-        );
     }
 
 }
