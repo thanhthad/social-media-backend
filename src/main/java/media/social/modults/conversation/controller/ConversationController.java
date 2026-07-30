@@ -10,6 +10,7 @@ import media.social.modults.conversation.dto.request.UpdateGroupNameRequest;
 import media.social.modults.conversation.dto.response.ConversationResponse;
 import media.social.modults.conversation.service.ConversationService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,15 +54,16 @@ public class ConversationController {
             summary = "Create group conversation",
             description = "Create a new group conversation"
     )
-    @PostMapping("/group")
+    @PostMapping(
+            value = "/group",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<?> createGroupConversation(
-            @RequestBody CreateGroupRequest request
+            @ModelAttribute CreateGroupRequest request
     ){
 
         ConversationResponse response =
-                conversationService.createGroupConversation(
-                        request
-                );
+                conversationService.createGroupConversation(request);
 
         return ResponseData.success(
                 response,

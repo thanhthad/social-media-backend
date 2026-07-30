@@ -11,11 +11,12 @@ import java.util.Optional;
 public interface ConversationRepository
         extends JpaRepository<Conversation, Long> {
     @Query("""
-        SELECT c
-        FROM Conversation c
-        JOIN FETCH c.owner
-        WHERE c.id = :conversationId
-    """)
+    SELECT c
+    FROM Conversation c
+    LEFT JOIN FETCH c.owner
+    LEFT JOIN FETCH c.lastMessage
+    WHERE c.id = :conversationId
+""")
     Optional<Conversation> findByIdWithOwner(
             Long conversationId
     );

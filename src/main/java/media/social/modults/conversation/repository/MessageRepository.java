@@ -5,11 +5,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
+
+    Optional<Message> findTopByConversationIdAndIdLessThanAndDeletedFalseOrderByIdDesc(
+            Long conversationId,
+            Long messageId
+    );
 
     @Query("""
     SELECT m
@@ -20,6 +26,25 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 """)
     Optional<Message> findByIdWithSenderAndMedia(
             Long messageId
+    );
+
+    @Query("""
+    SELECT COUNT(m)
+    FROM Message m
+    JOIN ConversationMember cm
+        ON cm.conversation.id = m.conversation.id
+    WHERE cm.conversation.id = :conversationId
+    AND cm.user.id = :userId
+    AND m.sender.id <> :userId
+    AND m.deleted = false
+    AND (
+        cm.lastReadMessage IS NULL
+        OR m.id > cm.lastReadMessage.id
+    )
+""")
+    long countUnreadMessages(
+            @Param("conversationId") Long conversationId,
+            @Param("userId") Long userId
     );
 
     @Query("""
@@ -44,10 +69,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     Page<MessageProjection> findMessages(
             Long conversationId,
             Pageable pageable
-    );
-
-    Optional<Message> findTopByConversationIdOrderByCreatedAtDesc(
-            Long conversationId
     );
 
     boolean existsByIdAndConversationId(

@@ -345,11 +345,6 @@ public class PostServiceImpl implements PostService {
 
         savePostHashtags(post, request.getContent());
 
-        log.info(
-                "POST_EVENT | action=CREATE_POST | userId={} | postId={}",
-                userId,
-                post.getId()
-        );
     }
 
     @Override

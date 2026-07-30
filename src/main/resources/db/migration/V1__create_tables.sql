@@ -192,7 +192,6 @@ CREATE TABLE conversations (
 
                                avatar_public_id VARCHAR(255),
 
-
                                last_message_at TIMESTAMP WITH TIME ZONE,
 
                                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -218,6 +217,8 @@ CREATE TABLE messages (
 
                           is_deleted BOOLEAN DEFAULT FALSE
 );
+
+
 
 CREATE TABLE message_reactions (
 

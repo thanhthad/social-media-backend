@@ -22,7 +22,7 @@ public class Conversation {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
+    @Column(name = "type", nullable =false)
     private ConversationType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,9 +38,11 @@ public class Conversation {
     @Column(name = "avatar_public_id")
     private String avatarPublicId;
 
-    @Column(
-            name = "last_message_at"
-    )
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_message_id")
+    private Message lastMessage;
+
+    @Column(name = "last_message_at")
     private OffsetDateTime lastMessageAt;
 
     @Column(
@@ -51,7 +53,7 @@ public class Conversation {
     private OffsetDateTime createdAt;
 
     @PrePersist
-    public void prePersist(){
+    public void prePersist() {
         this.createdAt = OffsetDateTime.now();
     }
 }

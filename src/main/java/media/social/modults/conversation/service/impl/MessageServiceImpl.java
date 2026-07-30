@@ -16,6 +16,7 @@ import media.social.modults.conversation.repository.ConversationRepository;
 import media.social.modults.conversation.repository.MessageMediaRepository;
 import media.social.modults.conversation.repository.MessageRepository;
 import media.social.modults.conversation.service.MessageService;
+import media.social.modults.conversation.service.domain.ConversationDomainService;
 import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.post.enums.MediaType;
@@ -41,6 +42,7 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final ConversationMemberRepository conversationMemberRepository;
+    private final ConversationDomainService conversationDomainService;
     private final UserServiceDomain userServiceDomain;
     private final CloudinaryService cloudinaryService;
     private final MessageMediaRepository messageMediaRepository;
@@ -109,6 +111,7 @@ public class MessageServiceImpl implements MessageService {
 
         Message saved = messageRepository.save(message);
 
+        conversation.setLastMessage(saved);
         conversation.setLastMessageAt(saved.getCreatedAt());
 
         conversationRepository.save(conversation);
@@ -209,7 +212,6 @@ public class MessageServiceImpl implements MessageService {
         return mapToResponse(message);
     }
 
-
     @Override
     @Transactional
     public void delete(Long messageId) {
@@ -219,6 +221,7 @@ public class MessageServiceImpl implements MessageService {
         Message message = messageRepository.findByIdWithSenderAndMedia(messageId)
                 .orElseThrow(() -> new MessageNotFoundException("Message not found"));
 
+        conversationDomainService.checkOwner(message);
         if(!message.getSender().getId().equals(userId)) {
             throw new AccessDeniedException(
                     "Only sender can delete message"
@@ -236,8 +239,35 @@ public class MessageServiceImpl implements MessageService {
                     }
                 });
 
+        Conversation conversation =
+                message.getConversation();
+
+        if(conversation.getLastMessage() != null
+                && conversation.getLastMessage()
+                .getId()
+                .equals(messageId)) {
+
+            Message previousMessage =
+                    messageRepository
+                            .findTopByConversationIdAndIdLessThanAndDeletedFalseOrderByIdDesc(
+                                    conversation.getId(),
+                                    messageId
+                            )
+                            .orElse(null);
+
+            conversation.setLastMessage(previousMessage);
+
+            if(previousMessage != null) {
+                conversation.setLastMessageAt(
+                        previousMessage.getCreatedAt()
+                );
+            } else {
+
+                conversation.setLastMessageAt(null);
+            }
+        }
+
         message.setDeleted(true);
-        message.setContent("Tin nhắn đã bị xóa");
     }
 
 

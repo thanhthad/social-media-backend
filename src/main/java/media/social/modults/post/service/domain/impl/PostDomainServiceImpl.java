@@ -1,6 +1,7 @@
 package media.social.modults.post.service.domain.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modults.conversation.entity.Message;
 import media.social.modults.post.entity.Post;
 import media.social.modults.post.exception.post.ForbiddenException;
 import media.social.modults.post.exception.post.PostNotFoundException;

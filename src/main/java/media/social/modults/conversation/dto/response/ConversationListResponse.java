@@ -20,6 +20,8 @@ public class ConversationListResponse {
 
     private LastMessageResponse lastMessage;
 
+    private Long unreadCount;
+
     private OffsetDateTime createdAt;
 
 }

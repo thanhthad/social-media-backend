@@ -389,25 +389,36 @@ public class ConversationServiceImpl implements ConversationService {
             avatarUrl = conversation.getAvatarUrl();
         }
 
-        Message message =
-                messageRepository
-                        .findTopByConversationIdOrderByCreatedAtDesc(
-                                conversation.getId()
-                        )
-                        .orElse(null);
-
         LastMessageResponse lastMessage = null;
 
-        if (message != null) {
-
-            lastMessage = LastMessageResponse.builder()
-                    .id(message.getId())
-                    .preview(buildPreview(message))
-                    .senderId(message.getSender().getId())
-                    .senderName(message.getSender().getUsername())
-                    .createdAt(message.getCreatedAt())
-                    .build();
+        if(conversation.getLastMessage() != null) {
+            Message message =
+                    conversation.getLastMessage();
+            lastMessage =
+                    LastMessageResponse.builder()
+                            .id(message.getId())
+                            .preview(
+                                    buildPreview(message)
+                            )
+                            .senderId(
+                                    message.getSender()
+                                            .getId()
+                            )
+                            .senderName(
+                                    message.getSender()
+                                            .getUsername()
+                            )
+                            .createdAt(
+                                    message.getCreatedAt()
+                            )
+                            .build();
         }
+
+        long unreadCount =
+                messageRepository.countUnreadMessages(
+                        conversation.getId(),
+                        currentUserId
+                );
 
         return ConversationListResponse.builder()
                 .id(conversation.getId())
@@ -415,10 +426,10 @@ public class ConversationServiceImpl implements ConversationService {
                 .displayName(displayName)
                 .avatarUrl(avatarUrl)
                 .lastMessage(lastMessage)
+                .unreadCount(unreadCount)
                 .createdAt(conversation.getCreatedAt())
                 .build();
     }
-
 
     private String buildPreview(Message message) {
 
