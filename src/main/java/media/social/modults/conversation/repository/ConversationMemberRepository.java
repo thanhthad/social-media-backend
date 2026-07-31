@@ -4,6 +4,7 @@ import media.social.modults.conversation.dto.response.ConversationMemberResponse
 import media.social.modults.conversation.entity.Conversation;
 import media.social.modults.conversation.entity.ConversationMember;
 import media.social.modults.conversation.entity.ConversationMemberId;
+import media.social.modults.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,17 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     void deleteByConversationIdAndUserId(Long conversationId, Long userId);
 
     Optional<ConversationMember> findByConversationIdAndUserId(Long conversationId, Long userId);
+
+    @Query("""
+        select cm.user
+        from ConversationMember cm
+        where cm.conversation.id = :conversationId
+          and cm.user.id <> :senderId
+    """)
+    List<User> findOtherMembers(
+            @Param("conversationId") Long conversationId,
+            @Param("senderId") Long senderId
+    );
 
     @Query("""
         SELECT cm.conversation

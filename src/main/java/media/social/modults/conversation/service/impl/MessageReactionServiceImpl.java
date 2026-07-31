@@ -1,6 +1,5 @@
 package media.social.modults.conversation.service.impl;
 
-
 import lombok.AllArgsConstructor;
 import media.social.modults.conversation.dto.response.*;
 import media.social.modults.conversation.entity.Message;
@@ -9,12 +8,11 @@ import media.social.modults.conversation.exception.MessageNotFoundException;
 import media.social.modults.conversation.repository.MessageReactionRepository;
 import media.social.modults.conversation.repository.MessageRepository;
 import media.social.modults.conversation.service.MessageReactionService;
+import media.social.modults.conversation.websocket.MessageReactionPublisher;
 import media.social.modults.post.enums.ReactionType;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.domain.UserServiceDomain;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.EnumMap;
@@ -25,10 +23,10 @@ import java.util.Map;
 @AllArgsConstructor
 public class MessageReactionServiceImpl
         implements MessageReactionService {
+
     private final MessageReactionRepository messageReactionRepository;
-
+    private final MessageReactionPublisher messageReactionPublisher;
     private final MessageRepository messageRepository;
-
     private final UserServiceDomain userServiceDomain;
 
     private Message getMessage(Long messageId){
@@ -80,7 +78,16 @@ public class MessageReactionServiceImpl
                     reaction
             );
         }
+        MessageReactionResponse response =
+                buildReactionResponse(
+                        messageId,
+                        userId
+                );
 
+        messageReactionPublisher.send(
+                userId,
+                response
+        );
     }
     @Override
     @Transactional
@@ -105,92 +112,72 @@ public class MessageReactionServiceImpl
         messageReactionRepository.delete(
                 reaction
         );
+        MessageReactionResponse response =
+                buildReactionResponse(
+                        messageId,
+                        userId
+                );
 
+        messageReactionPublisher.send(
+                userId,
+                response
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public MessageReactionResponse getMyReaction(
+    public List<MessageReactionUserResponse> getUsersReacted(
             Long messageId
-    ){
-        Long userId =
-                UserContextHolder.getUserId();
+    ) {
+
         getMessage(messageId);
-        MessageReaction reaction =
+
+        return messageReactionRepository
+                .findUsersReacted(messageId);
+    }
+
+    private MessageReactionResponse buildReactionResponse(
+            Long messageId,
+            Long userId
+    ){
+        List<MessageReaction> reactions =
                 messageReactionRepository
-                        .findByUserIdAndMessageId(
-                                userId,
-                                messageId
-                        )
-                        .orElse(null);
+                        .findAllByMessageId(messageId);
 
-        if(reaction == null){
-
-            return MessageReactionResponse.builder()
-                    .reacted(false)
-                    .type(null)
-                    .build();
-        }
-        return MessageReactionResponse.builder()
-                .reacted(true)
-                .type(reaction.getType())
-                .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public MessageReactionCountResponse countReaction(
-            Long messageId
-    ){
-        getMessage(messageId);
-
-        Map<ReactionType,Long> counts =
+        Map<ReactionType, Long> counts =
                 new EnumMap<>(ReactionType.class);
 
-        for(ReactionType type : ReactionType.values()){
+        reactions.forEach(reaction -> {
 
-            counts.put(
-                    type,
-                    0L
+            counts.merge(
+                    reaction.getType(),
+                    1L,
+                    Long::sum
             );
 
-        }
+        });
 
-        List<Object[]> results =
-                messageReactionRepository
-                        .countReactionsByMessageId(
-                                messageId
-                        );
-        for(Object[] row : results){
+        ReactionType myReaction =
+                reactions.stream()
+                        .filter(
+                                reaction ->
+                                        reaction.getUser()
+                                                .getId()
+                                                .equals(userId)
+                        )
+                        .map(MessageReaction::getType)
+                        .findFirst()
+                        .orElse(null);
 
-            ReactionType type =
-                    (ReactionType) row[0];
-            Long count =
-                    (Long) row[1];
-            counts.put(
-                    type,
-                    count
-            );
-        }
-        return MessageReactionCountResponse.builder()
+        return MessageReactionResponse.builder()
+                .messageId(messageId)
+                .totalReactions(
+                        (long) reactions.size()
+                )
                 .counts(counts)
+                .myReaction(myReaction)
                 .build();
-
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<MessageReactionUserResponse> getUsersReacted(
-            Long messageId,
-            ReactionType type,
-            Pageable pageable
-    ){
-        getMessage(messageId);
-        return messageReactionRepository
-                .findUsersReacted(
-                        messageId,
-                        type,
-                        pageable
-                );
-    }
+
 }

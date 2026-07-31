@@ -4,13 +4,18 @@ import lombok.Builder;
 import lombok.Getter;
 import media.social.modults.post.enums.ReactionType;
 
+import java.util.Map;
 
 @Getter
 @Builder
 public class MessageReactionResponse {
 
-    private boolean reacted;
+    private Long messageId;
 
-    private ReactionType type;
+    private Long totalReactions;
+
+    private Map<ReactionType, Long> counts;
+
+    private ReactionType myReaction;
 
 }

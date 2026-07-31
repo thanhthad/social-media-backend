@@ -8,6 +8,7 @@ import media.social.modults.conversation.dto.response.MessageResponse;
 import media.social.modults.conversation.entity.Conversation;
 import media.social.modults.conversation.entity.Message;
 import media.social.modults.conversation.entity.MessageMedia;
+import media.social.modults.conversation.enums.ConversationType;
 import media.social.modults.conversation.exception.ConversationNotFoundException;
 import media.social.modults.conversation.exception.InvalidMediaException;
 import media.social.modults.conversation.exception.MessageNotFoundException;
@@ -17,6 +18,7 @@ import media.social.modults.conversation.repository.MessageMediaRepository;
 import media.social.modults.conversation.repository.MessageRepository;
 import media.social.modults.conversation.service.MessageService;
 import media.social.modults.conversation.service.domain.ConversationDomainService;
+import media.social.modults.conversation.websocket.MessagePublisher;
 import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.post.enums.MediaType;
@@ -46,6 +48,7 @@ public class MessageServiceImpl implements MessageService {
     private final UserServiceDomain userServiceDomain;
     private final CloudinaryService cloudinaryService;
     private final MessageMediaRepository messageMediaRepository;
+    private final MessagePublisher messagePublisher;
 
     @Override
     @Transactional
@@ -116,7 +119,22 @@ public class MessageServiceImpl implements MessageService {
 
         conversationRepository.save(conversation);
 
-        return mapToResponse(saved);
+        MessageResponse messageResponse = mapToResponse(saved);
+
+        List<User> receivers =
+                conversationMemberRepository.findOtherMembers(
+                        conversation.getId(),
+                        userId
+                );
+
+        receivers.forEach(receiver ->
+                messagePublisher.sendToUser(
+                        receiver.getId(),
+                        messageResponse
+                )
+        );
+
+        return messageResponse;
     }
 
 

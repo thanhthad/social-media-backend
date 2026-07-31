@@ -4,13 +4,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import media.social.common.response.ResponseData;
-import media.social.modults.conversation.dto.response.MessageReactionCountResponse;
-import media.social.modults.conversation.dto.response.MessageReactionResponse;
-import media.social.modults.conversation.dto.response.MessageReactionUserResponse;
 import media.social.modults.conversation.service.MessageReactionService;
 import media.social.modults.post.enums.ReactionType;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -65,67 +60,18 @@ public class MessageReactionController {
         );
     }
 
-
-    // ================= GET MY REACTION =================
-    @GetMapping("/{messageId}/me")
-    public ResponseEntity<?> getMyReaction(
-            @PathVariable Long messageId
-    ){
-
-        MessageReactionResponse response =
-                messageReactionService.getMyReaction(
-                        messageId
-                );
-
-        return ResponseData.success(
-                response,
-                "Get my reaction successfully",
-                HttpStatus.OK
-        );
-    }
-
-
-    // ================= COUNT REACTION =================
-    @GetMapping("/{messageId}/count")
-    public ResponseEntity<?> countReaction(
-            @PathVariable Long messageId
-    ){
-
-        MessageReactionCountResponse response =
-                messageReactionService.countReaction(
-                        messageId
-                );
-
-
-        return ResponseData.success(
-                response,
-                "Count reaction successfully",
-                HttpStatus.OK
-        );
-    }
-
-
-
-    // ================= USERS REACTED =================
+    // ================= GET USERS REACTED =================
     @GetMapping("/{messageId}/users")
     public ResponseEntity<?> getUsersReacted(
-            @PathVariable Long messageId,
-            @RequestParam(required = false) ReactionType type,
-            Pageable pageable
+            @PathVariable Long messageId
     ){
 
-        Page<MessageReactionUserResponse> response =
-                messageReactionService.getUsersReacted(
-                        messageId,
-                        type,
-                        pageable
-                );
-
-
         return ResponseData.success(
-                response,
+                messageReactionService.getUsersReacted(messageId),
                 "Get users reacted successfully",
                 HttpStatus.OK
         );
     }
+
+
 }

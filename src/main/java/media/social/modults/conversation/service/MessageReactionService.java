@@ -1,11 +1,9 @@
 package media.social.modults.conversation.service;
 
-import media.social.modults.conversation.dto.response.MessageReactionCountResponse;
-import media.social.modults.conversation.dto.response.MessageReactionResponse;
 import media.social.modults.conversation.dto.response.MessageReactionUserResponse;
 import media.social.modults.post.enums.ReactionType;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface MessageReactionService {
 
@@ -14,23 +12,13 @@ public interface MessageReactionService {
             ReactionType type
     );
 
-
     void removeReaction(
             Long messageId
     );
 
-    MessageReactionResponse getMyReaction(
+    List<MessageReactionUserResponse> getUsersReacted(
             Long messageId
     );
 
-    MessageReactionCountResponse countReaction(
-            Long messageId
-    );
-
-    Page<MessageReactionUserResponse> getUsersReacted(
-            Long messageId,
-            ReactionType type,
-            Pageable pageable
-    );
 
 }

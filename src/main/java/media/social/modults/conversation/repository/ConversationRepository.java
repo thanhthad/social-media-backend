@@ -20,4 +20,6 @@ public interface ConversationRepository
     Optional<Conversation> findByIdWithOwner(
             Long conversationId
     );
+
+
 }

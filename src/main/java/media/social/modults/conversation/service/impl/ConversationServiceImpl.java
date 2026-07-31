@@ -18,6 +18,7 @@ import media.social.modults.conversation.repository.ConversationRepository;
 import media.social.modults.conversation.repository.MessageRepository;
 import media.social.modults.conversation.service.ConversationService;
 import media.social.modults.conversation.service.domain.ConversationDomainService;
+import media.social.modults.conversation.websocket.ConversationPublisher;
 import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.post.enums.MediaType;
@@ -43,6 +44,7 @@ public class ConversationServiceImpl implements ConversationService {
     private final MessageRepository messageRepository;
     private final UserServiceDomain userServiceDomain;
     private final CloudinaryService cloudinaryService;
+    private final ConversationPublisher conversationPublisher;
 
     @Override
     @Transactional
@@ -99,7 +101,18 @@ public class ConversationServiceImpl implements ConversationService {
         conversationMemberRepository.save(currentMember);
         conversationMemberRepository.save(targetMember);
 
-        return mapToResponse(conversation,userId);
+        ConversationResponse response =
+                mapToResponse(
+                        conversation,
+                        userId
+                );
+
+        conversationPublisher.sendToUser(
+                targetUserId,
+                response
+        );
+
+        return response;
     }
 
     @Override
@@ -181,10 +194,21 @@ public class ConversationServiceImpl implements ConversationService {
                         })
                         .toList();
         conversationMemberRepository.saveAll(members);
-        return mapToResponse(
-                conversation,
-                userId
-        );
+        ConversationResponse response =
+                mapToResponse(
+                        conversation,
+                        userId
+                );
+
+        members.forEach(member -> {
+            conversationPublisher.sendToUser(
+                    member.getUser().getId(),
+                    response
+            );
+
+        });
+
+        return response;
     }
 
     @Transactional
