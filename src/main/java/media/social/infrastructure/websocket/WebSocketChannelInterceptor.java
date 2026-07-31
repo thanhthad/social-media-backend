@@ -1,4 +1,4 @@
-package media.social.config;
+package media.social.infrastructure.websocket;
 
 import lombok.RequiredArgsConstructor;
 import media.social.modults.user.security.jwt.JwtUtil;

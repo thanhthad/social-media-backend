@@ -1,4 +1,4 @@
-package media.social.config;
+package media.social.infrastructure.cloudinary;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;

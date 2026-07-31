@@ -1,4 +1,4 @@
-package media.social.config;
+package media.social.infrastructure.websocket;
 
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Configuration;

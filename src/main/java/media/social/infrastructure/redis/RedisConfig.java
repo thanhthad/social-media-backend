@@ -1,4 +1,4 @@
-package media.social.config;
+package media.social.infrastructure.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
