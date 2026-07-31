@@ -16,10 +16,6 @@ public interface MessageService {
             Pageable pageable
     );
 
-    MessageResponse findById(
-            Long messageId
-    );
-
     void delete(
             Long messageId
     );

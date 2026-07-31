@@ -148,7 +148,6 @@ public class MessageReactionServiceImpl
                 new EnumMap<>(ReactionType.class);
 
         reactions.forEach(reaction -> {
-
             counts.merge(
                     reaction.getType(),
                     1L,
@@ -156,7 +155,6 @@ public class MessageReactionServiceImpl
             );
 
         });
-
         ReactionType myReaction =
                 reactions.stream()
                         .filter(
@@ -178,6 +176,5 @@ public class MessageReactionServiceImpl
                 .myReaction(myReaction)
                 .build();
     }
-
 
 }

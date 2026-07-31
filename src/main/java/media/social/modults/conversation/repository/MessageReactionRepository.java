@@ -13,6 +13,16 @@ import java.util.Optional;
 public interface MessageReactionRepository
         extends JpaRepository<MessageReaction, Long> {
 
+    @Query("""
+        SELECT mr
+        FROM MessageReaction mr
+        JOIN FETCH mr.user u
+        WHERE mr.message.id IN :messageIds
+    """)
+    List<MessageReaction> findByMessageIds(
+            List<Long> messageIds
+    );
+
     List<MessageReaction> findAllByMessageId(
             Long messageId
     );

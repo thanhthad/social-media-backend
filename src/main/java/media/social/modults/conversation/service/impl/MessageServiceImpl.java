@@ -8,20 +8,19 @@ import media.social.modults.conversation.dto.response.MessageResponse;
 import media.social.modults.conversation.entity.Conversation;
 import media.social.modults.conversation.entity.Message;
 import media.social.modults.conversation.entity.MessageMedia;
-import media.social.modults.conversation.enums.ConversationType;
+import media.social.modults.conversation.entity.MessageReaction;
 import media.social.modults.conversation.exception.ConversationNotFoundException;
 import media.social.modults.conversation.exception.InvalidMediaException;
 import media.social.modults.conversation.exception.MessageNotFoundException;
-import media.social.modults.conversation.repository.ConversationMemberRepository;
-import media.social.modults.conversation.repository.ConversationRepository;
-import media.social.modults.conversation.repository.MessageMediaRepository;
-import media.social.modults.conversation.repository.MessageRepository;
+import media.social.modults.conversation.repository.*;
+import media.social.modults.conversation.service.MessageReactionService;
 import media.social.modults.conversation.service.MessageService;
 import media.social.modults.conversation.service.domain.ConversationDomainService;
 import media.social.modults.conversation.websocket.MessagePublisher;
 import media.social.modults.file.image.dto.response.UploadFileResponse;
 import media.social.modults.file.image.service.CloudinaryService;
 import media.social.modults.post.enums.MediaType;
+import media.social.modults.post.enums.ReactionType;
 import media.social.modults.user.entity.User;
 import media.social.modults.user.security.context.UserContextHolder;
 import media.social.modults.user.service.domain.UserServiceDomain;
@@ -33,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,6 +49,7 @@ public class MessageServiceImpl implements MessageService {
     private final CloudinaryService cloudinaryService;
     private final MessageMediaRepository messageMediaRepository;
     private final MessagePublisher messagePublisher;
+    private final MessageReactionRepository messageReactionRepository;
 
     @Override
     @Transactional
@@ -137,7 +138,6 @@ public class MessageServiceImpl implements MessageService {
         return messageResponse;
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public Page<MessageResponse> getMessages(
@@ -180,6 +180,35 @@ public class MessageServiceImpl implements MessageService {
                                         Collectors.toList()
                                 )
                         ));
+        List<MessageReaction> reactions =
+                messageReactionRepository.findByMessageIds(
+                        messageIds
+                );
+
+        Map<Long, Map<ReactionType, Long>> reactionMap =
+                reactions.stream()
+                        .collect(Collectors.groupingBy(
+                                reaction -> reaction.getMessage().getId(),
+                                Collectors.groupingBy(
+                                        MessageReaction::getType,
+                                        () -> new EnumMap<>(ReactionType.class),
+                                        Collectors.counting()
+                                )
+                        ));
+        Map<Long, ReactionType> myReactionMap =
+                reactions.stream()
+                        .filter(
+                                reaction ->
+                                        reaction.getUser()
+                                                .getId()
+                                                .equals(userId)
+                        )
+                        .collect(Collectors.toMap(
+                                reaction ->
+                                        reaction.getMessage().getId(),
+
+                                MessageReaction::getType
+                        ));
 
         return messages.map(message ->
                 MessageResponse.builder()
@@ -205,6 +234,28 @@ public class MessageServiceImpl implements MessageService {
                                         List.of()
                                 )
                         )
+                        .myReaction(
+                                myReactionMap.get(
+                                        message.getId()
+                                )
+                        )
+                        .totalReactions(
+                                reactionMap
+                                        .getOrDefault(
+                                                message.getId(),
+                                                Map.of()
+                                        )
+                                        .values()
+                                        .stream()
+                                        .mapToLong(Long::longValue)
+                                        .sum()
+                        )
+                        .counts(
+                                reactionMap.getOrDefault(
+                                        message.getId(),
+                                        Map.of()
+                                )
+                        )
                         .createdAt(
                                 message.getCreatedAt()
                         )
@@ -212,23 +263,6 @@ public class MessageServiceImpl implements MessageService {
         );
     }
 
-
-    @Override
-    @Transactional(readOnly = true)
-    public MessageResponse findById(Long messageId) {
-
-        Long userId = UserContextHolder.getUserId();
-
-        Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new MessageNotFoundException("Message not found"));
-
-        checkMember(
-                message.getConversation().getId(),
-                userId
-        );
-
-        return mapToResponse(message);
-    }
 
     @Override
     @Transactional
