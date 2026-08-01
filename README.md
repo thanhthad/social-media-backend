@@ -1,6 +1,10 @@
-A production-oriented social media backend system built with **Java Spring Boot**, focusing on scalable architecture, security, real-time communication, caching, and modern backend development practices.
+# Social Media Backend Platform
 
-This project provides core social networking features including user management, posts, reactions, comments, follows, messaging, notifications, and media management.
+## A production-oriented social media backend system built with Java Spring Boot
+
+A scalable backend platform designed with modern backend engineering practices, focusing on **clean architecture, security, real-time communication, caching strategies, and high-performance system design**.
+
+The project provides core social networking features including **user management, posts, reactions, comments, follows, messaging, notifications, and media management**, built with a focus on scalability, maintainability, and production-ready development.
 
 ---
 # 🚀 Tech Stack
@@ -356,7 +360,6 @@ V4__update_chat_fields.sql
 
 Database contains:
 
-<img width="2604" height="1991" alt="DBdiagram" src="https://github.com/user-attachments/assets/6a21217d-92c1-4e8b-b7cc-fa40f4a5f66f" />
 <img width="2604" height="1991" alt="DBdiagram" src="https://github.com/user-attachments/assets/098c984a-e939-475d-84c8-447ef2f3681d" /># Social Media Backend Platform
 
 
