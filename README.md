@@ -85,6 +85,8 @@ media.social
 # ✨ Main Features
 
 # 🔐 Authentication & Authorization
+#Swagger UI:
+<img width="1902" height="868" alt="image" src="https://github.com/user-attachments/assets/91a7d0ab-b62a-4da6-abad-c3591117ba43" />
 
 Implemented secure authentication flow:
 
