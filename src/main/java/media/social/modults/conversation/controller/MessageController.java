@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.conversation.dto.request.CreateMessageRequest;
 import media.social.modults.conversation.dto.response.MessageResponse;
@@ -31,6 +32,11 @@ public class MessageController {
     @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @RateLimit(
+            name = "MESSAGE_CREATE",
+            limit = 60,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> create(
             @Valid @ModelAttribute CreateMessageRequest request
     ){
@@ -47,6 +53,11 @@ public class MessageController {
 
     // ================= GET MESSAGES =================
     @GetMapping("/conversation/{conversationId}")
+    @RateLimit(
+            name = "MESSAGE_GET_LIST",
+            limit = 300,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getMessages(
             @PathVariable Long conversationId,
             Pageable pageable
@@ -65,26 +76,13 @@ public class MessageController {
         );
     }
 
-    // ================= FIND MESSAGE =================
-    @GetMapping("/{messageId}")
-    public ResponseEntity<?> findById(
-            @PathVariable Long messageId
-    ){
-
-        MessageResponse response =
-                messageService.findById(
-                        messageId
-                );
-
-        return ResponseData.success(
-                response,
-                "Get message successfully",
-                HttpStatus.OK
-        );
-    }
-
     // ================= DELETE MESSAGE =================
     @DeleteMapping("/{messageId}")
+    @RateLimit(
+            name = "MESSAGE_DELETE",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> delete(
             @PathVariable Long messageId
     ){

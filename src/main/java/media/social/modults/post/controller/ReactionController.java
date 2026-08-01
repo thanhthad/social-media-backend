@@ -19,7 +19,6 @@ public class ReactionController {
 
     private final ReactionService reactionService;
 
-
     // ================= ADD / UPDATE REACTION =================
     @PostMapping("/{postId}/reaction")
     @Operation(summary = "React or update reaction for post")
@@ -40,7 +39,6 @@ public class ReactionController {
         );
     }
 
-
     // ================= REMOVE REACTION =================
     @DeleteMapping("/{postId}/reaction")
     @Operation(summary = "Remove reaction from post")
@@ -57,8 +55,6 @@ public class ReactionController {
         );
     }
 
-
-
     // ================= COUNT REACTION =================
     @GetMapping("/{postId}/reactions/count")
     @Operation(summary = "Count reactions of post")
@@ -72,7 +68,6 @@ public class ReactionController {
                 HttpStatus.OK
         );
     }
-
 
     // ================= GET USERS REACTED =================
     @GetMapping("/{postId}/reactions")

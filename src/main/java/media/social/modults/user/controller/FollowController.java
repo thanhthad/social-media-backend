@@ -3,8 +3,8 @@ package media.social.modults.user.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
-import media.social.modults.user.dto.response.user.FollowCountResponse;
 import media.social.modults.user.dto.response.user.FollowUserResponse;
 import media.social.modults.user.service.FollowService;
 import org.springframework.data.domain.Page;
@@ -27,6 +27,11 @@ public class FollowController {
 
     @PostMapping("/{userId}")
     @Operation(summary = "Follow a user")
+    @RateLimit(
+            name = "FOLLOW_CREATE",
+            limit = 50,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> followUser(
             @PathVariable Long userId
     ) {
@@ -42,6 +47,11 @@ public class FollowController {
 
     @DeleteMapping("/{userId}")
     @Operation(summary = "Unfollow a user")
+    @RateLimit(
+            name = "FOLLOW_DELETE",
+            limit = 50,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> unfollowUser(
             @PathVariable Long userId
     ) {
@@ -55,13 +65,17 @@ public class FollowController {
         );
     }
 
-
     // ==================================================
     // LIST FOLLOWERS / FOLLOWING (PUBLIC)
     // ==================================================
 
     @GetMapping("/{userId}/followers")
     @Operation(summary = "Get followers of a user")
+    @RateLimit(
+            name = "FOLLOWER_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getFollowers(
             @PathVariable Long userId,
             Pageable pageable
@@ -79,6 +93,11 @@ public class FollowController {
 
     @GetMapping("/{userId}/following")
     @Operation(summary = "Get following of a user")
+    @RateLimit(
+            name = "FOLLOWING_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getFollowing(
             @PathVariable Long userId,
             Pageable pageable
@@ -100,6 +119,11 @@ public class FollowController {
 
     @GetMapping("/me/followers")
     @Operation(summary = "Get my followers")
+    @RateLimit(
+            name = "MY_FOLLOWER_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getMyFollowers(
             Pageable pageable
     ) {
@@ -116,6 +140,11 @@ public class FollowController {
 
     @GetMapping("/me/following")
     @Operation(summary = "Get my following")
+    @RateLimit(
+            name = "MY_FOLLOWING_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getMyFollowing(
             Pageable pageable
     ) {

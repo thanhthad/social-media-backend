@@ -3,11 +3,11 @@ package media.social.modults.post.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.post.dto.request.post.CreatePostRequest;
 import media.social.modults.post.dto.request.post.UpdatePostContent;
 import media.social.modults.post.dto.request.post.UpdatePostMedia;
-import media.social.modults.post.entity.Post;
 import media.social.modults.post.service.PostService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -22,8 +22,14 @@ public class PostController {
 
     private final PostService postService;
 
+    // ================= FEED =================
     @GetMapping("/feed")
     @Operation(summary = "Get news feed")
+    @RateLimit(
+            name = "POST_FEED",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getFeed(Pageable pageable) {
 
         return ResponseData.success(
@@ -33,8 +39,14 @@ public class PostController {
         );
     }
 
+    // ================= EXPLORE =================
     @GetMapping("/explore")
-    @Operation(summary = "Get news explore")
+    @Operation(summary = "Get explore feed")
+    @RateLimit(
+            name = "POST_EXPLORE",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getExplore(Pageable pageable) {
 
         return ResponseData.success(
@@ -44,8 +56,14 @@ public class PostController {
         );
     }
 
+    // ================= SEARCH BY CONTENT =================
     @GetMapping("/search")
     @Operation(summary = "Search posts by content")
+    @RateLimit(
+            name = "POST_SEARCH",
+            limit = 60,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> searchByContent(
             @RequestParam String keyword,
             Pageable pageable
@@ -58,8 +76,14 @@ public class PostController {
         );
     }
 
+    // ================= SEARCH BY HASHTAG =================
     @GetMapping("/search/hashtag")
     @Operation(summary = "Search posts by hashtag")
+    @RateLimit(
+            name = "POST_SEARCH_HASHTAG",
+            limit = 60,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> searchByHashtag(
             @RequestParam String name,
             Pageable pageable
@@ -74,11 +98,18 @@ public class PostController {
 
     // ================= CREATE POST =================
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Create new post with media")
+    @Operation(summary = "Create new post")
+    @RateLimit(
+            name = "POST_CREATE",
+            limit = 20,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> createPost(
             @ModelAttribute @Valid CreatePostRequest request
     ) {
+
         postService.createPost(request);
+
         return ResponseData.success(
                 null,
                 "Create post successfully",
@@ -86,18 +117,24 @@ public class PostController {
         );
     }
 
-    // ================= UPDATE CONTENT =================
+    // ================= UPDATE POST =================
     @PatchMapping("/{postId}")
     @Operation(summary = "Update post content")
+    @RateLimit(
+            name = "POST_UPDATE",
+            limit = 40,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> updateContent(
             @PathVariable Long postId,
             @RequestBody @Valid UpdatePostContent request
     ) {
+
         postService.updatePostContent(postId, request);
 
         return ResponseData.success(
                 null,
-                "Update post content successfully",
+                "Update post successfully",
                 HttpStatus.OK
         );
     }
@@ -107,26 +144,38 @@ public class PostController {
             value = "/{postId}/media",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    @Operation(summary = "Add media to post")
+    @Operation(summary = "Upload post media")
+    @RateLimit(
+            name = "POST_UPLOAD_MEDIA",
+            limit = 20,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> addMedia(
             @PathVariable Long postId,
             @ModelAttribute @Valid UpdatePostMedia request
     ) {
+
         postService.updatePostMedia(postId, request);
 
         return ResponseData.success(
                 null,
-                "Add media successfully",
+                "Upload media successfully",
                 HttpStatus.OK
         );
     }
 
     // ================= DELETE POST =================
     @DeleteMapping("/{postId}")
-    @Operation(summary = "Delete post by id")
+    @Operation(summary = "Delete post")
+    @RateLimit(
+            name = "POST_DELETE",
+            limit = 20,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> deletePost(
             @PathVariable Long postId
     ) {
+
         postService.deleteByPostId(postId);
 
         return ResponseData.success(
@@ -136,12 +185,18 @@ public class PostController {
         );
     }
 
-    // ================= DELETE MEDIA (FIXED) =================
+    // ================= DELETE MEDIA =================
     @DeleteMapping("/media/{mediaId}")
-    @Operation(summary = "Delete media by postMediaId")
+    @Operation(summary = "Delete media")
+    @RateLimit(
+            name = "POST_DELETE_MEDIA",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> deleteMedia(
             @PathVariable Long mediaId
     ) {
+
         postService.deletePostMedia(mediaId);
 
         return ResponseData.success(
@@ -151,9 +206,14 @@ public class PostController {
         );
     }
 
-    // ================= GET FEED =================
+    // ================= MY POSTS =================
     @GetMapping
-    @Operation(summary = "Get feed posts (current user)")
+    @Operation(summary = "Get my posts")
+    @RateLimit(
+            name = "POST_MY_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getAll(Pageable pageable) {
 
         return ResponseData.success(
@@ -163,9 +223,14 @@ public class PostController {
         );
     }
 
-    // ================= GET POST DETAIL =================
+    // ================= POST DETAIL =================
     @GetMapping("/{postId}")
-    @Operation(summary = "Get post detail by id")
+    @Operation(summary = "Get post detail")
+    @RateLimit(
+            name = "POST_DETAIL",
+            limit = 180,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getPostById(
             @PathVariable Long postId
     ) {
@@ -177,9 +242,14 @@ public class PostController {
         );
     }
 
-    // ================= GET USER POSTS =================
+    // ================= USER POSTS =================
     @GetMapping("/user/{userId}")
-    @Operation(summary = "Get posts by userId")
+    @Operation(summary = "Get posts by user")
+    @RateLimit(
+            name = "POST_USER_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getPostsByUserId(
             @PathVariable Long userId,
             Pageable pageable
@@ -192,9 +262,14 @@ public class PostController {
         );
     }
 
-    // ================= GET USER POSTS =================
+    // ================= SAVED POSTS =================
     @GetMapping("/savedPost")
-    @Operation(summary = "Get SavedPost")
+    @Operation(summary = "Get saved posts")
+    @RateLimit(
+            name = "POST_SAVED_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getSavedPosts(
             Pageable pageable
     ) {

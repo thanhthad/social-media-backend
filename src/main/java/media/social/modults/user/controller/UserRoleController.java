@@ -3,6 +3,7 @@ package media.social.modults.user.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.user.Enum.RoleName;
 import media.social.modults.user.dto.response.role.RoleResponse;
@@ -25,6 +26,11 @@ public class UserRoleController {
     @PostMapping("/{userId}/{roleName}")
     @Operation(summary = "Assign role to user")
     @PreAuthorize("hasRole('ADMIN')")
+    @RateLimit(
+            name = "ADMIN_ASSIGN_ROLE",
+            limit = 20,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> assignRole(
             @PathVariable Long userId,
             @PathVariable RoleName roleName
@@ -42,6 +48,11 @@ public class UserRoleController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{userId}/{roleName}")
     @Operation(summary = "Remove role from user")
+    @RateLimit(
+            name = "ADMIN_REMOVE_ROLE",
+            limit = 20,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> removeRole(
             @PathVariable Long userId,
             @PathVariable RoleName roleName
@@ -59,6 +70,11 @@ public class UserRoleController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{userId}")
     @Operation(summary = "Get roles of user")
+    @RateLimit(
+            name = "ADMIN_GET_USER_ROLES",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getUserRoles(
             @PathVariable Long userId
     ) {
@@ -75,6 +91,11 @@ public class UserRoleController {
 
     @GetMapping("/me")
     @Operation(summary = "Get current user roles")
+    @RateLimit(
+            name = "USER_GET_MY_ROLES",
+            limit = 300,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getMyRoles() {
 
         List<RoleResponse> response =
@@ -90,12 +111,18 @@ public class UserRoleController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/check/{userId}/{roleName}")
     @Operation(summary = "Check if user has role")
+    @RateLimit(
+            name = "ADMIN_CHECK_ROLE",
+            limit = 300,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> hasRole(
             @PathVariable Long userId,
             @PathVariable RoleName roleName
     ) {
 
-        boolean result = userRoleService.hasRole(userId, roleName);
+        boolean result =
+                userRoleService.hasRole(userId, roleName);
 
         return ResponseData.success(
                 result,

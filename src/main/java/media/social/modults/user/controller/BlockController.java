@@ -4,9 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.user.dto.request.block.BlockRequest;
-import media.social.modults.user.dto.response.block.BlockCheckResponse;
 import media.social.modults.user.dto.response.block.ListUserBlockedResponse;
 import media.social.modults.user.service.BlockService;
 import org.springframework.data.domain.Page;
@@ -14,8 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/blocks")
@@ -27,6 +25,11 @@ public class BlockController {
 
     @PostMapping
     @Operation(summary = "Block a user")
+    @RateLimit(
+            name = "BLOCK_CREATE",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> blockUser(
             @Valid @RequestBody BlockRequest request
     ) {
@@ -42,6 +45,11 @@ public class BlockController {
 
     @DeleteMapping("/{blockedId}")
     @Operation(summary = "Unblock a user")
+    @RateLimit(
+            name = "BLOCK_DELETE",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> unblockUser(
             @PathVariable Long blockedId
     ) {
@@ -57,6 +65,11 @@ public class BlockController {
 
     @GetMapping("/check/{userId}")
     @Operation(summary = "Check whether current user blocked target user")
+    @RateLimit(
+            name = "BLOCK_CHECK",
+            limit = 500,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> checkBlocked(
             @PathVariable Long userId
     ) {
@@ -70,6 +83,11 @@ public class BlockController {
 
     @GetMapping("/me")
     @Operation(summary = "Get blocked users of current user")
+    @RateLimit(
+            name = "BLOCK_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getBlockedUsers(
             Pageable pageable
     ) {

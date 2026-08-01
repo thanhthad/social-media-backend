@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.notification.service.NotificationService;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,11 @@ public class NotificationController {
     // ================= GET MY NOTIFICATIONS =================
     @GetMapping
     @Operation(summary = "Get my notifications")
+    @RateLimit(
+            name = "NOTIFICATION_GET_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getMyNotifications(
             Pageable pageable
     ) {
@@ -34,10 +40,14 @@ public class NotificationController {
         );
     }
 
-
     // ================= MARK AS READ =================
     @PatchMapping("/{notificationId}/read")
     @Operation(summary = "Mark notification as read")
+    @RateLimit(
+            name = "NOTIFICATION_MARK_READ",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> markAsRead(
             @PathVariable Long notificationId
     ) {
@@ -51,10 +61,14 @@ public class NotificationController {
         );
     }
 
-
     // ================= MARK ALL AS READ =================
     @PatchMapping("/read-all")
     @Operation(summary = "Mark all notifications as read")
+    @RateLimit(
+            name = "NOTIFICATION_MARK_ALL_READ",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> markAllAsRead() {
 
         notificationService.markAllAsRead();
@@ -66,10 +80,14 @@ public class NotificationController {
         );
     }
 
-
     // ================= COUNT UNREAD =================
     @GetMapping("/unread-count")
     @Operation(summary = "Count unread notifications")
+    @RateLimit(
+            name = "NOTIFICATION_UNREAD_COUNT",
+            limit = 600,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> countUnread() {
 
         return ResponseData.success(
@@ -78,5 +96,4 @@ public class NotificationController {
                 HttpStatus.OK
         );
     }
-
 }

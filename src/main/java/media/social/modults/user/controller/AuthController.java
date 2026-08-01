@@ -4,9 +4,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
-import media.social.modults.user.dto.request.auth.RefreshTokenRequest;
 import media.social.modults.user.dto.request.auth.LoginRequest;
+import media.social.modults.user.dto.request.auth.RefreshTokenRequest;
 import media.social.modults.user.dto.request.auth.RegisterRequest;
 import media.social.modults.user.dto.response.auth.AuthResponse;
 import media.social.modults.user.service.AuthService;
@@ -25,11 +26,17 @@ public class AuthController {
 
     // ================= LOGIN =================
     @PostMapping("/login")
+    @RateLimit(
+            name = "AUTH_LOGIN",
+            limit = 10,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> login(
             @Valid @RequestBody LoginRequest request
     ) {
 
-        AuthResponse response = authService.login(request);
+        AuthResponse response =
+                authService.login(request);
 
         return ResponseData.success(
                 response,
@@ -38,11 +45,19 @@ public class AuthController {
         );
     }
 
+    // ================= REGISTER =================
     @PostMapping("/register")
+    @RateLimit(
+            name = "AUTH_REGISTER",
+            limit = 5,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest request
     ) {
+
         authService.register(request);
+
         return ResponseData.success(
                 null,
                 "Register successfully",
@@ -52,11 +67,19 @@ public class AuthController {
 
     // ================= REFRESH TOKEN =================
     @PostMapping("/refresh")
+    @RateLimit(
+            name = "AUTH_REFRESH_TOKEN",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> refreshToken(
             @Valid @RequestBody RefreshTokenRequest request
     ) {
 
-        AuthResponse authResponse  = authService.generateAccessToken(request.getRefreshToken());
+        AuthResponse authResponse =
+                authService.generateAccessToken(
+                        request.getRefreshToken()
+                );
 
         return ResponseData.success(
                 authResponse,
@@ -67,11 +90,18 @@ public class AuthController {
 
     // ================= LOGOUT =================
     @PostMapping("/logout")
+    @RateLimit(
+            name = "AUTH_LOGOUT",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> logout(
             @Valid @RequestBody RefreshTokenRequest request
     ) {
 
-        authService.logout(request.getRefreshToken());
+        authService.logout(
+                request.getRefreshToken()
+        );
 
         return ResponseData.success(
                 null,

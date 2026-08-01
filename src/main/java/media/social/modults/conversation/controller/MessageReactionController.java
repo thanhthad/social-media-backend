@@ -3,6 +3,7 @@ package media.social.modults.conversation.controller;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.conversation.service.MessageReactionService;
 import media.social.modults.post.enums.ReactionType;
@@ -22,9 +23,13 @@ public class MessageReactionController {
 
     private final MessageReactionService messageReactionService;
 
-
     // ================= REACT MESSAGE =================
     @PostMapping("/{messageId}")
+    @RateLimit(
+            name = "MESSAGE_REACTION_CREATE",
+            limit = 120,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> react(
             @PathVariable Long messageId,
             @RequestParam ReactionType type
@@ -42,9 +47,13 @@ public class MessageReactionController {
         );
     }
 
-
     // ================= REMOVE REACTION =================
     @DeleteMapping("/{messageId}")
+    @RateLimit(
+            name = "MESSAGE_REACTION_DELETE",
+            limit = 60,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> removeReaction(
             @PathVariable Long messageId
     ){
@@ -62,6 +71,11 @@ public class MessageReactionController {
 
     // ================= GET USERS REACTED =================
     @GetMapping("/{messageId}/users")
+    @RateLimit(
+            name = "MESSAGE_REACTION_GET_USERS",
+            limit = 300,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getUsersReacted(
             @PathVariable Long messageId
     ){
@@ -72,6 +86,4 @@ public class MessageReactionController {
                 HttpStatus.OK
         );
     }
-
-
 }

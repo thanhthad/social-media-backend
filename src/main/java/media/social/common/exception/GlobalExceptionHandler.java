@@ -2,6 +2,7 @@ package media.social.common.exception;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
+import media.social.common.ratelimit.exception.TooManyRequestException;
 import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
 import media.social.modults.conversation.exception.*;
@@ -61,6 +62,14 @@ public class GlobalExceptionHandler {
         return UserContextHolder.getUserId();
     }
 
+    // ================= REDIS_RATE_LIMIT ===========================
+    @ExceptionHandler(TooManyRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleRateLimit(
+            TooManyRequestException ex
+    ) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS);
+
+    }
     // ================= CONVERSATION ===========================
     @ExceptionHandler(ConversationNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleConversationNotFound(ConversationNotFoundException ex) {

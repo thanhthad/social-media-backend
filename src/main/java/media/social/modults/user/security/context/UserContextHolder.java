@@ -24,6 +24,18 @@ public class UserContextHolder {
         return user;
     }
 
+    public static boolean isAuthenticated() {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        return authentication != null
+                && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof CustomUserDetails;
+    }
+
     public static Long getUserId() {
         return getCurrentUser().getId();
     }

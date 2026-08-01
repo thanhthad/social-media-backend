@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.conversation.dto.request.CreateGroupRequest;
 import media.social.modults.conversation.dto.request.UpdateGroupNameRequest;
@@ -33,14 +34,17 @@ public class ConversationController {
             description = "Create a private conversation between current user and another user"
     )
     @PostMapping("/private/{targetUserId}")
+    @RateLimit(
+            name = "CONVERSATION_CREATE_PRIVATE",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> createPrivateConversation(
             @PathVariable Long targetUserId
     ){
 
         ConversationResponse response =
-                conversationService.createPrivateConversation(
-                        targetUserId
-                );
+                conversationService.createPrivateConversation(targetUserId);
 
         return ResponseData.success(
                 response,
@@ -57,6 +61,11 @@ public class ConversationController {
     @PostMapping(
             value = "/group",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @RateLimit(
+            name = "CONVERSATION_CREATE_GROUP",
+            limit = 10,
+            windowSeconds = 60
     )
     public ResponseEntity<?> createGroupConversation(
             @ModelAttribute CreateGroupRequest request
@@ -78,6 +87,11 @@ public class ConversationController {
             description = "Get all conversations of current user"
     )
     @GetMapping
+    @RateLimit(
+            name = "CONVERSATION_GET_MY_LIST",
+            limit = 300,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> getMyConversations(){
 
         return ResponseData.success(
@@ -93,6 +107,11 @@ public class ConversationController {
             description = "Update avatar image of group conversation"
     )
     @PutMapping("/{conversationId}/avatar")
+    @RateLimit(
+            name = "CONVERSATION_UPDATE_AVATAR",
+            limit = 20,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> updateGroupAvatar(
             @PathVariable Long conversationId,
             @RequestParam("file") MultipartFile file
@@ -116,6 +135,11 @@ public class ConversationController {
             description = "Update name of group conversation"
     )
     @PutMapping("/{conversationId}/name")
+    @RateLimit(
+            name = "CONVERSATION_UPDATE_NAME",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> updateGroupName(
             @PathVariable Long conversationId,
             @RequestBody UpdateGroupNameRequest request
@@ -139,13 +163,16 @@ public class ConversationController {
             description = "Delete a conversation owned by current user"
     )
     @DeleteMapping("/{conversationId}")
+    @RateLimit(
+            name = "CONVERSATION_DELETE",
+            limit = 20,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> deleteConversation(
             @PathVariable Long conversationId
     ){
 
-        conversationService.deleteConversation(
-                conversationId
-        );
+        conversationService.deleteConversation(conversationId);
 
         return ResponseData.success(
                 null,
@@ -153,5 +180,4 @@ public class ConversationController {
                 HttpStatus.OK
         );
     }
-
 }

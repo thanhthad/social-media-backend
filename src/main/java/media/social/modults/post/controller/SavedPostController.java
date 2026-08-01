@@ -2,6 +2,7 @@ package media.social.modults.post.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.post.service.SavedPostService;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,11 @@ public class SavedPostController {
 
     @PostMapping("/{postId}")
     @Operation(summary = "Save a post")
+    @RateLimit(
+            name = "SAVE_POST_CREATE",
+            limit = 60,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> savePost(
             @PathVariable Long postId
     ) {
@@ -32,6 +38,11 @@ public class SavedPostController {
 
     @DeleteMapping("/{postId}")
     @Operation(summary = "Unsave a post")
+    @RateLimit(
+            name = "SAVE_POST_DELETE",
+            limit = 60,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> unsavePost(
             @PathVariable Long postId
     ) {
@@ -47,6 +58,11 @@ public class SavedPostController {
 
     @GetMapping("/{postId}/status")
     @Operation(summary = "Check saved status")
+    @RateLimit(
+            name = "SAVE_POST_CHECK",
+            limit = 500,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> isSaved(
             @PathVariable Long postId
     ) {

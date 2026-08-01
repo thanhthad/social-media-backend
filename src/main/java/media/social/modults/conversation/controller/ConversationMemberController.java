@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modults.conversation.service.ConversationMemberService;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,11 @@ public class ConversationMemberController {
             description = "Owner adds a new member into group conversation"
     )
     @PostMapping("/{conversationId}/members/{userId}")
+    @RateLimit(
+            name = "CONVERSATION_ADD_MEMBER",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> addMember(
             @PathVariable Long conversationId,
             @PathVariable Long userId
@@ -51,6 +57,11 @@ public class ConversationMemberController {
             description = "Owner removes a member from group conversation"
     )
     @DeleteMapping("/{conversationId}/members/{userId}")
+    @RateLimit(
+            name = "CONVERSATION_REMOVE_MEMBER",
+            limit = 30,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> removeMember(
             @PathVariable Long conversationId,
             @PathVariable Long userId
@@ -74,6 +85,11 @@ public class ConversationMemberController {
             description = "Update user's last read message position in conversation"
     )
     @PutMapping("/{conversationId}/read/{messageId}")
+    @RateLimit(
+            name = "CONVERSATION_UPDATE_READ",
+            limit = 1000,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> updateLastReadMessage(
             @PathVariable Long conversationId,
             @PathVariable Long messageId
@@ -90,5 +106,4 @@ public class ConversationMemberController {
                 HttpStatus.OK
         );
     }
-
 }
