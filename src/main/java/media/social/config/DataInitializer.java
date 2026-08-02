@@ -1,15 +1,15 @@
 package media.social.config;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modults.post.dto.request.post.CreatePostRequest;
-import media.social.modults.post.enums.Visibility;
-import media.social.modults.post.repository.PostRepository;
-import media.social.modults.post.service.PostService;
-import media.social.modults.user.Enum.RoleName;
-import media.social.modults.user.Enum.Status;
-import media.social.modults.user.entity.*;
-import media.social.modults.user.repository.*;
-import media.social.modults.user.security.userdetails.CustomUserDetailsService;
+import media.social.modules.post.dto.request.post.CreatePostRequest;
+import media.social.modules.post.enums.Visibility;
+import media.social.modules.post.repository.PostRepository;
+import media.social.modules.post.service.PostService;
+import media.social.modules.user.Enum.RoleName;
+import media.social.modules.user.Enum.Status;
+import media.social.modules.user.entity.*;
+import media.social.modules.user.repository.*;
+import media.social.modules.user.security.userdetails.CustomUserDetailsService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.attribute.UserPrincipal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;

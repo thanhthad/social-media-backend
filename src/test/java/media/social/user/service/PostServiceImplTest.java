@@ -1,14 +1,14 @@
 package media.social.user.service;
 
-import media.social.modults.post.dto.request.post.CreatePostRequest;
-import media.social.modults.post.entity.Post;
-import media.social.modults.post.enums.Visibility;
-import media.social.modults.post.repository.*;
-import media.social.modults.post.service.domain.PostDomainService;
-import media.social.modults.post.service.impl.PostServiceImpl;
-import media.social.modults.user.entity.User;
-import media.social.modults.user.security.context.UserContextHolder;
-import media.social.modults.user.service.domain.UserServiceDomain;
+import media.social.modules.post.dto.request.post.CreatePostRequest;
+import media.social.modules.post.entity.Post;
+import media.social.modules.post.enums.Visibility;
+import media.social.modules.post.repository.*;
+import media.social.modules.post.service.domain.PostDomainService;
+import media.social.modules.post.service.impl.PostServiceImpl;
+import media.social.modules.user.entity.User;
+import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.user.service.domain.UserServiceDomain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

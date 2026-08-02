@@ -1,16 +1,16 @@
     package media.social.user.service;
 
-    import media.social.modults.user.Enum.RoleName;
-    import media.social.modults.user.dto.request.auth.LoginRequest;
-    import media.social.modults.user.dto.request.auth.RegisterRequest;
-    import media.social.modults.user.dto.response.auth.AuthResponse;
-    import media.social.modults.user.entity.*;
-    import media.social.modults.user.exception.user.UserAlreadyExistsException;
-    import media.social.modults.user.repository.*;
-    import media.social.modults.user.security.jwt.JwtUtil;
-    import media.social.modults.user.security.userdetails.CustomUserDetails;
-    import media.social.modults.user.service.RefreshTokenService;
-    import media.social.modults.user.service.impl.AuthServiceImpl;
+    import media.social.modules.user.Enum.RoleName;
+    import media.social.modules.user.dto.request.auth.LoginRequest;
+    import media.social.modules.user.dto.request.auth.RegisterRequest;
+    import media.social.modules.user.dto.response.auth.AuthResponse;
+    import media.social.modules.user.entity.*;
+    import media.social.modules.user.exception.user.UserAlreadyExistsException;
+    import media.social.modules.user.repository.*;
+    import media.social.modules.user.security.jwt.JwtUtil;
+    import media.social.modules.user.security.userdetails.CustomUserDetails;
+    import media.social.modules.user.service.RefreshTokenService;
+    import media.social.modules.user.service.impl.AuthServiceImpl;
     import org.junit.jupiter.api.BeforeEach;
     import org.junit.jupiter.api.DisplayName;
     import org.junit.jupiter.api.Test;

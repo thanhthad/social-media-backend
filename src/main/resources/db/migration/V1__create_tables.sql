@@ -7,9 +7,11 @@ CREATE TABLE roles (
 
 CREATE TABLE users (
                        user_id BIGSERIAL PRIMARY KEY,
-                       username VARCHAR(50) UNIQUE NOT NULL,
+                       username VARCHAR(50) UNIQUE ,
                        email VARCHAR(255) UNIQUE NOT NULL,
-                       password_hash VARCHAR(255) NOT NULL,
+                       password_hash VARCHAR(255),
+                       provider VARCHAR(50) NOT NULL DEFAULT 'LOCAL',
+                       email_verified BOOLEAN NOT NULL DEFAULT FALSE,
                        status VARCHAR(50),
                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

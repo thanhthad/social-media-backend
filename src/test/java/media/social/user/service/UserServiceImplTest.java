@@ -1,18 +1,15 @@
 package media.social.user.service;
 
-import media.social.modults.file.image.dto.response.UploadFileResponse;
-import media.social.modults.file.image.service.CloudinaryService;
-import media.social.modults.user.dto.request.user.ChangePasswordRequest;
-import media.social.modults.user.dto.request.user.UpdateAvatarRequest;
-import media.social.modults.user.dto.response.user.UserProfileResponse;
-import media.social.modults.user.entity.Profile;
-import media.social.modults.user.entity.User;
-import media.social.modults.user.exception.user.UserNotFoundException;
-import media.social.modults.user.mapper.UserMapper;
-import media.social.modults.user.repository.ProfileRepository;
-import media.social.modults.user.repository.UserRepository;
-import media.social.modults.user.security.context.UserContextHolder;
-import media.social.modults.user.service.impl.UserServiceImpl;
+import media.social.modules.file.image.service.CloudinaryService;
+import media.social.modules.user.dto.request.user.ChangePasswordRequest;
+import media.social.modules.user.entity.Profile;
+import media.social.modules.user.entity.User;
+import media.social.modules.user.exception.user.UserNotFoundException;
+import media.social.modules.user.mapper.UserMapper;
+import media.social.modules.user.repository.ProfileRepository;
+import media.social.modules.user.repository.UserRepository;
+import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.user.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,10 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
