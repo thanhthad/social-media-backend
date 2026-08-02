@@ -21,8 +21,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         User user = userRepository.findByEmailWithRoles(email)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found")
+                        new UsernameNotFoundException(
+                                "User not found"
+                        )
                 );
+
+        if (!user.getEmailVerified()) {
+            throw new DisabledException(
+                    "Email has not been verified"
+            );
+        }
 
         if (user.getStatus() == Status.BANNED) {
             throw new DisabledException(
