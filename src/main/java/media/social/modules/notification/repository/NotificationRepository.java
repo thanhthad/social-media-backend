@@ -40,7 +40,7 @@ public interface NotificationRepository
     );
 
     @Query("""
-        SELECT new media.social.modults.notification.dto.response.NotificationResponse(
+        SELECT new media.social.modules.notification.dto.response.NotificationResponse(
             n.id,
             s.id,
             s.username,

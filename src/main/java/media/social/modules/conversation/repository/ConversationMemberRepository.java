@@ -42,7 +42,7 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     );
 
     @Query("""
-    SELECT new media.social.modults.conversation.dto.response.ConversationMemberResponse(
+    SELECT new media.social.modules.conversation.dto.response.ConversationMemberResponse(
         u.id,
         u.username,
         p.avatarUrl
@@ -63,7 +63,7 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
         ON cm1.conversation = c
     JOIN ConversationMember cm2
         ON cm2.conversation = c
-    WHERE c.type = media.social.modults.conversation.enums.ConversationType.PRIVATE
+    WHERE c.type = media.social.modules.conversation.enums.ConversationType.PRIVATE
     AND cm1.user.id = :userId
     AND cm2.user.id = :targetUserId
     AND (

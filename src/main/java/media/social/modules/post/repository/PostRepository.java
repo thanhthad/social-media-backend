@@ -70,7 +70,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -90,14 +90,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     LEFT JOIN u.profile pr
     
     WHERE u.id = :userId
-    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
     
     AND NOT EXISTS (
         SELECT 1
         FROM Report report
         WHERE report.post.id = p.id
           AND report.status =
-          media.social.modults.post.enums.ReportStatus.APPROVED
+          media.social.modules.post.enums.ReportStatus.APPROVED
     )
     
     ORDER BY p.createdAt DESC
@@ -108,7 +108,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -126,12 +126,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     LEFT JOIN u.profile pr
     WHERE u.id = :userId
     AND p.visibility IN :visibilities
-    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
         WHERE r.post.id = p.id
-          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+          AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
             )
     ORDER BY p.createdAt DESC
     """)
@@ -142,7 +142,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -159,13 +159,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE p.id = :postId
-    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
     AND p.visibility IN :visibilities
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
         WHERE r.post.id = p.id
-          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+          AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
     )
     """)
     Optional<PostFlatResponse> findPostDetailById(
@@ -175,7 +175,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -195,12 +195,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
            OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
     )
-    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
         WHERE r.post.id = p.id
-          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+          AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
     )
     AND (
         u.id = :viewerId
@@ -214,8 +214,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     AND (
         u.id = :viewerId
         OR p.visibility IN (
-            media.social.modults.post.enums.Visibility.PUBLIC,
-            media.social.modults.post.enums.Visibility.FOLLOWERS
+            media.social.modules.post.enums.Visibility.PUBLIC,
+            media.social.modules.post.enums.Visibility.FOLLOWERS
         )
     )
     ORDER BY p.createdAt DESC
@@ -226,7 +226,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -246,15 +246,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
            OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
     )
-    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
         WHERE r.post.id = p.id
-          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+          AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
     )
     AND u.id <> :viewerId
-    AND p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
+    AND p.visibility = media.social.modules.post.enums.Visibility.PUBLIC
     AND NOT EXISTS (
         SELECT 1
         FROM Follow f
@@ -269,7 +269,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -290,19 +290,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id=:viewerId AND b.blocked.id=u.id)
            OR (b.blocker.id=u.id AND b.blocked.id=:viewerId)
     )
-    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
     AND NOT EXISTS (
             SELECT 1
             FROM Report r
             WHERE r.post.id = p.id
-              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+              AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
         )
     AND LOWER(p.content) LIKE LOWER(CONCAT('%',:keyword,'%'))
     AND (
             u.id=:viewerId
-            OR p.visibility=media.social.modults.post.enums.Visibility.PUBLIC
+            OR p.visibility=media.social.modules.post.enums.Visibility.PUBLIC
             OR (
-                p.visibility=media.social.modults.post.enums.Visibility.FOLLOWERS
+                p.visibility=media.social.modules.post.enums.Visibility.FOLLOWERS
                 AND EXISTS(
                     SELECT 1
                     FROM Follow f
@@ -320,7 +320,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT DISTINCT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    SELECT DISTINCT new media.social.modules.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -337,7 +337,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE LOWER(ph.hashtag.name)=LOWER(:name)
-    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
     AND NOT EXISTS(
         SELECT 1
         FROM Block b
@@ -348,13 +348,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             SELECT 1
             FROM Report r
             WHERE r.post.id = p.id
-              AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+              AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
     )
     AND (
             u.id=:viewerId
-            OR p.visibility=media.social.modults.post.enums.Visibility.PUBLIC
+            OR p.visibility=media.social.modules.post.enums.Visibility.PUBLIC
             OR (
-                p.visibility=media.social.modults.post.enums.Visibility.FOLLOWERS
+                p.visibility=media.social.modules.post.enums.Visibility.FOLLOWERS
                 AND EXISTS(
                     SELECT 1
                     FROM Follow f
@@ -372,7 +372,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.post.PostFlatResponse(
+    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
         p.id,
         p.content,
         p.visibility,
@@ -389,7 +389,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE sp.user.id = :userId
-    AND u.status = media.social.modults.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Block b
@@ -400,13 +400,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         SELECT 1
         FROM Report r
         WHERE r.post.id = p.id
-          AND r.status = media.social.modults.post.enums.ReportStatus.APPROVED
+          AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
     )
     AND (
         u.id = :userId
-        OR p.visibility = media.social.modults.post.enums.Visibility.PUBLIC
+        OR p.visibility = media.social.modules.post.enums.Visibility.PUBLIC
         OR (
-            p.visibility = media.social.modults.post.enums.Visibility.FOLLOWERS
+            p.visibility = media.social.modules.post.enums.Visibility.FOLLOWERS
             AND EXISTS (
                 SELECT 1
                 FROM Follow f

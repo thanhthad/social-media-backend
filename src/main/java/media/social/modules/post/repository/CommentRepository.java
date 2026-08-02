@@ -23,7 +23,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     Optional<Comment> findByIdWithUserAndPost(Long commentId);
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.comment.CommentResponse(
+    SELECT new media.social.modules.post.dto.response.comment.CommentResponse(
         c.id,
         u.id,
         u.username,
@@ -72,7 +72,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.comment.CommentResponse(
+    SELECT new media.social.modules.post.dto.response.comment.CommentResponse(
         c.id,
         u.id,
         u.username,
@@ -120,7 +120,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     );
 
     @Query("""
-SELECT new media.social.modults.post.dto.response.comment.CommentResponse(
+SELECT new media.social.modules.post.dto.response.comment.CommentResponse(
     c.id,
     u.id,
     u.username,

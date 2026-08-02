@@ -12,7 +12,7 @@ public interface PostHashtagRepository
     List<PostHashtag> findByPost_Id(Long postId);
 
     @Query("""
-    SELECT new media.social.modults.post.dto.response.hashtag.TrendingHashtagResponse(
+    SELECT new media.social.modules.post.dto.response.hashtag.TrendingHashtagResponse(
         h.hashtagId,
         h.name,
         COUNT(ph)

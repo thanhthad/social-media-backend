@@ -24,7 +24,7 @@ public interface BlockRepository extends JpaRepository<Block, BlockId> {
                               @Param("blockedId") Long blockedId);
 
     @Query("""
-    SELECT new media.social.modults.user.dto.response.block.ListUserBlockedResponse(
+    SELECT new media.social.modules.user.dto.response.block.ListUserBlockedResponse(
         u.id,
         u.username,
         p.fullName,

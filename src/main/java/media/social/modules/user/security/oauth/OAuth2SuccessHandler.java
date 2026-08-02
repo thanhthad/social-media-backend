@@ -5,9 +5,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import media.social.modules.user.entity.User;
-import media.social.modules.user.repository.UserRepository;
+import media.social.modules.user.dto.response.auth.AuthResponse;
 import media.social.modules.user.security.jwt.JwtUtil;
+import media.social.modules.user.security.userdetails.CustomUserDetails;
+import media.social.modules.user.security.userdetails.CustomUserDetailsService;
+import media.social.modules.user.service.RefreshTokenService;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -15,15 +17,15 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public void onAuthenticationSuccess(
@@ -38,19 +40,35 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String email =
                 oAuth2User.getAttribute("email");
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow();
+        CustomUserDetails user = (CustomUserDetails)
+                customUserDetailsService.loadUserByUsername(email);
 
-        String accessToken =
-                jwtUtil.generateToken(user);
+        String accessToken = jwtUtil.generateAccessToken(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAuthorities()
+        );
+
+        String refreshToken = refreshTokenService.create(user.getId()).getToken();
+
+        boolean hasUsername = user.getUsername() != null && !user.getUsername().isBlank();
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setCharacterEncoding("UTF-8");
+
+        AuthResponse responseBody = AuthResponse.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .hasUsername(hasUsername)
+                .build();
 
         objectMapper.writeValue(
                 response.getWriter(),
-                Map.of(
-                        "accessToken", accessToken
-                )
+                responseBody
         );
 
     }

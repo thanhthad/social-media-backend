@@ -41,7 +41,7 @@ public interface CommentReactionRepository
     );
 
     @Query("""
-        SELECT new media.social.modults.post.dto.response.reaction.UserReactionResponse(
+        SELECT new media.social.modules.post.dto.response.reaction.UserReactionResponse(
             u.id,
             u.email,
             p.avatarUrl,

@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("""
-    SELECT new media.social.modults.user.dto.response.cache.PublicUserProfileCacheResponse(
+    SELECT new media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse(
         u.id,
         u.username,
         u.email,
@@ -47,7 +47,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.user.dto.response.cache.UserFollowStatCacheResponse(
+    SELECT new media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse(
         COUNT(DISTINCT follower.id),
         COUNT(DISTINCT following.id)
     )
@@ -97,7 +97,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     @Query("""
-    SELECT new media.social.modults.user.dto.response.user.UserSearchResponse(
+    SELECT new media.social.modules.user.dto.response.user.UserSearchResponse(
         u.id,
         u.username,
         p.avatarUrl,
@@ -115,7 +115,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.user.dto.response.user.AdminUserResponse(
+    SELECT new media.social.modules.user.dto.response.user.AdminUserResponse(
         u.id,
         u.username,
         u.status,
@@ -135,7 +135,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modults.user.dto.response.user.AdminUserResponse(
+    SELECT new media.social.modules.user.dto.response.user.AdminUserResponse(
         u.id,
         u.username,
         u.status,

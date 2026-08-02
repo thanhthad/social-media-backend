@@ -27,7 +27,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     );
 
     @Query("""
-        SELECT new media.social.modults.post.dto.response.report.ReportDetailResponse(
+        SELECT new media.social.modules.post.dto.response.report.ReportDetailResponse(
             r.id,
             p.id,
             reporter.id,
@@ -50,7 +50,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Page<ReportDetailResponse> getAll(Pageable pageable);
 
     @Query("""
-        SELECT new media.social.modults.post.dto.response.report.ReportDetailResponse(
+        SELECT new media.social.modules.post.dto.response.report.ReportDetailResponse(
             r.id,
             p.id,
             reporter.id,

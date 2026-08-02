@@ -31,7 +31,7 @@ public interface MessageReactionRepository
     );
 
     @Query("""
-    SELECT new media.social.modults.conversation.dto.response.MessageReactionUserResponse(
+    SELECT new media.social.modules.conversation.dto.response.MessageReactionUserResponse(
         u.id,
         u.username,
         p.avatarUrl,
