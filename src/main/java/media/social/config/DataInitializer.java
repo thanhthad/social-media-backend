@@ -139,6 +139,7 @@ public class DataInitializer implements CommandLineRunner {
                         .email(email)
                         .passwordHash(passwordEncoder.encode("123456"))
                         .status(Status.ACTIVE)
+                        .emailVerified(true)
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
                         .build();
@@ -247,6 +248,7 @@ public class DataInitializer implements CommandLineRunner {
                 User user = User.builder()
                         .username(username)
                         .email(email)
+                        .emailVerified(true)
                         .passwordHash(passwordEncoder.encode("123456"))
                         .status(Status.ACTIVE)
                         .createdAt(LocalDateTime.now())

@@ -39,6 +39,10 @@ import media.social.modules.user.exception.role.UserRoleNotFoundException;
 import media.social.modules.user.exception.user.UnauthorizedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
+import media.social.modules.user.exception.verification.EmailSendFailedException;
+import media.social.modules.user.exception.verification.EmailVerificationTokenExpiredException;
+import media.social.modules.user.exception.verification.EmailVerificationTokenInvalidException;
+import media.social.modules.user.exception.verification.EmailVerificationTokenUsedException;
 import media.social.modules.user.security.context.UserContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +64,47 @@ public class GlobalExceptionHandler {
 
     private Long getUserId(){
         return UserContextHolder.getUserId();
+    }
+
+    // ================= EMAIL VERIFICATION ===========================
+    @ExceptionHandler(EmailSendFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailSendFailException(
+            EmailSendFailedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailVerificationTokenInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidVerificationToken(
+            EmailVerificationTokenInvalidException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailVerificationTokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>> handleExpiredVerificationToken(
+            EmailVerificationTokenExpiredException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailVerificationTokenUsedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUsedVerificationToken(
+            EmailVerificationTokenUsedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.CONFLICT
+        );
     }
 
     // ================= REDIS_RATE_LIMIT ===========================

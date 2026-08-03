@@ -11,6 +11,7 @@ import media.social.modules.user.dto.request.auth.RefreshTokenRequest;
 import media.social.modules.user.dto.request.auth.RegisterRequest;
 import media.social.modules.user.dto.response.auth.AuthResponse;
 import media.social.modules.user.service.AuthService;
+import media.social.modules.user.service.EmailVerificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final EmailVerificationService emailVerificationService;
 
     // ================= LOGIN =================
     @PostMapping("/login")
@@ -64,6 +66,22 @@ public class AuthController {
                 HttpStatus.OK
         );
     }
+
+    // ================= VERIFY EMAIL =================
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(
+            @RequestParam String token
+    ) {
+
+        emailVerificationService.verify(token);
+
+        return ResponseData.success(
+                null,
+                "Email verified successfully",
+                HttpStatus.OK
+        );
+    }
+
 
     // ================= REFRESH TOKEN =================
     @PostMapping("/refresh")

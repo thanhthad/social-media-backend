@@ -12,6 +12,7 @@ import media.social.modules.user.service.FollowService;
 import media.social.modules.user.service.cache.UserCacheService;
 import media.social.modules.user.service.cache.UserProfileCacheService;
 import media.social.modules.user.service.domain.UserRoleServiceDomain;
+import org.apache.coyote.BadRequestException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
@@ -107,24 +108,15 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new UserNotFoundException("User Not Found")
         );
+        if(user.getEmailVerified() != false){
+            throw new AccessDeniedException("Only new user must be use API ");
+        }
         user.setUsername(request.getUserName());
         userRepository.save(user);
 
         return UserProfileResponse.builder()
                 .username(request.getUserName())
                 .build();
-    }
-
-    @Override
-    public boolean hasUsername() {
-        Long userId = UserContextHolder.getUserId();
-
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found")
-        );
-
-        return user.getUsername() != null;
-
     }
 
     @Override

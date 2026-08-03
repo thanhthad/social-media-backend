@@ -15,6 +15,7 @@ import media.social.modules.user.repository.UserRoleRepository;
 import media.social.modules.user.security.jwt.JwtUtil;
 import media.social.modules.user.security.userdetails.CustomUserDetails;
 import media.social.modules.user.service.AuthService;
+import media.social.modules.user.service.EmailVerificationService;
 import media.social.modules.user.service.RefreshTokenService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final ProfileRepository profileRepository;
     private final UserRoleRepository userRoleRepository;
     private final RoleRepository roleRepository;
+    private final EmailVerificationService emailVerificationService;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -71,6 +73,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void register(RegisterRequest request) {
+
         if(userRepository.existsByUsername(request.getUsername())){
             throw new UserAlreadyExistsException("User already exists with username");
         }
@@ -103,7 +106,10 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         userRoleRepository.save(userRole);
 
+        emailVerificationService.createVerificationToken(saved);
     }
+
+
 
     @Override
     @Transactional(readOnly = true)

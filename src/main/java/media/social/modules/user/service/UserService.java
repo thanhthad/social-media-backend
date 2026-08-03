@@ -19,8 +19,6 @@ public interface UserService {
 
     public UserProfileResponse updateUserName(UpdateUsernameRequest request);
 
-    public boolean hasUsername();
-
     public ProfileResponse updateAvatar(UpdateAvatarRequest request);
 
     public void updatePassword(ChangePasswordRequest request);

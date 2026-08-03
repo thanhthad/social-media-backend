@@ -103,26 +103,6 @@ public class UserController {
         );
     }
 
-    @GetMapping("/me/username-status")
-    @Operation(summary = "Check current user username status")
-    @RateLimit(
-            name = "USER_USERNAME_STATUS",
-            limit = 60,
-            windowSeconds = 60
-    )
-    public ResponseEntity<?> checkUsernameStatus() {
-
-        boolean hasUsername =
-                userService.hasUsername();
-
-
-        return ResponseData.success(
-                hasUsername,
-                "Check username status successfully",
-                HttpStatus.OK
-        );
-    }
-
     @PostMapping(
             value = "/me/avatar",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE

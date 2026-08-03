@@ -19,6 +19,19 @@ CREATE TABLE users (
                        last_active_at TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE email_verification_tokens (
+                                           id BIGSERIAL PRIMARY KEY,
+                                           user_id BIGINT NOT NULL,
+                                           token VARCHAR(255) NOT NULL UNIQUE,
+                                           expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                                           used BOOLEAN NOT NULL DEFAULT FALSE,
+                                           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                           CONSTRAINT fk_email_verification_user
+                                               FOREIGN KEY (user_id)
+                                                   REFERENCES users(user_id)
+                                                   ON DELETE CASCADE
+);
+
 CREATE TABLE user_roles (
                             user_id BIGINT NOT NULL,
                             role_id BIGINT NOT NULL,
