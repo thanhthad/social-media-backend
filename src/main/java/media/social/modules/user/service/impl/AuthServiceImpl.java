@@ -1,9 +1,11 @@
 package media.social.modules.user.service.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modules.user.exception.user.ForbiddenException;
 import media.social.modules.user.Enum.RoleName;
 import media.social.modules.user.entity.*;
 import media.social.modules.user.exception.role.RoleNotFoundException;
+import media.social.modules.user.exception.user.UnauthorizedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.dto.request.auth.LoginRequest;
 import media.social.modules.user.dto.request.auth.RegisterRequest;
@@ -17,8 +19,7 @@ import media.social.modules.user.security.userdetails.CustomUserDetails;
 import media.social.modules.user.service.AuthService;
 import media.social.modules.user.service.EmailVerificationService;
 import media.social.modules.user.service.RefreshTokenService;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -43,14 +44,33 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        Authentication authentication;
 
-        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+
+            throw new UnauthorizedException(
+                    "Invalid email or password"
+            );
+        } catch (InternalAuthenticationServiceException e) {
+
+            if (e.getCause() instanceof DisabledException) {
+
+                throw new ForbiddenException(
+                        e.getCause().getMessage()
+                );
+            }
+            throw e;
+        }
+
+        CustomUserDetails user =
+                (CustomUserDetails) authentication.getPrincipal();
 
         String accessToken = jwtUtil.generateAccessToken(
                 user.getId(),
@@ -59,7 +79,9 @@ public class AuthServiceImpl implements AuthService {
                 user.getAuthorities()
         );
 
-        String refreshToken = refreshTokenService.create(user.getId()).getToken();
+        String refreshToken =
+                refreshTokenService.create(user.getId())
+                        .getToken();
 
         return AuthResponse.builder()
                 .userId(user.getId())
@@ -67,7 +89,6 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
-
     }
 
     @Override

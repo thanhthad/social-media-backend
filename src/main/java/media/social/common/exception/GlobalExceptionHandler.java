@@ -50,11 +50,13 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import media.social.modules.user.exception.user.ForbiddenException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -238,6 +240,11 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
@@ -252,6 +259,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleProfileNotFound(ProfileNotFoundException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserForbidden(ForbiddenException ex) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
 
     //====================REPORT==================
     @ExceptionHandler(ReportNotFoundException.class)
@@ -446,12 +462,6 @@ public class GlobalExceptionHandler {
         response.setData(errors);
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    //===================FORBIDDEN=====================================
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ApiResponse<Object>> handleForbidden(ForbiddenException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
 
     // ================= FALLBACK (ONLY IMPORTANT LOG) =================
