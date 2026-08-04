@@ -1,7 +1,7 @@
 package media.social.modules.auth.security.oauth;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modules.auth.enums.AuthProvider;
+import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.user.entity.Profile;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.repository.ProfileRepository;

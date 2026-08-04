@@ -1,6 +1,6 @@
 package media.social.modules.user.repository;
 
-import media.social.modules.auth.enums.Status;
+import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modules.user.dto.response.user.AdminUserResponse;

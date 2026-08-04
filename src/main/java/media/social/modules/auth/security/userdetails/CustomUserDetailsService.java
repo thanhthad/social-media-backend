@@ -1,7 +1,7 @@
 package media.social.modules.auth.security.userdetails;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modules.auth.enums.Status;
+import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.repository.UserRepository;
 import org.springframework.security.authentication.DisabledException;

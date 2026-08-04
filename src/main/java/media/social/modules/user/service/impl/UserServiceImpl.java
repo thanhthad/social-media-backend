@@ -1,7 +1,7 @@
 package media.social.modules.user.service.impl;
 import media.social.modules.post.enums.MediaType;
-import media.social.modules.auth.enums.AuthProvider;
-import media.social.modules.auth.enums.RoleName;
+import media.social.modules.auth.Enum.AuthProvider;
+import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import media.social.modules.file.image.dto.response.UploadFileResponse;
 import media.social.modules.file.image.service.CloudinaryService;
-import media.social.modules.auth.enums.Status;
+import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.request.user.ChangePasswordRequest;
 import media.social.modules.user.dto.request.user.UpdateAvatarRequest;
 import media.social.modules.user.dto.request.user.UpdateProfileRequest;

@@ -1,4 +1,4 @@
-package media.social.modules.auth.repo;
+package media.social.modules.auth.repository;
 
 import media.social.modules.auth.entity.EmailVerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;

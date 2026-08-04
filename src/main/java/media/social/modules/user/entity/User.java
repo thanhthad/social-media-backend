@@ -2,8 +2,8 @@ package media.social.modules.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import media.social.modules.auth.enums.AuthProvider;
-import media.social.modules.auth.enums.Status;
+import media.social.modules.auth.Enum.AuthProvider;
+import media.social.modules.auth.Enum.Status;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
