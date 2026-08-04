@@ -1,14 +1,11 @@
 package media.social.modules.auth.controller;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
-import media.social.modules.auth.dto.request.LoginRequest;
-import media.social.modules.auth.dto.request.RefreshTokenRequest;
-import media.social.modules.auth.dto.request.RegisterRequest;
+import media.social.modules.auth.dto.request.*;
 import media.social.modules.auth.dto.response.AuthResponse;
 import media.social.modules.auth.service.AuthService;
 import media.social.modules.auth.service.EmailVerificationService;
@@ -19,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Authentication", description = "Auth APIs")
 public class AuthController {
 
@@ -52,7 +48,7 @@ public class AuthController {
     @RateLimit(
             name = "AUTH_REGISTER",
             limit = 5,
-            windowSeconds = 60
+            windowSeconds = 600
     )
     public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest request
@@ -124,6 +120,47 @@ public class AuthController {
         return ResponseData.success(
                 null,
                 "Logout successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ================= FORGOT PASSWORD =================
+    @PostMapping("/forgot-password")
+    @RateLimit(
+            name = "AUTH_FORGOT_PASSWORD",
+            limit = 5,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ){
+
+        String token = authService.forgotPassword(request);
+
+        return ResponseData.success(
+                token,
+                "Password reset email sent successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ================= RESET PASSWORD =================
+    @PostMapping("/reset-password")
+    @RateLimit(
+            name = "AUTH_RESET_PASSWORD",
+            limit = 10,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ){
+
+        authService.resetPassword(request);
+
+
+        return ResponseData.success(
+                null,
+                "Password reset successfully",
                 HttpStatus.OK
         );
     }

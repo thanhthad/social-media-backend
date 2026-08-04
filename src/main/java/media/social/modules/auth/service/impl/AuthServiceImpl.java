@@ -1,10 +1,13 @@
 package media.social.modules.auth.service.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modules.auth.dto.request.ForgotPasswordRequest;
+import media.social.modules.auth.dto.request.ResetPasswordRequest;
 import media.social.modules.auth.entity.RefreshToken;
-import media.social.modules.auth.enums.Status;
+import media.social.modules.auth.Enum.Status;
+import media.social.modules.auth.service.PasswordResetService;
 import media.social.modules.user.exception.user.ForbiddenException;
-import media.social.modules.auth.enums.RoleName;
+import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.user.entity.*;
 import media.social.modules.user.exception.role.RoleNotFoundException;
 import media.social.modules.user.exception.user.UnauthorizedException;
@@ -12,6 +15,7 @@ import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.auth.dto.request.LoginRequest;
 import media.social.modules.auth.dto.request.RegisterRequest;
 import media.social.modules.auth.dto.response.AuthResponse;
+import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.ProfileRepository;
 import media.social.modules.user.repository.RoleRepository;
 import media.social.modules.user.repository.UserRepository;
@@ -43,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRoleRepository userRoleRepository;
     private final RoleRepository roleRepository;
     private final EmailVerificationService emailVerificationService;
+    private final PasswordResetService passwordResetService;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -59,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
         } catch (BadCredentialsException e) {
 
             throw new UnauthorizedException(
-                    "Invalid email or password"
+                    "Email has not been verified or Your account has been banned"
             );
         } catch (InternalAuthenticationServiceException e) {
 
@@ -158,5 +163,34 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout(String refreshToken) {
         refreshTokenService.revoke(refreshToken);
+    }
+
+    @Override
+    public String forgotPassword(
+            ForgotPasswordRequest request
+    ){
+        User user =
+                userRepository.findByEmail(
+                                request.getEmail()
+                        )
+                        .orElseThrow(
+                                () -> new UserNotFoundException(
+                                        "User not found"
+                                )
+                        );
+
+        String token = passwordResetService
+                .createResetToken(user);
+        return token;
+    }
+
+    @Override
+    public void resetPassword(
+            ResetPasswordRequest request
+    ){
+        passwordResetService.resetPassword(
+                request.getToken(),
+                request.getNewPassword()
+        );
     }
 }
