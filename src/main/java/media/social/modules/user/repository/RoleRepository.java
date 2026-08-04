@@ -1,6 +1,6 @@
 package media.social.modules.user.repository;
 
-import media.social.modules.auth.enums.RoleName;
+import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.user.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 

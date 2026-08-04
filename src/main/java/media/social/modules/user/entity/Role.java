@@ -2,7 +2,7 @@ package media.social.modules.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import media.social.modules.auth.enums.RoleName;
+import media.social.modules.auth.Enum.RoleName;
 
 import java.util.HashSet;
 import java.util.Set;

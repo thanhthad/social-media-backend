@@ -1,7 +1,7 @@
 package media.social.modules.user.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modules.auth.enums.RoleName;
+import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.user.dto.response.role.RoleResponse;
 import media.social.modules.user.entity.Role;
 import media.social.modules.user.entity.User;

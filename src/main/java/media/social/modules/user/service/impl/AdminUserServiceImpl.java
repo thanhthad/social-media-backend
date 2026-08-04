@@ -1,8 +1,8 @@
 package media.social.modules.user.service.impl;
 
 import lombok.AllArgsConstructor;
-import media.social.modules.auth.enums.RoleName;
-import media.social.modules.auth.enums.Status;
+import media.social.modules.auth.Enum.RoleName;
+import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.request.user.UpdateUserStatusRequest;
 import media.social.modules.user.dto.response.user.AdminUserResponse;
 import media.social.modules.user.entity.User;

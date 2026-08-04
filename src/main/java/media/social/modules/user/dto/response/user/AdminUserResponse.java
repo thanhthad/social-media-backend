@@ -2,7 +2,7 @@ package media.social.modules.user.dto.response.user;
 
 import lombok.Builder;
 import lombok.Getter;
-import media.social.modules.auth.enums.Status;
+import media.social.modules.auth.Enum.Status;
 
 import java.time.LocalDateTime;
 
