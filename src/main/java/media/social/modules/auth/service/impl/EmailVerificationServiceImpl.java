@@ -6,7 +6,7 @@ import media.social.modules.user.entity.User;
 import media.social.modules.auth.exception.verification.EmailVerificationTokenExpiredException;
 import media.social.modules.auth.exception.verification.EmailVerificationTokenInvalidException;
 import media.social.modules.auth.exception.verification.EmailVerificationTokenUsedException;
-import media.social.modules.auth.repo.EmailVerificationTokenRepository;
+import media.social.modules.auth.repository.EmailVerificationTokenRepository;
 import media.social.modules.auth.service.EmailService;
 import media.social.modules.auth.service.EmailVerificationService;
 import org.springframework.stereotype.Service;

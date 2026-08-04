@@ -97,6 +97,72 @@ public class EmailServiceImpl implements EmailService {
             );
         }
     }
+
+    @Override
+    public void sendPasswordResetEmail(
+            String email,
+            String token
+    ){
+            String url =
+                    "http://localhost:8080/api/auth/reset-password?token="
+                            + token;
+            try {
+                MimeMessage message =
+                        mailSender.createMimeMessage();
+
+                MimeMessageHelper helper =
+                        new MimeMessageHelper(
+                                message,
+                                true,
+                                "UTF-8"
+                        );
+
+                helper.setFrom(
+                        fromEmail,
+                        "Media Social"
+                );
+
+                helper.setTo(email);
+
+                helper.setSubject(
+                        "Reset your password"
+                );
+
+                String content="""
+    
+                <html>
+                <body>
+        
+                <h2>Password Reset</h2>
+        
+                <p>
+                Click below to reset your password
+                </p>
+        
+                <a href="%s">
+                Reset Password
+                </a>
+        
+                <p>
+                This link expires in 15 minutes
+                </p>
+        
+                </body>
+                </html>
+        
+                """.formatted(url);
+
+            helper.setText(content,true);
+
+            mailSender.send(message);
+        } catch (Exception e){
+            throw new EmailSendFailedException(
+                    "Failed to send password reset email"
+            );
+        }
+
+    }
+
 }
 //@Service
 //@RequiredArgsConstructor

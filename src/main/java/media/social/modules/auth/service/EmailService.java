@@ -6,5 +6,9 @@ public interface EmailService {
             String email,
             String token
     );
+    void sendPasswordResetEmail(
+            String email,
+            String token
+    );
 
 }
