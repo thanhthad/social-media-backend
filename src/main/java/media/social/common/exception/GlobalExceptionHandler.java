@@ -5,6 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import media.social.common.ratelimit.exception.TooManyRequestException;
 import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
+import media.social.modules.auth.exception.password.PasswordResetTokenExpiredException;
+import media.social.modules.auth.exception.password.PasswordResetTokenInvalidException;
+import media.social.modules.auth.exception.password.PasswordResetTokenUsedException;
 import media.social.modules.conversation.exception.*;
 import media.social.modules.file.image.exception.CloudinaryDeleteException;
 import media.social.modules.file.image.exception.CloudinaryUploadException;
@@ -44,6 +47,7 @@ import media.social.modules.auth.exception.verification.EmailVerificationTokenEx
 import media.social.modules.auth.exception.verification.EmailVerificationTokenInvalidException;
 import media.social.modules.auth.exception.verification.EmailVerificationTokenUsedException;
 import media.social.modules.auth.security.context.UserContextHolder;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -54,6 +58,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import media.social.modules.user.exception.user.ForbiddenException;
@@ -68,6 +73,67 @@ public class GlobalExceptionHandler {
         return UserContextHolder.getUserId();
     }
 
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConnectionError(
+            ResourceAccessException ex
+    ){
+
+        log.error("External service connection failed", ex);
+
+        return ResponseData.fail(
+                "Service unavailable. Please try again later.",
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    public ResponseEntity<ApiResponse<Object>> handleRedisConnectionFailure(
+            RedisConnectionFailureException ex
+    ){
+
+        log.error("Redis connection failed", ex);
+
+        return ResponseData.fail(
+                "System temporarily unavailable",
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+
+    // ================= PASSWORD RESET =================
+    @ExceptionHandler(PasswordResetTokenInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenInvalid(
+            PasswordResetTokenInvalidException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(PasswordResetTokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenExpired(
+            PasswordResetTokenExpiredException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(PasswordResetTokenUsedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenUsed(
+            PasswordResetTokenUsedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
     // ================= EMAIL VERIFICATION ===========================
     @ExceptionHandler(EmailSendFailedException.class)
     public ResponseEntity<ApiResponse<Object>> handleEmailSendFailException(
