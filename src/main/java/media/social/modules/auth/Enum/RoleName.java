@@ -1,4 +1,4 @@
-package media.social.modules.auth.enums;
+package media.social.modules.auth.Enum;
 
 public enum RoleName {
 

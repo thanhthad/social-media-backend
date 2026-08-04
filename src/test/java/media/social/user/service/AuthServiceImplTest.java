@@ -1,7 +1,7 @@
     package media.social.user.service;
 
     import media.social.modules.auth.entity.RefreshToken;
-    import media.social.modules.auth.enums.RoleName;
+    import media.social.modules.auth.Enum.RoleName;
     import media.social.modules.auth.dto.request.LoginRequest;
     import media.social.modules.auth.dto.request.RegisterRequest;
     import media.social.modules.auth.dto.response.AuthResponse;

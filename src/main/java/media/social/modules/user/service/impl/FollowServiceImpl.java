@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
 import media.social.modules.notification.service.NotificationService;
-import media.social.modules.auth.enums.RoleName;
+import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.user.dto.response.user.FollowCountResponse;
 import media.social.modules.user.dto.response.user.FollowUserResponse;
 import media.social.modules.user.entity.Follow;

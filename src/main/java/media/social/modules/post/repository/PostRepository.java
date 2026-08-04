@@ -90,7 +90,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     LEFT JOIN u.profile pr
     
     WHERE u.id = :userId
-    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
     
     AND NOT EXISTS (
         SELECT 1
@@ -126,7 +126,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     LEFT JOIN u.profile pr
     WHERE u.id = :userId
     AND p.visibility IN :visibilities
-    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
@@ -159,7 +159,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE p.id = :postId
-    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
     AND p.visibility IN :visibilities
     AND NOT EXISTS (
         SELECT 1
@@ -195,7 +195,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
            OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
     )
-    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
@@ -246,7 +246,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
            OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
     )
-    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
@@ -290,7 +290,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         WHERE (b.blocker.id=:viewerId AND b.blocked.id=u.id)
            OR (b.blocker.id=u.id AND b.blocked.id=:viewerId)
     )
-    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
     AND NOT EXISTS (
             SELECT 1
             FROM Report r
@@ -337,7 +337,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE LOWER(ph.hashtag.name)=LOWER(:name)
-    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
     AND NOT EXISTS(
         SELECT 1
         FROM Block b
@@ -389,7 +389,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     JOIN p.user u
     LEFT JOIN u.profile pr
     WHERE sp.user.id = :userId
-    AND u.status = media.social.modules.user.Enum.Status.ACTIVE
+    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
     AND NOT EXISTS (
         SELECT 1
         FROM Block b
