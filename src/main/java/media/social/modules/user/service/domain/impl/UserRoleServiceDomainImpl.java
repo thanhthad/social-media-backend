@@ -1,10 +1,10 @@
 package media.social.modules.user.service.domain.impl;
 
 import lombok.AllArgsConstructor;
-import media.social.modules.user.Enum.RoleName;
+import media.social.modules.auth.enums.RoleName;
 import media.social.modules.user.dto.response.role.RoleResponse;
 import media.social.modules.user.repository.UserRoleRepository;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.domain.UserRoleServiceDomain;
 import org.springframework.stereotype.Service;
 

@@ -21,7 +21,7 @@ import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,6 +1,6 @@
 package media.social.modules.user.repository;
 
-import media.social.modules.user.Enum.RoleName;
+import media.social.modules.auth.enums.RoleName;
 import media.social.modules.user.entity.Role;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.entity.UserRole;

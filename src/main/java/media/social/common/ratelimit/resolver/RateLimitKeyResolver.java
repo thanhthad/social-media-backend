@@ -1,6 +1,6 @@
 package media.social.common.ratelimit.resolver;
 
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;

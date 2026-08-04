@@ -1,6 +1,6 @@
 package media.social.modules.user.service;
 
-import media.social.modules.user.entity.RefreshToken;
+import media.social.modules.auth.entity.RefreshToken;
 
 public interface RefreshTokenService {
 

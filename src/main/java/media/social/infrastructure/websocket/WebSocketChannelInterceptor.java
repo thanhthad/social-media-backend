@@ -1,7 +1,7 @@
 package media.social.infrastructure.websocket;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modules.user.security.jwt.JwtUtil;
+import media.social.modules.auth.security.jwt.JwtUtil;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;

@@ -10,7 +10,7 @@ import media.social.modules.notification.repository.NotificationRepository;
 import media.social.modules.notification.service.NotificationService;
 import media.social.modules.notification.websocket.NotificationPublisher;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

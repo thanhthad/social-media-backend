@@ -14,7 +14,7 @@ import media.social.modules.post.repository.PostRepository;
 import media.social.modules.post.repository.SavedPostRepository;
 import media.social.modules.post.service.SavedPostService;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.FollowService;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.stereotype.Service;

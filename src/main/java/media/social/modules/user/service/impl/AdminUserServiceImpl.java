@@ -1,14 +1,14 @@
 package media.social.modules.user.service.impl;
 
 import lombok.AllArgsConstructor;
-import media.social.modules.user.Enum.RoleName;
-import media.social.modules.user.Enum.Status;
+import media.social.modules.auth.enums.RoleName;
+import media.social.modules.auth.enums.Status;
 import media.social.modules.user.dto.request.user.UpdateUserStatusRequest;
 import media.social.modules.user.dto.response.user.AdminUserResponse;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.UserRepository;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.AdminUserService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;

@@ -3,7 +3,7 @@ package media.social.modules.user.dto.request.user;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import media.social.modules.user.Enum.Status;
+import media.social.modules.auth.enums.Status;
 
 @Getter
 @Setter

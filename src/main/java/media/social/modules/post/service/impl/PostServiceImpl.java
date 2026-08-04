@@ -21,7 +21,7 @@ import media.social.modules.post.service.cache.PostCacheService;
 import media.social.modules.user.entity.User;
 import media.social.modules.post.exception.post.PostNotFoundException;
 import media.social.modules.user.exception.block.UserBlockedException;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.post.service.PostService;
 import media.social.modules.user.service.FollowService;

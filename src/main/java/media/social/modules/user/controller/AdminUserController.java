@@ -5,7 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
-import media.social.modules.user.Enum.Status;
+import media.social.modules.auth.enums.Status;
 import media.social.modules.user.dto.request.user.UpdateUserStatusRequest;
 import media.social.modules.user.service.AdminUserService;
 import org.springframework.data.domain.Pageable;

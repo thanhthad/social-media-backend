@@ -8,7 +8,7 @@ import media.social.modules.conversation.enums.ConversationType;
 import media.social.modules.conversation.repository.ConversationRepository;
 import media.social.modules.conversation.service.domain.ConversationDomainService;
 import media.social.modules.post.exception.post.ForbiddenException;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

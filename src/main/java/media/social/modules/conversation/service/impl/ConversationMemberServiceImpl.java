@@ -12,7 +12,7 @@ import media.social.modules.conversation.repository.ConversationRepository;
 import media.social.modules.conversation.repository.MessageRepository;
 import media.social.modules.conversation.service.ConversationMemberService;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;

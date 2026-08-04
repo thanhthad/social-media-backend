@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
-import media.social.modules.user.Enum.RoleName;
+import media.social.modules.auth.enums.RoleName;
 import media.social.modules.user.dto.response.role.RoleResponse;
 import media.social.modules.user.service.UserRoleService;
 import org.springframework.http.HttpStatus;

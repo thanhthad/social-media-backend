@@ -7,7 +7,7 @@ import media.social.modules.post.repository.*;
 import media.social.modules.post.service.domain.PostDomainService;
 import media.social.modules.post.service.impl.PostServiceImpl;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

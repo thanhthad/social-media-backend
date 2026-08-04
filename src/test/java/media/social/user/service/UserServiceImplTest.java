@@ -8,7 +8,7 @@ import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.mapper.UserMapper;
 import media.social.modules.user.repository.ProfileRepository;
 import media.social.modules.user.repository.UserRepository;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,7 +1,7 @@
 package media.social.modules.user.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modules.user.Enum.RoleName;
+import media.social.modules.auth.enums.RoleName;
 import media.social.modules.user.dto.response.role.RoleResponse;
 import media.social.modules.user.entity.Role;
 import media.social.modules.user.entity.User;
@@ -12,7 +12,7 @@ import media.social.modules.user.exception.role.UserRoleAlreadyExistsException;
 import media.social.modules.user.exception.role.UserRoleNotFoundException;
 import media.social.modules.user.repository.RoleRepository;
 import media.social.modules.user.repository.UserRoleRepository;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.UserRoleService;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.stereotype.Service;

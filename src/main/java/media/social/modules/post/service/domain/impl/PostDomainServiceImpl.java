@@ -6,7 +6,7 @@ import media.social.modules.post.exception.post.ForbiddenException;
 import media.social.modules.post.exception.post.PostNotFoundException;
 import media.social.modules.post.repository.PostRepository;
 import media.social.modules.post.service.domain.PostDomainService;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service

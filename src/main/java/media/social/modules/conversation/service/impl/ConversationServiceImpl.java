@@ -23,7 +23,7 @@ import media.social.modules.file.image.dto.response.UploadFileResponse;
 import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;

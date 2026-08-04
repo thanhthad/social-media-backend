@@ -11,7 +11,7 @@ import media.social.modules.conversation.service.MessageReactionService;
 import media.social.modules.conversation.websocket.MessageReactionPublisher;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.security.context.UserContextHolder;
+import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
