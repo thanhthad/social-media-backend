@@ -5,9 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import media.social.common.ratelimit.exception.TooManyRequestException;
 import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
+import media.social.modules.auth.exception.password.AccountAlreadyLockedException;
 import media.social.modules.auth.exception.password.PasswordResetTokenExpiredException;
 import media.social.modules.auth.exception.password.PasswordResetTokenInvalidException;
 import media.social.modules.auth.exception.password.PasswordResetTokenUsedException;
+import media.social.modules.auth.exception.verification.*;
 import media.social.modules.conversation.exception.*;
 import media.social.modules.file.image.exception.CloudinaryDeleteException;
 import media.social.modules.file.image.exception.CloudinaryUploadException;
@@ -42,10 +44,6 @@ import media.social.modules.user.exception.role.UserRoleNotFoundException;
 import media.social.modules.user.exception.user.UnauthorizedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
-import media.social.modules.auth.exception.verification.EmailSendFailedException;
-import media.social.modules.auth.exception.verification.EmailVerificationTokenExpiredException;
-import media.social.modules.auth.exception.verification.EmailVerificationTokenInvalidException;
-import media.social.modules.auth.exception.verification.EmailVerificationTokenUsedException;
 import media.social.modules.auth.security.context.UserContextHolder;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
@@ -54,6 +52,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -134,6 +133,31 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST
         );
     }
+
+    @ExceptionHandler(AccountAlreadyLockedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handleAccountAlreadyLockedTokenUsed(
+            AccountAlreadyLockedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handleAccountLockedTokenUsed(
+            LockedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
     // ================= EMAIL VERIFICATION ===========================
     @ExceptionHandler(EmailSendFailedException.class)
     public ResponseEntity<ApiResponse<Object>> handleEmailSendFailException(
@@ -144,6 +168,17 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST
         );
     }
+
+    @ExceptionHandler(EmailAlreadyVerifiedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailAlreadyVerifiedException(
+            EmailAlreadyVerifiedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
 
     @ExceptionHandler(EmailVerificationTokenInvalidException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidVerificationToken(
