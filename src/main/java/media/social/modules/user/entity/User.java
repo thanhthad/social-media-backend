@@ -50,6 +50,18 @@ public class User {
     @Column(nullable = false)
     private Status status;
 
+    @Column(
+            name = "failed_attempt",
+            nullable = false
+    )
+    @Builder.Default
+    private Integer failedAttempt = 0;
+
+    @Column(
+            name = "lock_until"
+    )
+    private LocalDateTime lockUntil;
+
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Profile profile;
 

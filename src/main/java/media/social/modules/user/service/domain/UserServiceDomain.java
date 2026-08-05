@@ -7,4 +7,18 @@ public interface UserServiceDomain {
     public void validateUserExists(Long userId);
 
     public User getByUserId(Long userId);
+
+    User getByEmail(String email);
+
+    void increaseFailedAttempt(
+            String email
+    );
+
+    void resetFailedAttempt(
+            Long userId
+    );
+
+    boolean isAccountLocked(
+            User user
+    );
 }

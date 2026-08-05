@@ -16,7 +16,9 @@ CREATE TABLE users (
                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                        last_login_at TIMESTAMP WITH TIME ZONE,
-                       last_active_at TIMESTAMP WITH TIME ZONE
+                       last_active_at TIMESTAMP WITH TIME ZONE,
+                       failed_attempt INTEGER DEFAULT 0,
+                       lock_until TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE email_verification_tokens (
