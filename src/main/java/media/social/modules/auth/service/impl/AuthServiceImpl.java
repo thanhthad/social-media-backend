@@ -1,10 +1,11 @@
 package media.social.modules.auth.service.impl;
 
 import lombok.AllArgsConstructor;
-import media.social.modules.auth.dto.request.ForgotPasswordRequest;
-import media.social.modules.auth.dto.request.ResetPasswordRequest;
+import media.social.modules.auth.dto.request.*;
 import media.social.modules.auth.entity.RefreshToken;
 import media.social.modules.auth.Enum.Status;
+import media.social.modules.auth.exception.password.AccountAlreadyLockedException;
+import media.social.modules.auth.exception.verification.EmailAlreadyVerifiedException;
 import media.social.modules.auth.service.PasswordResetService;
 import media.social.modules.user.exception.user.ForbiddenException;
 import media.social.modules.auth.Enum.RoleName;
@@ -12,8 +13,6 @@ import media.social.modules.user.entity.*;
 import media.social.modules.user.exception.role.RoleNotFoundException;
 import media.social.modules.user.exception.user.UnauthorizedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
-import media.social.modules.auth.dto.request.LoginRequest;
-import media.social.modules.auth.dto.request.RegisterRequest;
 import media.social.modules.auth.dto.response.AuthResponse;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.ProfileRepository;
@@ -25,6 +24,7 @@ import media.social.modules.auth.security.userdetails.CustomUserDetails;
 import media.social.modules.auth.service.AuthService;
 import media.social.modules.auth.service.EmailVerificationService;
 import media.social.modules.user.service.RefreshTokenService;
+import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
@@ -48,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final EmailVerificationService emailVerificationService;
     private final PasswordResetService passwordResetService;
+    private final UserServiceDomain userServiceDomain;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -62,9 +63,12 @@ public class AuthServiceImpl implements AuthService {
                     )
             );
         } catch (BadCredentialsException e) {
+            userServiceDomain.increaseFailedAttempt(
+                    request.getEmail()
+            );
 
             throw new UnauthorizedException(
-                    "Email has not been verified or Your account has been banned"
+                    "Invalid email or password"
             );
         } catch (InternalAuthenticationServiceException e) {
 
@@ -79,6 +83,10 @@ public class AuthServiceImpl implements AuthService {
 
         CustomUserDetails user =
                 (CustomUserDetails) authentication.getPrincipal();
+
+        userServiceDomain.resetFailedAttempt(
+                user.getId()
+        );
 
         String accessToken = jwtUtil.generateAccessToken(
                 user.getId(),
@@ -139,24 +147,38 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse generateAccessToken(String refreshToken) {
 
-        RefreshToken token = refreshTokenService.verify(refreshToken);
+        RefreshToken oldToken =
+                refreshTokenService.verify(refreshToken);
 
-        String accessToken = refreshTokenService.generateAccessToken(refreshToken);
-
-        User user = token.getUser();
+        User user = oldToken.getUser();
 
         if(user.getStatus().equals(Status.BANNED)){
-            throw new AccessDeniedException("Your account is banned");
+            throw new AccessDeniedException(
+                    "Your account is banned"
+            );
         }
+        refreshTokenService.revoke(refreshToken);
 
+        RefreshToken newRefreshToken =
+                refreshTokenService.create(
+                        user.getId()
+                );
+
+        String accessToken =
+                refreshTokenService.generateAccessToken(
+                        newRefreshToken.getToken()
+                );
         return AuthResponse.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(newRefreshToken.getToken())
+                .hasUsername(
+                        user.getUsername() != null
+                )
                 .build();
     }
 
@@ -192,5 +214,30 @@ public class AuthServiceImpl implements AuthService {
                 request.getToken(),
                 request.getNewPassword()
         );
+    }
+
+    @Override
+    @Transactional
+    public void resendVerification(
+            ResendVerificationRequest request
+    ) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(
+                        () -> new UserNotFoundException(
+                                "User not found"
+                        )
+                );
+
+        if(user.getEmailVerified()) {
+            throw new EmailAlreadyVerifiedException(
+                    "Email already verified"
+            );
+        }
+
+        emailVerificationService
+                .deleteByUser(user);
+
+        emailVerificationService
+                .createVerificationToken(user);
     }
 }

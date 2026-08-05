@@ -1,9 +1,6 @@
 package media.social.modules.auth.service;
 
-import media.social.modules.auth.dto.request.ForgotPasswordRequest;
-import media.social.modules.auth.dto.request.LoginRequest;
-import media.social.modules.auth.dto.request.RegisterRequest;
-import media.social.modules.auth.dto.request.ResetPasswordRequest;
+import media.social.modules.auth.dto.request.*;
 import media.social.modules.auth.dto.response.AuthResponse;
 
 public interface AuthService {
@@ -19,4 +16,8 @@ public interface AuthService {
     String forgotPassword(ForgotPasswordRequest request);
 
     void resetPassword(ResetPasswordRequest request);
+
+    void resendVerification(
+            ResendVerificationRequest request
+    );
 }

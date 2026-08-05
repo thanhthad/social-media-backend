@@ -16,10 +16,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Auth APIs")
+@Tag(
+        name = "Authentication",
+        description = "Auth APIs"
+)
 public class AuthController {
 
     private final AuthService authService;
+
     private final EmailVerificationService emailVerificationService;
 
     // ================= LOGIN =================
@@ -48,7 +52,7 @@ public class AuthController {
     @RateLimit(
             name = "AUTH_REGISTER",
             limit = 5,
-            windowSeconds = 600
+            windowSeconds = 60
     )
     public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest request
@@ -65,10 +69,14 @@ public class AuthController {
 
     // ================= VERIFY EMAIL =================
     @GetMapping("/verify-email")
+    @RateLimit(
+            name = "AUTH_VERIFY_EMAIL",
+            limit = 20,
+            windowSeconds = 60
+    )
     public ResponseEntity<?> verifyEmail(
             @RequestParam String token
     ) {
-
         emailVerificationService.verify(token);
 
         return ResponseData.success(
@@ -78,6 +86,25 @@ public class AuthController {
         );
     }
 
+    // ================= RESEND VERIFICATION =================
+    @PostMapping("/resend-verification")
+    @RateLimit(
+            name = "AUTH_RESEND_VERIFICATION",
+            limit = 3,
+            windowSeconds = 300
+    )
+    public ResponseEntity<?> resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request
+    ) {
+
+        authService.resendVerification(request);
+
+        return ResponseData.success(
+                null,
+                "Verification email has been sent",
+                HttpStatus.OK
+        );
+    }
 
     // ================= REFRESH TOKEN =================
     @PostMapping("/refresh")
@@ -89,14 +116,13 @@ public class AuthController {
     public ResponseEntity<?> refreshToken(
             @Valid @RequestBody RefreshTokenRequest request
     ) {
-
-        AuthResponse authResponse =
+        AuthResponse response =
                 authService.generateAccessToken(
                         request.getRefreshToken()
                 );
 
         return ResponseData.success(
-                authResponse,
+                response,
                 "Create new access token successfully",
                 HttpStatus.OK
         );
@@ -129,13 +155,14 @@ public class AuthController {
     @RateLimit(
             name = "AUTH_FORGOT_PASSWORD",
             limit = 5,
-            windowSeconds = 60
+            windowSeconds = 300
     )
     public ResponseEntity<?> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
     ){
 
-        String token = authService.forgotPassword(request);
+        String token =
+                authService.forgotPassword(request);
 
         return ResponseData.success(
                 token,
@@ -145,6 +172,7 @@ public class AuthController {
     }
 
     // ================= RESET PASSWORD =================
+
     @PostMapping("/reset-password")
     @RateLimit(
             name = "AUTH_RESET_PASSWORD",
@@ -154,7 +182,6 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request
     ){
-
         authService.resetPassword(request);
 
 

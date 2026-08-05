@@ -84,4 +84,12 @@ public class EmailVerificationServiceImpl
         repository.save(verificationToken);
 
     }
+
+    @Override
+    @Transactional
+    public void deleteByUser(User user) {
+
+        repository.deleteByUser(user);
+
+    }
 }
