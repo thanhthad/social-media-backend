@@ -7,14 +7,49 @@ CREATE TABLE roles (
 
 CREATE TABLE users (
                        user_id BIGSERIAL PRIMARY KEY,
-                       username VARCHAR(50) UNIQUE NOT NULL,
+                       username VARCHAR(50) UNIQUE ,
                        email VARCHAR(255) UNIQUE NOT NULL,
-                       password_hash VARCHAR(255) NOT NULL,
+                       password_hash VARCHAR(255),
+                       provider VARCHAR(50) NOT NULL DEFAULT 'LOCAL',
+                       email_verified BOOLEAN NOT NULL DEFAULT FALSE,
                        status VARCHAR(50),
                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                        last_login_at TIMESTAMP WITH TIME ZONE,
-                       last_active_at TIMESTAMP WITH TIME ZONE
+                       last_active_at TIMESTAMP WITH TIME ZONE,
+                       failed_attempt INTEGER DEFAULT 0,
+                       lock_until TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE email_verification_tokens (
+                                           id BIGSERIAL PRIMARY KEY,
+                                           user_id BIGINT NOT NULL,
+                                           token VARCHAR(255) NOT NULL UNIQUE,
+                                           expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                                           used BOOLEAN NOT NULL DEFAULT FALSE,
+                                           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                           CONSTRAINT fk_email_verification_user
+                                               FOREIGN KEY (user_id)
+                                                   REFERENCES users(user_id)
+                                                   ON DELETE CASCADE
+);
+
+CREATE TABLE password_reset_tokens (
+
+                                       id BIGSERIAL PRIMARY KEY,
+
+                                       user_id BIGINT NOT NULL,
+
+                                       token VARCHAR(255) NOT NULL UNIQUE,
+
+                                       expires_at TIMESTAMP NOT NULL,
+
+                                       used BOOLEAN DEFAULT FALSE,
+
+                                       CONSTRAINT fk_password_reset_user
+                                           FOREIGN KEY(user_id)
+                                               REFERENCES users(user_id)
+                                               ON DELETE CASCADE
 );
 
 CREATE TABLE user_roles (

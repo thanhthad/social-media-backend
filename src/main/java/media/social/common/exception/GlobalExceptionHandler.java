@@ -5,52 +5,62 @@ import lombok.extern.slf4j.Slf4j;
 import media.social.common.ratelimit.exception.TooManyRequestException;
 import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
-import media.social.modults.conversation.exception.*;
-import media.social.modults.file.image.exception.CloudinaryDeleteException;
-import media.social.modults.file.image.exception.CloudinaryUploadException;
-import media.social.modults.file.image.exception.InvalidMediaException;
-import media.social.modults.notification.exception.NotificationAlreadyExistsException;
-import media.social.modults.notification.exception.NotificationNotFoundException;
-import media.social.modults.post.exception.comment.CanNotCommentYourself;
-import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
-import media.social.modults.post.exception.comment.CommentNotFoundException;
-import media.social.modults.post.exception.post.*;
-import media.social.modults.post.exception.post_media.InvalidImageException;
-import media.social.modults.post.exception.post_media.MediaNotFoundException;
-import media.social.modults.post.exception.reaction.ReactionNotFoundException;
-import media.social.modults.post.exception.report.CannotReportOwnPostException;
-import media.social.modults.post.exception.report.ReportAlreadyExistsException;
-import media.social.modults.post.exception.report.ReportAlreadyReviewedException;
-import media.social.modults.post.exception.report.ReportNotFoundException;
-import media.social.modults.post.exception.saved_post.SavedPostAlreadyExistsException;
-import media.social.modults.post.exception.saved_post.SavedPostNotFoundException;
-import media.social.modults.user.exception.block.BlockAlreadyExistsException;
-import media.social.modults.user.exception.block.BlockNotFoundException;
-import media.social.modults.user.exception.block.UserBlockedException;
-import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
-import media.social.modults.user.exception.follow.FollowNotFoundException;
-import media.social.modults.user.exception.profile.ProfileNotFoundException;
-import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenException;
-import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
-import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
-import media.social.modults.user.exception.role.RoleNotFoundException;
-import media.social.modults.user.exception.role.UserRoleAlreadyExistsException;
-import media.social.modults.user.exception.role.UserRoleNotFoundException;
-import media.social.modults.user.exception.user.UnauthorizedException;
-import media.social.modults.user.exception.user.UserAlreadyExistsException;
-import media.social.modults.user.exception.user.UserNotFoundException;
-import media.social.modults.user.security.context.UserContextHolder;
+import media.social.modules.auth.exception.password.AccountAlreadyLockedException;
+import media.social.modules.auth.exception.password.PasswordResetTokenExpiredException;
+import media.social.modules.auth.exception.password.PasswordResetTokenInvalidException;
+import media.social.modules.auth.exception.password.PasswordResetTokenUsedException;
+import media.social.modules.auth.exception.verification.*;
+import media.social.modules.conversation.exception.*;
+import media.social.modules.file.image.exception.CloudinaryDeleteException;
+import media.social.modules.file.image.exception.CloudinaryUploadException;
+import media.social.modules.file.image.exception.InvalidMediaException;
+import media.social.modules.notification.exception.NotificationAlreadyExistsException;
+import media.social.modules.notification.exception.NotificationNotFoundException;
+import media.social.modules.post.exception.comment.CanNotCommentYourself;
+import media.social.modules.post.exception.comment.CommentAlreadyExistsException;
+import media.social.modules.post.exception.comment.CommentNotFoundException;
+import media.social.modules.post.exception.post.*;
+import media.social.modules.post.exception.post_media.InvalidImageException;
+import media.social.modules.post.exception.post_media.MediaNotFoundException;
+import media.social.modules.post.exception.reaction.ReactionNotFoundException;
+import media.social.modules.post.exception.report.CannotReportOwnPostException;
+import media.social.modules.post.exception.report.ReportAlreadyExistsException;
+import media.social.modules.post.exception.report.ReportAlreadyReviewedException;
+import media.social.modules.post.exception.report.ReportNotFoundException;
+import media.social.modules.post.exception.saved_post.SavedPostAlreadyExistsException;
+import media.social.modules.post.exception.saved_post.SavedPostNotFoundException;
+import media.social.modules.user.exception.block.BlockAlreadyExistsException;
+import media.social.modules.user.exception.block.BlockNotFoundException;
+import media.social.modules.user.exception.block.UserBlockedException;
+import media.social.modules.user.exception.follow.FollowAlreadyExistsException;
+import media.social.modules.user.exception.follow.FollowNotFoundException;
+import media.social.modules.user.exception.profile.ProfileNotFoundException;
+import media.social.modules.auth.exception.refreshtoken.InvalidRefreshTokenException;
+import media.social.modules.auth.exception.refreshtoken.RefreshTokenExpiredException;
+import media.social.modules.auth.exception.refreshtoken.RefreshTokenRevokedException;
+import media.social.modules.user.exception.role.RoleNotFoundException;
+import media.social.modules.user.exception.role.UserRoleAlreadyExistsException;
+import media.social.modules.user.exception.role.UserRoleNotFoundException;
+import media.social.modules.user.exception.user.UnauthorizedException;
+import media.social.modules.user.exception.user.UserAlreadyExistsException;
+import media.social.modules.user.exception.user.UserNotFoundException;
+import media.social.modules.auth.security.context.UserContextHolder;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import media.social.modules.user.exception.user.ForbiddenException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,6 +70,144 @@ public class GlobalExceptionHandler {
 
     private Long getUserId(){
         return UserContextHolder.getUserId();
+    }
+
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConnectionError(
+            ResourceAccessException ex
+    ){
+
+        log.error("External service connection failed", ex);
+
+        return ResponseData.fail(
+                "Service unavailable. Please try again later.",
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    public ResponseEntity<ApiResponse<Object>> handleRedisConnectionFailure(
+            RedisConnectionFailureException ex
+    ){
+
+        log.error("Redis connection failed", ex);
+
+        return ResponseData.fail(
+                "System temporarily unavailable",
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+
+    // ================= PASSWORD RESET =================
+    @ExceptionHandler(PasswordResetTokenInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenInvalid(
+            PasswordResetTokenInvalidException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(PasswordResetTokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenExpired(
+            PasswordResetTokenExpiredException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(PasswordResetTokenUsedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenUsed(
+            PasswordResetTokenUsedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(AccountAlreadyLockedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handleAccountAlreadyLockedTokenUsed(
+            AccountAlreadyLockedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handleAccountLockedTokenUsed(
+            LockedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    // ================= EMAIL VERIFICATION ===========================
+    @ExceptionHandler(EmailSendFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailSendFailException(
+            EmailSendFailedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailAlreadyVerifiedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailAlreadyVerifiedException(
+            EmailAlreadyVerifiedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+
+    @ExceptionHandler(EmailVerificationTokenInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidVerificationToken(
+            EmailVerificationTokenInvalidException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailVerificationTokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>> handleExpiredVerificationToken(
+            EmailVerificationTokenExpiredException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailVerificationTokenUsedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUsedVerificationToken(
+            EmailVerificationTokenUsedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.CONFLICT
+        );
     }
 
     // ================= REDIS_RATE_LIMIT ===========================
@@ -193,6 +341,11 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
@@ -207,6 +360,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleProfileNotFound(ProfileNotFoundException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserForbidden(ForbiddenException ex) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
 
     //====================REPORT==================
     @ExceptionHandler(ReportNotFoundException.class)
@@ -401,12 +563,6 @@ public class GlobalExceptionHandler {
         response.setData(errors);
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    //===================FORBIDDEN=====================================
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ApiResponse<Object>> handleForbidden(ForbiddenException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
 
     // ================= FALLBACK (ONLY IMPORTANT LOG) =================
