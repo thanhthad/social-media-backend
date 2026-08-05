@@ -105,7 +105,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     )
     FROM User u
     JOIN u.profile p
-    WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))
+    WHERE u.username ILIKE CONCAT('%', :username, '%')
     AND u.status = :status
     """)
     Page<UserSearchResponse> searchUsers(
@@ -146,8 +146,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     )
     FROM User u
     LEFT JOIN u.profile p
-    WHERE LOWER(u.username)
-    LIKE LOWER(CONCAT('%', :username, '%'))
+    WHERE u.username ILIKE CONCAT('%', :username, '%')
     ORDER BY u.createdAt DESC
     """)
     Page<AdminUserResponse> searchAdminUsers(

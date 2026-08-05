@@ -297,7 +297,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             WHERE r.post.id = p.id
               AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
         )
-    AND LOWER(p.content) LIKE LOWER(CONCAT('%',:keyword,'%'))
+    AND p.content ILIKE CONCAT('%', :keyword, '%')
     AND (
             u.id=:viewerId
             OR p.visibility=media.social.modules.post.enums.Visibility.PUBLIC
