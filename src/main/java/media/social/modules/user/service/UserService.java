@@ -1,31 +1,47 @@
 package media.social.modules.user.service;
 
+import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateAvatarRequest;
 import media.social.modules.user.dto.request.user.ChangePasswordRequest;
-import media.social.modules.user.dto.request.user.UpdateProfileRequest;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
-import media.social.modules.user.dto.response.user.ProfileResponse;
-import media.social.modules.user.dto.response.user.PublicUserProfileResponse;
-import media.social.modules.user.dto.response.user.UserSearchResponse;
-import media.social.modules.user.dto.response.user.UserProfileResponse;
+import media.social.modules.user.dto.response.user.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface UserService {
 
-    public UserProfileResponse getMe();
+    public MyProfileResponse getMe();
 
-    public ProfileResponse updateMe(UpdateProfileRequest request);
+    ProfileResponse updateBasicProfile(
+            UpdateBasicProfileRequest request
+    );
+
+    ProfileResponse updateContact(
+            UpdateContactRequest request
+    );
+
+    ProfileResponse updateCareer(
+            UpdateCareerRequest request
+    );
+
+    ProfileResponse updateSocialLinks(
+            UpdateSocialLinksRequest request
+    );
+
+    ProfileResponse updateProfileVisibility(
+            UpdateProfileVisibilityRequest request
+    );
 
     public UserProfileResponse updateUserName(UpdateUsernameRequest request);
+
+    public ProfileResponse updateCover(UpdateCoverRequest request);
 
     public ProfileResponse updateAvatar(UpdateAvatarRequest request);
 
     public void updatePassword(ChangePasswordRequest request);
 
-    public PublicUserProfileResponse getUserById(Long id);
+    public PublicProfileResponse getUserById(Long id);
 
     public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable);
-
 
 }

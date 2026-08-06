@@ -76,19 +76,43 @@ CREATE TABLE user_roles (
                                     REFERENCES users(user_id)
 );
 
-
 CREATE TABLE profiles (
                           id BIGSERIAL PRIMARY KEY,
                           user_id BIGINT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
                           full_name VARCHAR(100),
+
                           avatar_url VARCHAR(255),
                           avatar_public_id VARCHAR(255),
+
+                          bio TEXT,
+
+    -- Cover
                           cover_url VARCHAR(255),
-                          bio VARCHAR(255),
+                          cover_public_id VARCHAR(255),
+
+    -- Contact
                           phone VARCHAR(20),
+                          website VARCHAR(255),
+
+    -- Personal
                           date_of_birth DATE,
-                          gender VARCHAR(10),
-                          location VARCHAR(255),
+                          gender VARCHAR(20),
+
+    -- Work & Education
+                          occupation VARCHAR(100),
+                          company VARCHAR(100),
+                          education VARCHAR(150),
+
+    -- Location
+                          country VARCHAR(100),
+                          city VARCHAR(100),
+
+    -- Social links
+                          social_links JSONB DEFAULT '{}'::jsonb,
+
+    -- Privacy
+                          profile_visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
+
                           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

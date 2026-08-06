@@ -8,10 +8,8 @@ import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modules.user.dto.request.user.ChangePasswordRequest;
 import media.social.modules.user.dto.request.user.UpdateAvatarRequest;
-import media.social.modules.user.dto.request.user.UpdateProfileRequest;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.user.ProfileResponse;
-import media.social.modules.user.dto.response.user.PublicUserProfileResponse;
 import media.social.modules.user.dto.response.user.UserProfileResponse;
 import media.social.modules.user.dto.response.user.UserSearchResponse;
 import media.social.modules.user.service.UserService;
@@ -45,41 +43,13 @@ public class UserController {
     )
     public ResponseEntity<?> getMe() {
 
-
-        UserProfileResponse response =
-                userService.getMe();
-
-
         return ResponseData.success(
-                response,
+                userService.getMe(),
                 "Get profile successfully",
                 HttpStatus.OK
         );
     }
 
-    @PutMapping("/me")
-    @Operation(summary = "Update current user profile")
-    @RateLimit(
-            name = "USER_UPDATE_PROFILE",
-            limit = 30,
-            windowSeconds = 60
-    )
-    public ResponseEntity<?> updateMe(
-            @Valid @RequestBody UpdateProfileRequest request
-    ) {
-
-
-        ProfileResponse profileResponse =
-                userService.updateMe(request);
-
-
-
-        return ResponseData.success(
-                profileResponse,
-                "Update profile successfully",
-                HttpStatus.OK
-        );
-    }
 
     @PutMapping("/me/username")
     @Operation(summary = "Update username")
@@ -159,10 +129,8 @@ public class UserController {
             @PathVariable Long id
     ) {
 
-        PublicUserProfileResponse response =
-                userService.getUserById(id);
         return ResponseData.success(
-                response,
+                userService.getUserById(id),
                 "Get user successfully",
                 HttpStatus.OK
         );
