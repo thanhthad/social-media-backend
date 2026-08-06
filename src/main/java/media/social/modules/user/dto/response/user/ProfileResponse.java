@@ -3,8 +3,8 @@ package media.social.modules.user.dto.response.user;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
+import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.enums.Gender;
-import media.social.modules.user.enums.ProfileVisibility;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -47,7 +47,7 @@ public class ProfileResponse {
 
     private Map<String, String> socialLinks;
 
-    private ProfileVisibility profileVisibility;
+    private Visibility profileVisibility;
 
     private OffsetDateTime createdAt;
 

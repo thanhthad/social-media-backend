@@ -37,7 +37,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
         p.occupation,
         p.company,
         p.education,
-        p.profileVisibility,
+        p.visibility,
         p.socialLinks,
         p.createdAt,
         p.updatedAt
@@ -110,12 +110,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
     )
     FROM User u
     JOIN u.profile p
+
     WHERE u.username ILIKE CONCAT('%', :username, '%')
+
     AND u.status = :status
+
+    AND NOT EXISTS (
+        SELECT 1
+        FROM Block b
+        WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
+           OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
+    )
     """)
     Page<UserSearchResponse> searchUsers(
             @Param("username") String username,
             @Param("status") Status status,
+            @Param("viewerId") Long viewerId,
             Pageable pageable
     );
 

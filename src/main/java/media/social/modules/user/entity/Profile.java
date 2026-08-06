@@ -2,8 +2,8 @@ package media.social.modules.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.enums.Gender;
-import media.social.modules.user.enums.ProfileVisibility;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -99,13 +99,11 @@ public class Profile {
     private Map<String, String> socialLinks;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "profile_visibility",
+    @Column( name = "profile_visibility",
             length = 20,
-            nullable = false
-    )
+            nullable = false)
     @Builder.Default
-    private ProfileVisibility profileVisibility = ProfileVisibility.PUBLIC;
+    private Visibility visibility = Visibility.PUBLIC;
 
     @Column(
             name = "created_at",

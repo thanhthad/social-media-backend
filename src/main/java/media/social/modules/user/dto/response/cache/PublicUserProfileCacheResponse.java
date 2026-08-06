@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.enums.Gender;
-import media.social.modules.user.enums.ProfileVisibility;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -51,7 +51,7 @@ public class PublicUserProfileCacheResponse {
 
     private String education;
 
-    private ProfileVisibility profileVisibility;
+    private Visibility visibility;
 
     private Map<String,String> socialLinks;
 

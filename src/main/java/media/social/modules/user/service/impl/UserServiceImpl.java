@@ -2,16 +2,19 @@ package media.social.modules.user.service.impl;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
+import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modules.user.dto.response.user.*;
+import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.service.FollowService;
 import media.social.modules.user.service.cache.UserCacheService;
 import media.social.modules.user.service.cache.UserProfileCacheService;
+import media.social.modules.user.service.domain.BlockPolicyService;
 import media.social.modules.user.service.domain.UserRoleServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +36,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
+
+import static media.social.modules.post.enums.Visibility.*;
 
 @Service
 @AllArgsConstructor
@@ -47,6 +53,7 @@ public class UserServiceImpl implements UserService {
     private final FollowService followService;
     private final UserProfileCacheService userProfileCacheService;
     private final UserCacheService userCacheService;
+    private final BlockPolicyService blockPolicyService;
 
     @Override
     @Transactional(readOnly = true)
@@ -78,7 +85,7 @@ public class UserServiceImpl implements UserService {
                 .occupation(cache.getOccupation())
                 .company(cache.getCompany())
                 .education(cache.getEducation())
-                .profileVisibility(cache.getProfileVisibility())
+                .visibility(cache.getVisibility())
                 .socialLinks(cache.getSocialLinks())
                 .createdAt(cache.getCreatedAt())
                 .updatedAt(cache.getUpdatedAt())
@@ -220,7 +227,7 @@ public class UserServiceImpl implements UserService {
 
         Profile profile = user.getProfile();
 
-        profile.setProfileVisibility(
+        profile.setVisibility(
                 request.getVisibility()
         );
 
@@ -229,7 +236,7 @@ public class UserServiceImpl implements UserService {
         userCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
-                .profileVisibility(profile.getProfileVisibility())
+                .profileVisibility(profile.getVisibility())
                 .build();
     }
 
@@ -397,6 +404,10 @@ public class UserServiceImpl implements UserService {
                     "Please use /me endpoint"
             );
         }
+        if(blockPolicyService.isBlocked(currentUserId,userId)){
+            throw new UserBlockedException("You cannot view this user's posts.");
+
+        }
 
         validateCanViewProfile(
                 currentUserId,
@@ -412,33 +423,60 @@ public class UserServiceImpl implements UserService {
         Boolean following =
                 followService.isFollowing(userId);
 
-        return PublicProfileResponse.builder()
-                .userId(cache.getId())
-                .username(cache.getUsername())
-                .avatarUrl(cache.getAvatarUrl())
-                .coverUrl(cache.getCoverUrl())
-                .bio(cache.getBio())
-                .fullName(cache.getFullName())
-                .website(cache.getWebsite())
-                .dateOfBirth(cache.getDateOfBirth())
-                .gender(cache.getGender())
-                .country(cache.getCountry())
-                .city(cache.getCity())
-                .district(cache.getDistrict())
-                .occupation(cache.getOccupation())
-                .company(cache.getCompany())
-                .education(cache.getEducation())
-                .socialLinks(cache.getSocialLinks())
-                .createdAt(cache.getCreatedAt())
-                .updatedAt(cache.getUpdatedAt())
-                .totalFollower(
-                        followStat.getTotalFollower()
-                )
-                .totalFollowing(
-                        followStat.getTotalFollowing()
-                )
-                .isFollowing(following)
-                .build();
+        boolean canViewFullProfile =
+                switch (cache.getVisibility()) {
+
+                    case PUBLIC ->
+                            true;
+
+                    case FOLLOWERS ->
+                            following;
+
+                    case PRIVATE ->
+                            false;
+                };
+
+        PublicProfileResponse.PublicProfileResponseBuilder builder =
+                PublicProfileResponse.builder()
+                        .userId(cache.getId())
+                        .username(cache.getUsername())
+                        .avatarUrl(cache.getAvatarUrl())
+                        .coverUrl(cache.getCoverUrl())
+
+                        .totalFollower(
+                                followStat.getTotalFollower()
+                        )
+                        .totalFollowing(
+                                followStat.getTotalFollowing()
+                        )
+
+                        .isFollowing(following);
+
+
+        if (canViewFullProfile) {
+            builder
+                    .bio(cache.getBio())
+                    .fullName(cache.getFullName())
+                    .website(cache.getWebsite())
+
+                    .dateOfBirth(cache.getDateOfBirth())
+                    .gender(cache.getGender())
+
+                    .country(cache.getCountry())
+                    .city(cache.getCity())
+                    .district(cache.getDistrict())
+
+                    .occupation(cache.getOccupation())
+                    .company(cache.getCompany())
+                    .education(cache.getEducation())
+
+                    .socialLinks(cache.getSocialLinks())
+
+                    .createdAt(cache.getCreatedAt())
+                    .updatedAt(cache.getUpdatedAt());
+        }
+
+        return builder.build();
     }
 
     private void validateCanViewProfile(
@@ -494,9 +532,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable) {
 
+        Long viewerId = UserContextHolder.getUserId();
+
         return userRepository.searchUsers(
                 username,
                 Status.ACTIVE,
+                viewerId,
                 pageable
         );
     }
