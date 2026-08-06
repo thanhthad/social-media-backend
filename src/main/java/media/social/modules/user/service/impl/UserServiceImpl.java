@@ -21,11 +21,8 @@ import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.request.user.ChangePasswordRequest;
 import media.social.modules.user.dto.request.user.UpdateAvatarRequest;
-import media.social.modules.user.dto.request.user.UpdateProfileRequest;
 import media.social.modules.user.entity.Profile;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.mapper.ProfileMapper;
-import media.social.modules.user.mapper.UserMapper;
 import media.social.modules.user.repository.ProfileRepository;
 import media.social.modules.user.repository.UserRepository;
 import media.social.modules.auth.security.context.UserContextHolder;
@@ -38,13 +35,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
-
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
     private final ProfileRepository profileRepository;
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
@@ -67,47 +62,32 @@ public class UserServiceImpl implements UserService {
 
         return MyProfileResponse.builder()
                 .userId(cache.getId())
-
                 .email(cache.getEmail())
-
                 .username(cache.getUsername())
-
                 .avatarUrl(cache.getAvatarUrl())
                 .coverUrl(cache.getCoverUrl())
-
                 .bio(cache.getBio())
                 .fullName(cache.getFullName())
-
                 .website(cache.getWebsite())
-
                 .phone(cache.getPhone())
-
                 .dateOfBirth(cache.getDateOfBirth())
                 .gender(cache.getGender())
-
                 .country(cache.getCountry())
                 .city(cache.getCity())
                 .district(cache.getDistrict())
-
                 .occupation(cache.getOccupation())
                 .company(cache.getCompany())
                 .education(cache.getEducation())
-
                 .profileVisibility(cache.getProfileVisibility())
-
                 .socialLinks(cache.getSocialLinks())
-
                 .createdAt(cache.getCreatedAt())
                 .updatedAt(cache.getUpdatedAt())
-
                 .totalFollower(
                         followStat.getTotalFollower()
                 )
-
                 .totalFollowing(
                         followStat.getTotalFollowing()
                 )
-
                 .build();
     }
 
@@ -513,12 +493,11 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable) {
-        Page<UserSearchResponse> userPage = userRepository.searchUsers(
+
+        return userRepository.searchUsers(
                 username,
                 Status.ACTIVE,
                 pageable
         );
-
-        return userPage;
     }
 }
