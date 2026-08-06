@@ -25,25 +25,10 @@ public class UserProfileCacheServiceImpl implements UserProfileCacheService {
     @Override
     public PublicUserProfileCacheResponse getUserProfile(Long userId) {
 
-        PublicUserProfileCacheResponse user = userRepository.findCurrentUserProfileCache(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found")
-        );
-
-        return PublicUserProfileCacheResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .avatarUrl(user.getAvatarUrl())
-                .bio(user.getBio())
-                .fullName(user.getFullName())
-                .phone(user.getPhone())
-                .dateOfBirth(user.getDateOfBirth())
-                .gender(user.getGender())
-                .location(user.getLocation())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
-
+        return userRepository.findCurrentUserProfileCache(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
     }
 
     @Cacheable(

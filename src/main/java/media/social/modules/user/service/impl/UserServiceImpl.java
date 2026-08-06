@@ -2,6 +2,7 @@ package media.social.modules.user.service.impl;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
+import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
@@ -45,7 +46,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final ProfileRepository profileRepository;
-    private final ProfileMapper profileMapper;
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
     private final UserRoleServiceDomain userRoleServiceDomain;
@@ -53,47 +53,204 @@ public class UserServiceImpl implements UserService {
     private final UserProfileCacheService userProfileCacheService;
     private final UserCacheService userCacheService;
 
-
     @Override
     @Transactional(readOnly = true)
-    public UserProfileResponse getMe() {
-        
+    public MyProfileResponse getMe() {
+
         Long userId = UserContextHolder.getUserId();
-        
-        PublicUserProfileCacheResponse userProfile =
+
+        PublicUserProfileCacheResponse cache =
                 userProfileCacheService.getUserProfile(userId);
 
-        UserFollowStatCacheResponse userFollowStatCacheResponse =
+        UserFollowStatCacheResponse followStat =
                 userProfileCacheService.getFollowStat(userId);
 
-        return userMapper.toUserProfileResponse(userProfile,userFollowStatCacheResponse);
+        return MyProfileResponse.builder()
+                .userId(cache.getId())
+
+                .email(cache.getEmail())
+
+                .username(cache.getUsername())
+
+                .avatarUrl(cache.getAvatarUrl())
+                .coverUrl(cache.getCoverUrl())
+
+                .bio(cache.getBio())
+                .fullName(cache.getFullName())
+
+                .website(cache.getWebsite())
+
+                .phone(cache.getPhone())
+
+                .dateOfBirth(cache.getDateOfBirth())
+                .gender(cache.getGender())
+
+                .country(cache.getCountry())
+                .city(cache.getCity())
+                .district(cache.getDistrict())
+
+                .occupation(cache.getOccupation())
+                .company(cache.getCompany())
+                .education(cache.getEducation())
+
+                .profileVisibility(cache.getProfileVisibility())
+
+                .socialLinks(cache.getSocialLinks())
+
+                .createdAt(cache.getCreatedAt())
+                .updatedAt(cache.getUpdatedAt())
+
+                .totalFollower(
+                        followStat.getTotalFollower()
+                )
+
+                .totalFollowing(
+                        followStat.getTotalFollowing()
+                )
+
+                .build();
     }
 
     @Override
     @Transactional
-    public ProfileResponse updateMe(UpdateProfileRequest request) {
+    public ProfileResponse updateBasicProfile(UpdateBasicProfileRequest request) {
 
         Long userId = UserContextHolder.getUserId();
 
-        User user = userRepository.findByIdWithProfile(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found")
-        );
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
 
-        profileMapper.updateProfileFromRequest(request, user.getProfile());
+        Profile profile = user.getProfile();
 
-        profileRepository.save(user.getProfile());
+        profile.setFullName(request.getFullName());
+        profile.setBio(request.getBio());
+        profile.setDateOfBirth(request.getDateOfBirth());
+        profile.setGender(request.getGender());
 
-        userCacheService.evictProfile(user.getId());
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
-                .fullName(request.getFullName())
-                .bio(request.getBio())
-                .phone(request.getPhone())
-                .dateOfBirth(request.getDateOfBirth())
-                .gender(request.getGender())
-                .location(request.getLocation())
+                .fullName(profile.getFullName())
+                .bio(profile.getBio())
+                .dateOfBirth(profile.getDateOfBirth())
+                .gender(profile.getGender())
                 .build();
+    }
 
+    @Override
+    @Transactional
+    public ProfileResponse updateContact(UpdateContactRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        profile.setPhone(request.getPhone());
+        profile.setWebsite(request.getWebsite());
+        profile.setCountry(request.getCountry());
+        profile.setCity(request.getCity());
+        profile.setDistrict(request.getDistrict());
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .phone(profile.getPhone())
+                .website(profile.getWebsite())
+                .country(profile.getCountry())
+                .city(profile.getCity())
+                .district(profile.getDistrict())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse updateCareer(UpdateCareerRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        profile.setOccupation(request.getOccupation());
+        profile.setCompany(request.getCompany());
+        profile.setEducation(request.getEducation());
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .occupation(profile.getOccupation())
+                .company(profile.getCompany())
+                .education(profile.getEducation())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse updateSocialLinks(UpdateSocialLinksRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        profile.setSocialLinks(request.getSocialLinks());
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .socialLinks(profile.getSocialLinks())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse updateProfileVisibility(
+            UpdateProfileVisibilityRequest request
+    ) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        profile.setProfileVisibility(
+                request.getVisibility()
+        );
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .profileVisibility(profile.getProfileVisibility())
+                .build();
     }
 
     @Override
@@ -115,6 +272,56 @@ public class UserServiceImpl implements UserService {
 
         return UserProfileResponse.builder()
                 .username(request.getUserName())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse updateCover(UpdateCoverRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        cloudinaryService.validateFile(
+                request.getFile(),
+                MediaType.IMAGE
+        );
+
+        UploadFileResponse upload =
+                cloudinaryService.uploadFile(
+                        request.getFile(),
+                        "covers",
+                        MediaType.IMAGE
+                );
+
+        if(profile.getCoverPublicId() != null){
+
+            cloudinaryService.deleteFile(
+                    profile.getCoverPublicId(),
+                    MediaType.IMAGE
+            );
+        }
+
+        profile.setCoverUrl(
+                upload.getFileUrl()
+        );
+
+        profile.setCoverPublicId(
+                upload.getPublicId()
+        );
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .coverUrl(profile.getCoverUrl())
                 .build();
     }
 
@@ -157,9 +364,8 @@ public class UserServiceImpl implements UserService {
         userCacheService.evictProfile(user.getId());
 
         return ProfileResponse.builder()
-                .avatarUrl(upload.getFileUrl())
+                .avatarUrl(profile.getAvatarUrl())
                 .build();
-
     }
 
     @Override
@@ -201,7 +407,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public PublicUserProfileResponse getUserById(Long userId) {
+    public PublicProfileResponse getUserById(Long userId) {
+
         Long currentUserId =
                 UserContextHolder.getUserId();
 
@@ -219,24 +426,38 @@ public class UserServiceImpl implements UserService {
         PublicUserProfileCacheResponse cache =
                 userProfileCacheService.getUserProfile(userId);
 
-        UserFollowStatCacheResponse userFollowStatCacheResponse =
+        UserFollowStatCacheResponse followStat =
                 userProfileCacheService.getFollowStat(userId);
 
         Boolean following =
                 followService.isFollowing(userId);
 
-        return PublicUserProfileResponse.builder()
-                .id(cache.getId())
+        return PublicProfileResponse.builder()
+                .userId(cache.getId())
                 .username(cache.getUsername())
                 .avatarUrl(cache.getAvatarUrl())
+                .coverUrl(cache.getCoverUrl())
                 .bio(cache.getBio())
                 .fullName(cache.getFullName())
+                .website(cache.getWebsite())
                 .dateOfBirth(cache.getDateOfBirth())
                 .gender(cache.getGender())
-                .location(cache.getLocation())
-                .totalFollower(userFollowStatCacheResponse.getTotalFollower())
-                .totalFollowing(userFollowStatCacheResponse.getTotalFollowing())
-                .following(following)
+                .country(cache.getCountry())
+                .city(cache.getCity())
+                .district(cache.getDistrict())
+                .occupation(cache.getOccupation())
+                .company(cache.getCompany())
+                .education(cache.getEducation())
+                .socialLinks(cache.getSocialLinks())
+                .createdAt(cache.getCreatedAt())
+                .updatedAt(cache.getUpdatedAt())
+                .totalFollower(
+                        followStat.getTotalFollower()
+                )
+                .totalFollowing(
+                        followStat.getTotalFollowing()
+                )
+                .isFollowing(following)
                 .build();
     }
 

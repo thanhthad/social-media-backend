@@ -1,25 +1,23 @@
-package media.social.modules.user.dto.response.cache;
+package media.social.modules.user.dto.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import media.social.modules.user.enums.Gender;
-import media.social.modules.user.enums.ProfileVisibility;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
+
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PublicUserProfileCacheResponse {
+public class PublicProfileResponse {
 
-    private Long id;
-
-    private String email;
+    private Long userId;
 
     private String username;
 
@@ -51,12 +49,15 @@ public class PublicUserProfileCacheResponse {
 
     private String education;
 
-    private ProfileVisibility profileVisibility;
-
     private Map<String,String> socialLinks;
 
     private OffsetDateTime createdAt;
 
     private OffsetDateTime updatedAt;
 
+    private Long totalFollower;
+
+    private Long totalFollowing;
+
+    private boolean isFollowing;
 }

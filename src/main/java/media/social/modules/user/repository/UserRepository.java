@@ -21,25 +21,30 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
     SELECT new media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse(
         u.id,
-        u.username,
         u.email,
+        u.username,
         p.avatarUrl,
+        p.coverUrl,
         p.bio,
         p.fullName,
+        p.website,
         p.phone,
         p.dateOfBirth,
         p.gender,
-        p.location,
-    
-        u.createdAt,
-        u.updatedAt
+        p.country,
+        p.city,
+        p.district,
+        p.occupation,
+        p.company,
+        p.education,
+        p.profileVisibility,
+        p.socialLinks,
+        p.createdAt,
+        p.updatedAt
     )
-    
     FROM User u
-    
     LEFT JOIN Profile p
-    ON p.user.id = u.id
-    
+        ON p.user.id = u.id
     WHERE u.id = :userId
     """)
     Optional<PublicUserProfileCacheResponse> findCurrentUserProfileCache(

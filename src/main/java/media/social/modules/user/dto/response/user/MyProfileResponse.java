@@ -1,4 +1,4 @@
-package media.social.modules.user.dto.response.cache;
+package media.social.modules.user.dto.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,13 +11,14 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
+
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PublicUserProfileCacheResponse {
+public class MyProfileResponse {
 
-    private Long id;
+    private Long userId;
 
     private String email;
 
@@ -58,5 +59,9 @@ public class PublicUserProfileCacheResponse {
     private OffsetDateTime createdAt;
 
     private OffsetDateTime updatedAt;
+
+    private Long totalFollower;
+
+    private Long totalFollowing;
 
 }

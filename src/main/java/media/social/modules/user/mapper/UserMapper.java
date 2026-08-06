@@ -9,32 +9,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapper {
 
-    public UserProfileResponse toUserProfileResponse(
-            PublicUserProfileCacheResponse user,
-            UserFollowStatCacheResponse userFollowStat
-
-    ) {
-
-        ProfileResponse profileResponse = profileResponse = ProfileResponse.builder()
-                .fullName(user.getFullName())
-                .avatarUrl(user.getAvatarUrl())
-                .bio(user.getBio())
-                .phone(user.getPhone())
-                .dateOfBirth(user.getDateOfBirth())
-                .gender(user.getGender())
-                .location(user.getLocation())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();;
-
-        return UserProfileResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .profile(profileResponse)
-                .totalFollower(userFollowStat.getTotalFollower())
-                .totalFollowing(userFollowStat.getTotalFollowing())
-                .build();
-    }
+//    public UserProfileResponse toUserProfileResponse(
+//            PublicUserProfileCacheResponse user,
+//            UserFollowStatCacheResponse userFollowStat
+//
+//    ) {
+//
+//        ProfileResponse profileResponse = profileResponse = ProfileResponse.builder()
+//                .fullName(user.getFullName())
+//                .avatarUrl(user.getAvatarUrl())
+//                .bio(user.getBio())
+//                .phone(user.getPhone())
+//                .dateOfBirth(user.getDateOfBirth())
+//                .gender(user.getGender())
+//                .location(user.getLocation())
+//                .createdAt(user.getCreatedAt())
+//                .updatedAt(user.getUpdatedAt())
+//                .build();;
+//
+//        return UserProfileResponse.builder()
+//                .id(user.getId())
+//                .username(user.getUsername())
+//                .email(user.getEmail())
+//                .profile(profileResponse)
+//                .totalFollower(userFollowStat.getTotalFollower())
+//                .totalFollowing(userFollowStat.getTotalFollowing())
+//                .build();
+//    }
 
 }
