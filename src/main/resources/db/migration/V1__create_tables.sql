@@ -106,6 +106,7 @@ CREATE TABLE profiles (
     -- Location
                           country VARCHAR(100),
                           city VARCHAR(100),
+                          district VARCHAR(100),
 
     -- Social links
                           social_links JSONB DEFAULT '{}'::jsonb,

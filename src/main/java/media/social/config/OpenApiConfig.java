@@ -14,6 +14,10 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
 
         return new OpenAPI()
+                .addSecurityItem(
+                        new SecurityRequirement()
+                                .addList("bearerAuth")
+                )
                 .components(
                         new Components()
                                 .addSecuritySchemes(

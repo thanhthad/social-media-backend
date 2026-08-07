@@ -5,9 +5,11 @@ import media.social.modules.post.dto.request.post.CreatePostRequest;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.repository.PostRepository;
 import media.social.modules.post.service.PostService;
+import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.entity.*;
+import media.social.modules.user.enums.Gender;
 import media.social.modules.user.repository.*;
 import media.social.modules.auth.security.userdetails.CustomUserDetailsService;
 import org.springframework.boot.CommandLineRunner;
@@ -19,7 +21,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @Component
@@ -138,6 +142,7 @@ public class DataInitializer implements CommandLineRunner {
                         .username(username)
                         .email(email)
                         .passwordHash(passwordEncoder.encode("123456"))
+                        .provider(AuthProvider.LOCAL)
                         .status(Status.ACTIVE)
                         .emailVerified(true)
                         .createdAt(LocalDateTime.now())
@@ -149,12 +154,14 @@ public class DataInitializer implements CommandLineRunner {
                         .user(savedAdmin)
                         .fullName(fullName)
                         .phone("09" + (88880000 + i))
-                        .gender("Nam")
-                        .location("Hà Nội")
+                        .gender(Gender.MALE)
+                        .city("Hà Nội")
                         .dateOfBirth(LocalDate.of(1990, 1, 1 + i))
                         .bio("Hệ thống quản trị viên cấp cao của nền tảng.")
-                        .createdAt(LocalDateTime.now())
-                        .updatedAt(LocalDateTime.now())
+                        .socialLinks(Map.of())
+                        .visibility(Visibility.PUBLIC)
+                        .createdAt(OffsetDateTime.now())
+                        .updatedAt(OffsetDateTime.now())
                         .build();
                 profileRepository.save(adminProfile);
 
@@ -203,7 +210,7 @@ public class DataInitializer implements CommandLineRunner {
                 "Bắc Ninh", "Thái Nguyên", "Nam Định", "Quy Nhơn", "Buôn Ma Thuột", "Vinh"
         };
 
-        String[] genders = {"Nam", "Nữ", "Khác"};
+        Gender[] genders = {Gender.MALE, Gender.FEMALE, Gender.OTHER};
 
         String[] bios = {
                 "Yêu công nghệ và thích khám phá điều mới.",
@@ -237,7 +244,7 @@ public class DataInitializer implements CommandLineRunner {
                         ten[random.nextInt(ten.length)];
 
                 String phone = "09" + (10000000 + random.nextInt(90000000));
-                String gender = genders[random.nextInt(genders.length)];
+                Gender gender = genders[random.nextInt(genders.length)];
                 String location = locations[random.nextInt(locations.length)];
                 String bio = bios[random.nextInt(bios.length)];
 
@@ -250,6 +257,7 @@ public class DataInitializer implements CommandLineRunner {
                         .email(email)
                         .emailVerified(true)
                         .passwordHash(passwordEncoder.encode("123456"))
+                        .provider(AuthProvider.LOCAL)
                         .status(Status.ACTIVE)
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
@@ -261,11 +269,13 @@ public class DataInitializer implements CommandLineRunner {
                         .fullName(fullName)
                         .phone(phone)
                         .gender(gender)
-                        .location(location)
+                        .city(location)
                         .dateOfBirth(dob)
                         .bio(bio)
-                        .createdAt(LocalDateTime.now())
-                        .updatedAt(LocalDateTime.now())
+                        .socialLinks(Map.of())
+                        .visibility(Visibility.PUBLIC)
+                        .createdAt(OffsetDateTime.now())
+                        .updatedAt(OffsetDateTime.now())
                         .build();
                 profileRepository.save(profile);
 

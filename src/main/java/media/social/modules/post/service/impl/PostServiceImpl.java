@@ -2,6 +2,7 @@ package media.social.modules.post.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
 import media.social.modules.post.entity.*;
 import media.social.modules.post.enums.MediaType;
@@ -206,14 +207,32 @@ public class PostServiceImpl implements PostService {
 
         Long viewerId = UserContextHolder.getUserId();
 
-        Page<PostFlatResponse> page =
+        Page<PostFlatProjection> projections =
                 postRepository.searchByContent(
                         viewerId,
                         keyword.trim(),
                         pageable
                 );
 
-        return buildPostResponse(page, pageable);
+        Page<PostFlatResponse> posts =
+                projections.map(p ->
+                        PostFlatResponse.builder()
+                                .id(p.getId())
+                                .content(p.getContent())
+                                .visibility(p.getVisibility())
+                                .createdAt(p.getCreatedAt())
+
+                                .userId(p.getUserId())
+                                .username(p.getUsername())
+                                .avatarUrl(p.getAvatarUrl())
+
+                                .commentCount(p.getCommentCount())
+                                .reactionCount(p.getReactionCount())
+
+                                .build()
+                );
+
+        return buildPostResponse(posts, pageable);
     }
 
     @Override

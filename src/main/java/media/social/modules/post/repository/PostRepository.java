@@ -1,5 +1,6 @@
 package media.social.modules.post.repository;
 
+import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.response.post.PostFlatResponse;
 import media.social.modules.post.entity.Post;
 import media.social.modules.post.enums.Visibility;
@@ -268,52 +269,85 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             Pageable pageable
     );
 
-    @Query("""
-    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl,
-            
-        p.commentCount,
-        p.reactionCount
-    )
-    FROM Post p
-    JOIN p.user u
-    LEFT JOIN u.profile pr
-    WHERE NOT EXISTS(
+    @Query(
+            value = """
+    SELECT
+    
+        p.post_id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.created_at AS createdAt,
+    
+        u.user_id AS userId,
+        u.username AS username,
+        pr.avatar_url AS avatarUrl,
+    
+        p.comment_count AS commentCount,
+        p.reaction_count AS reactionCount
+    
+    FROM posts p
+    JOIN users u
+        ON u.user_id = p.user_id
+    
+    LEFT JOIN profiles pr
+        ON pr.user_id = u.user_id
+    WHERE NOT EXISTS (
         SELECT 1
-        FROM Block b
-        WHERE (b.blocker.id=:viewerId AND b.blocked.id=u.id)
-           OR (b.blocker.id=u.id AND b.blocked.id=:viewerId)
-    )
-    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
-    AND NOT EXISTS (
-            SELECT 1
-            FROM Report r
-            WHERE r.post.id = p.id
-              AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
-        )
-    AND p.content ILIKE CONCAT('%', :keyword, '%')
-    AND (
-            u.id=:viewerId
-            OR p.visibility=media.social.modules.post.enums.Visibility.PUBLIC
-            OR (
-                p.visibility=media.social.modules.post.enums.Visibility.FOLLOWERS
-                AND EXISTS(
-                    SELECT 1
-                    FROM Follow f
-                    WHERE f.follower.id=:viewerId
-                    AND f.following.id=u.id
-                )
+        FROM blocks b
+        WHERE
+            (
+                b.blocker_id = :viewerId
+                AND b.blocked_id = u.user_id
+            )
+            OR
+            (
+                b.blocker_id = u.user_id
+                AND b.blocked_id = :viewerId
             )
     )
-    ORDER BY p.createdAt DESC
-    """)
-    Page<PostFlatResponse> searchByContent(
+    AND u.status = 'ACTIVE'
+    AND NOT EXISTS (
+        SELECT 1
+        FROM reports r
+        WHERE r.post_id = p.post_id
+        AND r.status = 'APPROVED'
+    )
+    AND similarity(p.content, :keyword) > 0.2
+    AND (
+        u.user_id = :viewerId
+        OR p.visibility = 'PUBLIC'
+        OR (
+            p.visibility = 'FOLLOWERS'
+            AND EXISTS (
+                SELECT 1
+                FROM follows f
+                WHERE f.follower_id = :viewerId
+                AND f.following_id = u.user_id
+            )
+        )
+    )
+    
+    
+    ORDER BY 
+        similarity(p.content,:keyword) DESC,
+        p.created_at DESC
+    
+    """,
+
+                countQuery = """
+    
+    SELECT COUNT(*)
+    FROM posts p
+    
+    JOIN users u
+    ON u.user_id = p.user_id
+    WHERE similarity(p.content,:keyword) > 0.2
+    AND u.status = 'ACTIVE'
+    """,
+
+            nativeQuery = true
+    )
+    Page<PostFlatProjection> searchByContent(
             @Param("viewerId") Long viewerId,
             @Param("keyword") String keyword,
             Pageable pageable

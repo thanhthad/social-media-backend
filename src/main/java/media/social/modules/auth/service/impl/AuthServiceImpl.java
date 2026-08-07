@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Service
 @AllArgsConstructor
@@ -130,8 +131,9 @@ public class AuthServiceImpl implements AuthService {
 
         Profile profile = Profile.builder()
                 .user(saved)
-                .createdAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
                 .build();
+
         profileRepository.save(profile);
 
         UserRole userRole =UserRole.builder()
