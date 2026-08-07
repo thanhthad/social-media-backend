@@ -3,6 +3,7 @@ import media.social.modules.post.enums.MediaType;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.post.enums.Visibility;
+import media.social.modules.user.dto.projection.UserSearchProjection;
 import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
@@ -530,15 +531,28 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable) {
+    public Page<UserSearchResponse> findUsersByName(
+            String username,
+            Pageable pageable
+    ) {
 
         Long viewerId = UserContextHolder.getUserId();
 
-        return userRepository.searchUsers(
-                username,
-                Status.ACTIVE,
-                viewerId,
-                pageable
+        Page<UserSearchProjection> projections =
+                userRepository.searchUsers(
+                        username,
+                        Status.ACTIVE.name(),
+                        viewerId,
+                        pageable
+                );
+
+        return projections.map(user ->
+                UserSearchResponse.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .avatarUrl(user.getAvatarUrl())
+                        .fullName(user.getFullName())
+                        .build()
         );
     }
 }
