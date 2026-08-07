@@ -2,6 +2,7 @@ package media.social.modules.dating.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import media.social.modules.dating.enums.GenderPreference;
 import media.social.modules.user.entity.User;
 
 import java.time.OffsetDateTime;
@@ -31,7 +32,9 @@ public class DatingPreference {
 
     private Integer maxAge;
 
-    private String genderPreference;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private GenderPreference genderPreference;
 
     private Integer maxDistance;
 

@@ -23,12 +23,10 @@ public class DatingProfileInterest {
     @JoinColumn(name = "dating_profile_id")
     private DatingProfile datingProfile;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("interestId")
     @JoinColumn(name = "interest_id")
     private DatingInterest interest;
-
 
     private OffsetDateTime createdAt;
 }
