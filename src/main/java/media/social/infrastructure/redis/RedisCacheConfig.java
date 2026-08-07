@@ -37,7 +37,8 @@ public class RedisCacheConfig {
         // Chỉ dùng cho Redis
         redisMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
-                        .allowIfBaseType("media.social")
+                        .allowIfSubType("media.social")
+                        .allowIfSubType("java.util")
                         .build(),
                 ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY
