@@ -11,10 +11,6 @@ import java.time.LocalDate;
 @Builder
 public class DatingProfileResponse {
 
-    private Long id;
-
-    private Long userId;
-
     private String displayName;
 
     private String bio;

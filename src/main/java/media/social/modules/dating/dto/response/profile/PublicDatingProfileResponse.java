@@ -4,15 +4,17 @@ import lombok.Builder;
 import lombok.Data;
 import media.social.modules.user.enums.Gender;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 public class PublicDatingProfileResponse {
 
-    private Long userId;
-
     private String username;
 
     private String avatarUrl;
+
+    private String coverUrl;
 
     private String displayName;
 
@@ -20,7 +22,7 @@ public class PublicDatingProfileResponse {
 
     private Gender gender;
 
-    private Integer age;
+    private LocalDate birthday;
 
     private Integer height;
 
@@ -28,5 +30,9 @@ public class PublicDatingProfileResponse {
 
     private String education;
 
+    private String country;
+
     private String city;
+
+    private String district;
 }

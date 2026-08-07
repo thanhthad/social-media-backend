@@ -12,13 +12,11 @@ import java.time.OffsetDateTime;
 @Builder
 public class MyDatingProfileResponse {
 
-    private Long id;
-
-    private Long userId;
-
     private String username;
 
     private String avatarUrl;
+
+    private String coverUrl;
 
     private String displayName;
 
@@ -27,8 +25,6 @@ public class MyDatingProfileResponse {
     private Gender gender;
 
     private LocalDate birthday;
-
-    private Integer age;
 
     private Integer height;
 
