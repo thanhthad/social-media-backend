@@ -5,6 +5,7 @@ import lombok.Data;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.enums.Gender;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -30,6 +31,10 @@ public class DatingProfileResponse {
     private String city;
 
     private String district;
+
+    private BigDecimal latitude;
+
+    private BigDecimal longitude;
 
     private Boolean active;
 

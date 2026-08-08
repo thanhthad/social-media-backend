@@ -35,4 +35,7 @@ public class PublicDatingProfileResponse {
     private String city;
 
     private String district;
+
+    private Double distanceKm;
+    private String distanceMessage;
 }
