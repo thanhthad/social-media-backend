@@ -66,15 +66,12 @@ public class DatingInterestServiceImpl implements DatingInterestService {
         datingProfileInterestRepository
                 .deleteByDatingProfileDatingProfileId(profile.getId());
 
-
         List<DatingInterest> interests =
                 datingInterestRepository.findAllByIdIn(request.getInterestIds());
-
 
         if(interests.size() != request.getInterestIds().size()){
             throw new BadRequestException("Some interests do not exist");
         }
-
 
         List<DatingProfileInterest> mappings = interests.stream()
                 .map(interest -> DatingProfileInterest.builder()
@@ -88,9 +85,7 @@ public class DatingInterestServiceImpl implements DatingInterestService {
                         .build())
                 .toList();
 
-
         datingProfileInterestRepository.saveAll(mappings);
-
 
         return interests.stream()
                 .map(this::mapToResponse)
