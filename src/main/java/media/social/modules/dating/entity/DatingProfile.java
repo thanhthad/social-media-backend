@@ -6,6 +6,7 @@ import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.enums.Gender;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
@@ -56,6 +57,12 @@ public class DatingProfile {
     private String occupation;
 
     private String education;
+
+    @Column(precision = 9, scale = 6)
+    private BigDecimal latitude;
+
+    @Column(precision = 9, scale = 6)
+    private BigDecimal longitude;
 
     private String country;
     private String city;

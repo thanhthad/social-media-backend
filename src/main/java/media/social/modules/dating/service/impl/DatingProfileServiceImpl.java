@@ -7,6 +7,7 @@ import media.social.modules.dating.dto.response.cache.DatingProfileCacheResponse
 import media.social.modules.dating.dto.response.profile.DatingProfileResponse;
 import media.social.modules.dating.dto.response.profile.MyDatingProfileResponse;
 import media.social.modules.dating.dto.response.profile.PublicDatingProfileResponse;
+import media.social.modules.dating.dto.response.projection.DatingDistanceProjection;
 import media.social.modules.dating.entity.DatingProfile;
 import media.social.modules.dating.exception.profile.BadRequestException;
 import media.social.modules.dating.exception.profile.DatingProfileNotFoundException;
@@ -165,13 +166,39 @@ public class DatingProfileServiceImpl implements DatingProfileService {
         profile.setCity(request.getCity());
         profile.setDistrict(request.getDistrict());
 
+        datingProfileRepository.save(profile);
+
         datingProfileCacheService.evictProfile(userId);
+
+        return DatingProfileResponse.builder()
+                .country(profile.getCountry())
+                .city(profile.getCity())
+                .district(profile.getDistrict())
+                .latitude(profile.getLatitude())
+                .longitude(profile.getLongitude())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public DatingProfileResponse updateCoordinates(
+            UpdateDatingCoordinatesRequest request
+    ) {
+        Long userId = UserContextHolder.getUserId();
+
+        DatingProfile profile = getDatingProfile(userId);
+
+        profile.setLatitude(request.getLatitude());
+        profile.setLongitude(request.getLongitude());
+
         datingProfileRepository.save(profile);
 
         return DatingProfileResponse.builder()
                 .country(profile.getCountry())
                 .city(profile.getCity())
                 .district(profile.getDistrict())
+                .latitude(profile.getLatitude())
+                .longitude(profile.getLongitude())
                 .build();
     }
 
@@ -233,8 +260,34 @@ public class DatingProfileServiceImpl implements DatingProfileService {
     @Transactional(readOnly = true)
     public PublicDatingProfileResponse getPublicProfile(Long userId) {
 
+        Long currentUserId = UserContextHolder.getUserId();
+
         DatingProfileCacheResponse profile =
                 datingProfileCacheService.getDatingProfile(userId);
+
+        DatingDistanceProjection distance =
+                datingProfileRepository.findDistanceBetweenUsers(
+                        currentUserId,
+                        userId
+                );
+
+        Double distanceKm = null;
+        String distanceMessage = null;
+
+        if ("CURRENT_USER_LOCATION_MISSING"
+                .equals(distance.getLocationStatus())) {
+
+            distanceMessage = "Bạn chưa cập nhật tọa độ";
+
+        } else if ("TARGET_USER_LOCATION_MISSING"
+                .equals(distance.getLocationStatus())) {
+
+            distanceMessage = "Đối phương chưa cập nhật tọa độ";
+
+        } else if ("OK".equals(distance.getLocationStatus())) {
+
+            distanceKm = distance.getDistanceKm();
+        }
 
         return PublicDatingProfileResponse.builder()
                 .username(profile.getUsername())
@@ -250,6 +303,8 @@ public class DatingProfileServiceImpl implements DatingProfileService {
                 .country(profile.getCountry())
                 .city(profile.getCity())
                 .district(profile.getDistrict())
+                .distanceKm(distanceKm)
+                .distanceMessage(distanceMessage)
                 .build();
     }
 

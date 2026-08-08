@@ -3,24 +3,41 @@
 -- =====================================
 CREATE TABLE dating_profiles (
                                  dating_profile_id BIGSERIAL PRIMARY KEY,
+
                                  user_id BIGINT NOT NULL UNIQUE,
+
                                  display_name VARCHAR(100),
                                  bio TEXT,
+
                                  gender VARCHAR(20),
                                  birthday DATE,
                                  height INTEGER,
+
                                  occupation VARCHAR(100),
                                  education VARCHAR(150),
+
                                  country VARCHAR(100),
                                  city VARCHAR(100),
                                  district VARCHAR(100),
+
+                                 latitude NUMERIC(9,6),
+                                 longitude NUMERIC(9,6),
+
                                  is_active BOOLEAN NOT NULL DEFAULT TRUE,
                                  visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
-                                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                                 CONSTRAINT fk_dating_profile_user FOREIGN KEY(user_id)
-                                     REFERENCES users(user_id)
-                                     ON DELETE CASCADE
+
+                                 created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                 updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                                 CONSTRAINT fk_dating_profile_user
+                                     FOREIGN KEY (user_id)
+                                         REFERENCES users(user_id)
+                                         ON DELETE CASCADE,
+                                 CONSTRAINT chk_dating_profile_latitude
+                                     CHECK (latitude IS NULL OR latitude BETWEEN -90 AND 90),
+
+                                 CONSTRAINT chk_dating_profile_longitude
+                                     CHECK (longitude IS NULL OR longitude BETWEEN -180 AND 180)
 );
 
 -- =====================================
@@ -80,13 +97,18 @@ CREATE TABLE dating_swipes (
                                target_id BIGINT NOT NULL,
                                action VARCHAR(30) NOT NULL,
                                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                               CONSTRAINT fk_swipe_user FOREIGN KEY(swiper_id)
-                                   REFERENCES users(user_id)
-                                   ON DELETE CASCADE,
-                               CONSTRAINT fk_swipe_target FOREIGN KEY(target_id)
-                                   REFERENCES users(user_id)
-                                   ON DELETE CASCADE,
-                               CONSTRAINT uk_user_target_swipe UNIQUE(swiper_id, target_id)
+                               CONSTRAINT chk_swipe_not_self
+                                   CHECK (swiper_id <> target_id),
+                               CONSTRAINT fk_swipe_user
+                                   FOREIGN KEY(swiper_id)
+                                       REFERENCES users(user_id)
+                                       ON DELETE CASCADE,
+                               CONSTRAINT fk_swipe_target
+                                   FOREIGN KEY(target_id)
+                                       REFERENCES users(user_id)
+                                       ON DELETE CASCADE,
+                               CONSTRAINT uk_user_target_swipe
+                                   UNIQUE(swiper_id, target_id)
 );
 
 -- =====================================
@@ -100,13 +122,18 @@ CREATE TABLE dating_matches (
                                 status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                                 matched_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                                 last_message_at TIMESTAMP WITH TIME ZONE,
-                                CONSTRAINT fk_match_user_one FOREIGN KEY(user_one_id)
-                                    REFERENCES users(user_id)
-                                    ON DELETE CASCADE,
-                                CONSTRAINT fk_match_user_two FOREIGN KEY(user_two_id)
-                                    REFERENCES users(user_id)
-                                    ON DELETE CASCADE,
-                                CONSTRAINT uk_match_pair UNIQUE(user_one_id, user_two_id)
+                                CONSTRAINT chk_match_not_self
+                                    CHECK (user_one_id <> user_two_id),
+                                CONSTRAINT fk_match_user_one
+                                    FOREIGN KEY (user_one_id)
+                                        REFERENCES users(user_id)
+                                        ON DELETE CASCADE,
+                                CONSTRAINT fk_match_user_two
+                                    FOREIGN KEY (user_two_id)
+                                        REFERENCES users(user_id)
+                                        ON DELETE CASCADE,
+                                CONSTRAINT uk_match_pair
+                                    UNIQUE (user_one_id, user_two_id)
 );
 
 -- =====================================

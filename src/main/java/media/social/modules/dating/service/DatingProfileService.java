@@ -23,6 +23,10 @@ public interface DatingProfileService {
             UpdateDatingLocationRequest request
     );
 
+    DatingProfileResponse updateCoordinates(
+            UpdateDatingCoordinatesRequest request
+    );
+
     DatingProfileResponse updateBio(
             UpdateDatingBioRequest request
     );
