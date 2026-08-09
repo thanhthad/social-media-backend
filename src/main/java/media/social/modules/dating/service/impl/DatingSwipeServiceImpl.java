@@ -7,6 +7,7 @@ import media.social.modules.dating.dto.response.swipe.DatingSwipeResponse;
 import media.social.modules.dating.entity.DatingSwipe;
 import media.social.modules.dating.enums.DatingSwipeAction;
 import media.social.modules.dating.repository.DatingSwipeRepository;
+import media.social.modules.dating.service.DatingMatchService;
 import media.social.modules.dating.service.DatingSwipeService;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.exception.user.UserNotFoundException;
@@ -23,6 +24,7 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
 
     private final DatingSwipeRepository datingSwipeRepository;
     private final UserRepository userRepository;
+    private final DatingMatchService datingMatchService;
 
     @Override
     public DatingSwipeResponse swipe(CreateDatingSwipeRequest request) {
@@ -44,6 +46,10 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
                         .swiper(swiper)
                         .target(target)
                         .build());
+
+        if(datingSwipeRepository.existsBySwiperUserIdAndTargetUserId(request.getTargetUserId(),swiperId)){
+            datingMatchService.createMatch(swiper,target);
+        }
 
         swipe.setAction(request.getAction());
 
