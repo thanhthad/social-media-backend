@@ -14,6 +14,7 @@ import media.social.modules.dating.exception.profile.DatingProfileNotFoundExcept
 import media.social.modules.dating.repository.DatingProfileRepository;
 import media.social.modules.dating.service.DatingProfileService;
 import media.social.modules.dating.service.cache.DatingProfileCacheService;
+import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.UserRepository;
@@ -265,29 +266,23 @@ public class DatingProfileServiceImpl implements DatingProfileService {
         DatingProfileCacheResponse profile =
                 datingProfileCacheService.getDatingProfile(userId);
 
+        if (!currentUserId.equals(userId)
+                && Visibility.PRIVATE.equals(profile.getVisibility())) {
+
+            return PublicDatingProfileResponse.builder()
+                    .avatarUrl(profile.getAvatarUrl())
+                    .coverUrl(profile.getCoverUrl())
+                    .displayName(profile.getDisplayName())
+                    .birthday(profile.getBirthday())
+                    .bio(profile.getBio())
+                    .build();
+        }
+
         DatingDistanceProjection distance =
                 datingProfileRepository.findDistanceBetweenUsers(
                         currentUserId,
                         userId
                 );
-
-        Double distanceKm = null;
-        String distanceMessage = null;
-
-        if ("CURRENT_USER_LOCATION_MISSING"
-                .equals(distance.getLocationStatus())) {
-
-            distanceMessage = "Bạn chưa cập nhật tọa độ";
-
-        } else if ("TARGET_USER_LOCATION_MISSING"
-                .equals(distance.getLocationStatus())) {
-
-            distanceMessage = "Đối phương chưa cập nhật tọa độ";
-
-        } else if ("OK".equals(distance.getLocationStatus())) {
-
-            distanceKm = distance.getDistanceKm();
-        }
 
         return PublicDatingProfileResponse.builder()
                 .username(profile.getUsername())
@@ -303,8 +298,7 @@ public class DatingProfileServiceImpl implements DatingProfileService {
                 .country(profile.getCountry())
                 .city(profile.getCity())
                 .district(profile.getDistrict())
-                .distanceKm(distanceKm)
-                .distanceMessage(distanceMessage)
+                .distanceKm(distance.getDistanceKm())
                 .build();
     }
 
