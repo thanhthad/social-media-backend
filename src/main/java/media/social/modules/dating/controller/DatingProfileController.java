@@ -47,6 +47,23 @@ public class DatingProfileController {
         );
     }
 
+    @PatchMapping("/profile/coordinates")
+    @Operation(summary = "Update my dating coordinates")
+    @RateLimit(
+            name = "DATING_UPDATE_COORDINATES",
+            limit = 10,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> updateCoordinates(
+            @Valid @RequestBody UpdateDatingCoordinatesRequest request
+    ) {
+        return ResponseData.success(
+                datingProfileService.updateCoordinates(request),
+                "Update dating coordinates successfully",
+                HttpStatus.OK
+        );
+    }
+
     @PutMapping("/me/profile/basic")
     @Operation(summary = "Update dating basic information")
     @RateLimit(name = "DATING_UPDATE_BASIC", limit = 20, windowSeconds = 60)
