@@ -11,6 +11,14 @@ import media.social.modules.auth.exception.password.PasswordResetTokenInvalidExc
 import media.social.modules.auth.exception.password.PasswordResetTokenUsedException;
 import media.social.modules.auth.exception.verification.*;
 import media.social.modules.conversation.exception.*;
+import media.social.modules.dating.exception.preference.PreferenceNotFoundException;
+import media.social.modules.dating.exception.profile.BadRequestException;
+import media.social.modules.dating.exception.profile.CoordinatesNotFoundException;
+import media.social.modules.dating.exception.profile.DatingProfileNotFoundException;
+import media.social.modules.dating.exception.report.CannotReportOwnProfileException;
+import media.social.modules.dating.exception.report.DatingReportAlreadyExistsException;
+import media.social.modules.dating.exception.report.DatingReportAlreadyReviewedException;
+import media.social.modules.dating.exception.report.DatingReportNotFoundException;
 import media.social.modules.file.image.exception.CloudinaryDeleteException;
 import media.social.modules.file.image.exception.CloudinaryUploadException;
 import media.social.modules.file.image.exception.InvalidMediaException;
@@ -70,6 +78,90 @@ public class GlobalExceptionHandler {
 
     private Long getUserId(){
         return UserContextHolder.getUserId();
+    }
+
+
+    // ================= PREFERENCE =================
+    @ExceptionHandler(PreferenceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePreferenceNotFound(
+            PreferenceNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    // ================= PROFILE =================
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadRequest(
+            BadRequestException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(CoordinatesNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCoordinatesNotFound(
+            CoordinatesNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(DatingProfileNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfileNotFound(
+            DatingProfileNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    // ================= REPORT =================
+    @ExceptionHandler(CannotReportOwnProfileException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCannotReportOwnProfile(
+            CannotReportOwnProfileException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingReportAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportAlreadyExists(
+            DatingReportAlreadyExistsException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(DatingReportAlreadyReviewedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportAlreadyReviewed(
+            DatingReportAlreadyReviewedException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingReportNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportNotFound(
+            DatingReportNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
     }
 
     @ExceptionHandler(ResourceAccessException.class)
