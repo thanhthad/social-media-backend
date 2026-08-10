@@ -23,41 +23,34 @@ public class DatingMatchServiceImpl implements DatingMatchService {
                     "Users cannot match with themselves"
             );
         }
-
         Long firstUserId =
                 Math.min(
                         userOne.getId(),
                         userTwo.getId()
                 );
-
         Long secondUserId =
                 Math.max(
                         userOne.getId(),
                         userTwo.getId()
                 );
-
-        if (datingMatchRepository.existsByUserOneUserIdAndUserTwoUserId(
+        if (datingMatchRepository.existsByUserOneIdAndUserTwoId(
                 firstUserId,
                 secondUserId
         )) {
             return;
         }
-
         User firstUser =
                 userOne.getId().equals(firstUserId)
                         ? userOne
                         : userTwo;
-
         User secondUser =
                 userOne.getId().equals(firstUserId)
                         ? userTwo
                         : userOne;
-
         DatingMatch match = DatingMatch.builder()
                 .userOne(firstUser)
                 .userTwo(secondUser)
                 .build();
-
         datingMatchRepository.save(match);
     }
 }

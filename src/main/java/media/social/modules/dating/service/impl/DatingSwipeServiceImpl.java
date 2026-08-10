@@ -41,13 +41,13 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
                 .orElseThrow(() -> new UserNotFoundException("Target user not found"));
 
         DatingSwipe swipe = datingSwipeRepository
-                .findBySwiperUserIdAndTargetUserId(swiperId, request.getTargetUserId())
+                .findBySwiperIdAndTargetId(swiperId, request.getTargetUserId())
                 .orElseGet(() -> DatingSwipe.builder()
                         .swiper(swiper)
                         .target(target)
                         .build());
 
-        if(datingSwipeRepository.existsBySwiperUserIdAndTargetUserId(request.getTargetUserId(),swiperId)){
+        if(datingSwipeRepository.existsBySwiperIdAndTargetId(request.getTargetUserId(),swiperId)){
             datingMatchService.createMatch(swiper,target);
         }
 
@@ -64,7 +64,7 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
         Long userId = UserContextHolder.getUserId();
 
         return datingSwipeRepository
-                .findAllBySwiperUserIdOrderByCreatedAtDesc(userId)
+                .findAllBySwiperIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -76,7 +76,7 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
         Long userId = UserContextHolder.getUserId();
 
         return datingSwipeRepository
-                .findAllBySwiperUserIdAndActionOrderByCreatedAtDesc(
+                .findAllBySwiperIdAndActionOrderByCreatedAtDesc(
                         userId,
                         DatingSwipeAction.LIKE
                 )
@@ -89,7 +89,7 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
     public void deleteSwipe(Long targetUserId) {
         Long userId = UserContextHolder.getUserId();
 
-        datingSwipeRepository.deleteBySwiperUserIdAndTargetUserId(
+        datingSwipeRepository.deleteBySwiperIdAndTargetId(
                 userId,
                 targetUserId
         );

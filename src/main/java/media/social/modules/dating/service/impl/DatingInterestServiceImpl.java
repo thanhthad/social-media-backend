@@ -48,7 +48,7 @@ public class DatingInterestServiceImpl implements DatingInterestService {
         DatingProfile profile = getDatingProfile(userId);
 
         return datingProfileInterestRepository
-                .findByDatingProfileDatingProfileId(profile.getId())
+                .findByDatingProfileId(profile.getId())
                 .stream()
                 .map(item -> mapToResponse(item.getInterest()))
                 .toList();
@@ -64,7 +64,7 @@ public class DatingInterestServiceImpl implements DatingInterestService {
         DatingProfile profile = getDatingProfile(userId);
 
         datingProfileInterestRepository
-                .deleteByDatingProfileDatingProfileId(profile.getId());
+                .deleteByDatingProfileId(profile.getId());
 
         List<DatingInterest> interests =
                 datingInterestRepository.findAllByIdIn(request.getInterestIds());

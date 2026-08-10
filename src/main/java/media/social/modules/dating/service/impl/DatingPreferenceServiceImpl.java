@@ -28,7 +28,7 @@ public class DatingPreferenceServiceImpl implements DatingPreferenceService {
 
         Long userId = UserContextHolder.getUserId();
 
-        if (datingPreferenceRepository.existsByUserUserId(userId)) {
+        if (datingPreferenceRepository.existsByUserId(userId)) {
             throw new BadRequestException("Dating preference already exists");
         }
 
@@ -104,7 +104,7 @@ public class DatingPreferenceServiceImpl implements DatingPreferenceService {
 
     private DatingPreference getDatingPreference(Long userId) {
 
-        return datingPreferenceRepository.findByUserUserId(userId)
+        return datingPreferenceRepository.findByUserId(userId)
                 .orElseThrow(() -> new PreferenceNotFoundException("Dating preference not found"));
     }
 
