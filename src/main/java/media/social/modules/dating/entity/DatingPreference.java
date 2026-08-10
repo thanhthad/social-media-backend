@@ -18,6 +18,7 @@ public class DatingPreference {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "preference_id")
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)

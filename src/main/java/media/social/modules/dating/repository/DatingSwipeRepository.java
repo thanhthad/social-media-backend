@@ -9,13 +9,27 @@ import java.util.Optional;
 
 public interface DatingSwipeRepository extends JpaRepository<DatingSwipe, Long> {
 
-    Optional<DatingSwipe> findBySwiperUserIdAndTargetUserId(Long swiperId, Long targetId);
+    Optional<DatingSwipe> findBySwiperIdAndTargetId(
+            Long swiperId,
+            Long targetId
+    );
 
-    boolean existsBySwiperUserIdAndTargetUserId(Long swiperId, Long targetId);
+    boolean existsBySwiperIdAndTargetId(
+            Long swiperId,
+            Long targetId
+    );
 
-    List<DatingSwipe> findAllBySwiperUserIdOrderByCreatedAtDesc(Long swiperId);
+    List<DatingSwipe> findAllBySwiperIdOrderByCreatedAtDesc(
+            Long swiperId
+    );
 
-    List<DatingSwipe> findAllBySwiperUserIdAndActionOrderByCreatedAtDesc(Long swiperId, DatingSwipeAction action);
+    List<DatingSwipe> findAllBySwiperIdAndActionOrderByCreatedAtDesc(
+            Long swiperId,
+            DatingSwipeAction action
+    );
 
-    void deleteBySwiperUserIdAndTargetUserId(Long swiperId, Long targetId);
+    void deleteBySwiperIdAndTargetId(
+            Long swiperId,
+            Long targetId
+    );
 }

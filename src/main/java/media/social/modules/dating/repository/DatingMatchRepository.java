@@ -9,23 +9,23 @@ import java.util.Optional;
 
 public interface DatingMatchRepository extends JpaRepository<DatingMatch, Long> {
 
-    Optional<DatingMatch> findByUserOneUserIdAndUserTwoUserId(
+    Optional<DatingMatch> findByUserOneIdAndUserTwoId(
             Long userOneId,
             Long userTwoId
     );
 
-    List<DatingMatch> findAllByUserOneUserIdOrUserTwoUserIdOrderByMatchedAtDesc(
+    List<DatingMatch> findAllByUserOneIdOrUserTwoIdOrderByMatchedAtDesc(
             Long userOneId,
             Long userTwoId
     );
 
-    List<DatingMatch> findAllByUserOneUserIdOrUserTwoUserIdAndStatusOrderByMatchedAtDesc(
+    List<DatingMatch> findAllByUserOneIdOrUserTwoIdAndStatusOrderByMatchedAtDesc(
             Long userOneId,
             Long userTwoId,
             DatingMatchStatus status
     );
 
-    boolean existsByUserOneUserIdAndUserTwoUserId(
+    boolean existsByUserOneIdAndUserTwoId(
             Long userOneId,
             Long userTwoId
     );

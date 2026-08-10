@@ -6,9 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface DatingProfileInterestRepository extends JpaRepository<DatingProfileInterest, DatingProfileInterestId> {
+public interface DatingProfileInterestRepository
+        extends JpaRepository<DatingProfileInterest, DatingProfileInterestId> {
 
-    List<DatingProfileInterest> findByDatingProfileDatingProfileId(Long datingProfileId);
+    List<DatingProfileInterest> findByDatingProfileId(Long datingProfileId);
 
-    void deleteByDatingProfileDatingProfileId(Long datingProfileId);
+    void deleteByDatingProfileId(Long datingProfileId);
 }

@@ -5,10 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface DatingPreferenceRepository extends JpaRepository<DatingPreference, Long> {
+public interface DatingPreferenceRepository
+        extends JpaRepository<DatingPreference, Long> {
 
-    Optional<DatingPreference> findByUserUserId(Long userId);
+    Optional<DatingPreference> findByUserId(Long userId);
 
-    boolean existsByUserUserId(Long userId);
-
+    boolean existsByUserId(Long userId);
 }

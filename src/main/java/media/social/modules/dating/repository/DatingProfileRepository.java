@@ -292,7 +292,8 @@ public interface DatingProfileRepository
                     AND match.user_two_id =
                         GREATEST(:currentUserId, target.user_id)
               )
-            """
+            """,
+            nativeQuery = true
     )
     Page<DatingDiscoveryProjection> findDiscoveryCandidates(
             @Param("currentUserId") Long currentUserId,
