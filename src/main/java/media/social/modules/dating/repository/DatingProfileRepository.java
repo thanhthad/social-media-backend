@@ -205,7 +205,9 @@ public interface DatingProfileRepository
                 target.birthday,
                 target.city,
                 target.latitude,
-                target.longitude
+                target.longitude,
+                me.latitude,
+                me.longitude
             ORDER BY
                 common_interest_count DESC,
                 distance_km ASC

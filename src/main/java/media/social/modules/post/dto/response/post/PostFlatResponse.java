@@ -27,6 +27,4 @@ public class PostFlatResponse {
     private Long commentCount;
     private Long reactionCount;
 
-    private Boolean reacted;
-    private ReactionType myReactionType;
 }
