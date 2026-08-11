@@ -2,6 +2,7 @@ package media.social.modules.post.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import media.social.modules.auth.Enum.Status;
 import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
 import media.social.modules.post.entity.*;
@@ -13,6 +14,7 @@ import media.social.modules.post.dto.response.post.PostFlatResponse;
 import media.social.modules.post.dto.response.post.PostMediaResponse;
 import media.social.modules.post.dto.response.post.PostResponse;
 import media.social.modules.file.image.dto.response.UploadFileResponse;
+import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.exception.post_media.InvalidImageException;
 import media.social.modules.post.exception.post_media.MediaNotFoundException;
@@ -21,11 +23,12 @@ import media.social.modules.post.service.domain.PostDomainService;
 import media.social.modules.post.service.cache.PostCacheService;
 import media.social.modules.user.entity.User;
 import media.social.modules.post.exception.post.PostNotFoundException;
+import media.social.modules.user.enums.FriendshipStatus;
 import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.post.service.PostService;
-import media.social.modules.user.service.FollowService;
+import media.social.modules.user.service.FriendshipService;
 import media.social.modules.user.service.domain.BlockPolicyService;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
@@ -53,7 +56,7 @@ public class PostServiceImpl implements PostService {
     private final HashtagRepository hashtagRepository;
     private final PostHashtagRepository postHashtagRepository;
     private final BlockPolicyService blockPolicyService;
-    private final FollowService followService;
+    private final FriendshipService friendshipService;
     private final PostDomainService postDomainService;
     private final ReactionRepository reactionRepository;
     private final PostCacheService postCacheService;
@@ -65,7 +68,13 @@ public class PostServiceImpl implements PostService {
         Long viewerId = UserContextHolder.getUserId();
 
         Page<PostFlatResponse> flatPage =
-                postRepository.findFeed(viewerId, pageable);
+                postRepository.findFeed(
+                        viewerId,
+                        FriendshipStatus.ACCEPTED,
+                        Visibility.PUBLIC,
+                        Visibility.FRIEND,
+                        pageable
+                );
 
         return buildPostResponse(flatPage, pageable);
     }
@@ -77,7 +86,14 @@ public class PostServiceImpl implements PostService {
         Long viewerId = UserContextHolder.getUserId();
 
         Page<PostFlatResponse> flatPage =
-                postRepository.findExplore(viewerId, pageable);
+                postRepository.findExplore(
+                        viewerId,
+                        Status.ACTIVE,
+                        ReportStatus.APPROVED,
+                        Visibility.PUBLIC,
+                        FriendshipStatus.ACCEPTED,
+                        pageable
+                );
 
         return buildPostResponse(flatPage, pageable);
     }
@@ -91,35 +107,34 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PostResponse> getAllPostByUserId(Long targetUserId, Pageable pageable) {
-
+    public Page<PostResponse> getAllPostByUserId(
+            Long targetUserId,
+            Pageable pageable
+    ) {
         Long viewerId = UserContextHolder.getUserId();
 
         if (blockPolicyService.isBlocked(viewerId, targetUserId)) {
-            throw new UserBlockedException("You cannot view this user's posts.");
-        }
-
-        if (viewerId.equals(targetUserId)) {
-            return getAllPost(targetUserId, pageable);
-        }
-
-        List<Visibility> visibilities;
-
-        if (followService.isFollowing(targetUserId)) {
-            visibilities = List.of(
-                    Visibility.PUBLIC,
-                    Visibility.FOLLOWERS
-            );
-        } else {
-            visibilities = List.of(
-                    Visibility.PUBLIC
+            throw new UserBlockedException(
+                    "You cannot view this user's posts."
             );
         }
 
         Page<PostFlatResponse> flatPage =
-                postRepository.findAllVisiblePost(targetUserId,visibilities, pageable);
+                postRepository.findAllVisiblePost(
+                        viewerId,
+                        targetUserId,
+                        Status.ACTIVE,
+                        ReportStatus.APPROVED,
+                        Visibility.PUBLIC,
+                        Visibility.FRIEND,
+                        FriendshipStatus.ACCEPTED,
+                        pageable
+                );
 
-        return buildPostResponse(flatPage,pageable);
+        return buildPostResponse(
+                flatPage,
+                pageable
+        );
     }
 
 
@@ -135,6 +150,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public PostResponse getPostById(Long postId) {
+
         Long viewerId = UserContextHolder.getUserId();
 
         Post post = postRepository.findByIdWithUser(postId)
@@ -143,22 +159,27 @@ public class PostServiceImpl implements PostService {
                 );
 
         Long ownerId = post.getUser().getId();
+
         if (blockPolicyService.isBlocked(viewerId, ownerId)) {
-            throw new UserBlockedException("You cannot view this user's posts.");
+            throw new UserBlockedException(
+                    "You cannot view this user's posts."
+            );
         }
 
         List<Visibility> visibilities;
 
         if (viewerId.equals(ownerId)) {
+
             visibilities = List.of(
                     Visibility.PUBLIC,
-                    Visibility.FOLLOWERS,
+                    Visibility.FRIEND,
                     Visibility.PRIVATE
             );
-        } else if (followService.isFollowing(ownerId)) {
+        } else if (friendshipService.areFriends(viewerId, ownerId)) {
+
             visibilities = List.of(
                     Visibility.PUBLIC,
-                    Visibility.FOLLOWERS
+                    Visibility.FRIEND
             );
         } else {
             visibilities = List.of(
@@ -172,9 +193,10 @@ public class PostServiceImpl implements PostService {
                         visibilities
                 );
 
-        Reaction reaction = reactionRepository
-                .findByUserIdAndPostId(viewerId, postId)
-                .orElse(null);
+        Reaction reaction =
+                reactionRepository
+                        .findByUserIdAndPostId(viewerId, postId)
+                        .orElse(null);
 
         return PostResponse.builder()
                 .id(flat.getId())
@@ -204,13 +226,17 @@ public class PostServiceImpl implements PostService {
             String keyword,
             Pageable pageable
     ) {
-
         Long viewerId = UserContextHolder.getUserId();
 
         Page<PostFlatProjection> projections =
                 postRepository.searchByContent(
                         viewerId,
                         keyword.trim(),
+                        Status.ACTIVE.name(),
+                        ReportStatus.APPROVED.name(),
+                        Visibility.PUBLIC.name(),
+                        Visibility.FRIEND.name(),
+                        FriendshipStatus.ACCEPTED.name(),
                         pageable
                 );
 
@@ -221,14 +247,11 @@ public class PostServiceImpl implements PostService {
                                 .content(p.getContent())
                                 .visibility(p.getVisibility())
                                 .createdAt(p.getCreatedAt())
-
                                 .userId(p.getUserId())
                                 .username(p.getUsername())
                                 .avatarUrl(p.getAvatarUrl())
-
                                 .commentCount(p.getCommentCount())
                                 .reactionCount(p.getReactionCount())
-
                                 .build()
                 );
 
@@ -241,13 +264,17 @@ public class PostServiceImpl implements PostService {
             String hashtag,
             Pageable pageable
     ) {
-
         Long viewerId = UserContextHolder.getUserId();
 
         Page<PostFlatResponse> page =
                 postRepository.searchByHashtag(
                         viewerId,
                         hashtag.trim().toLowerCase(),
+                        Status.ACTIVE,
+                        ReportStatus.APPROVED,
+                        Visibility.PUBLIC,
+                        Visibility.FRIEND,
+                        FriendshipStatus.ACCEPTED,
                         pageable
                 );
 
@@ -255,12 +282,26 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PostResponse> getAllSavedPost(Pageable pageable) {
+
         Long userId = UserContextHolder.getUserId();
 
-        Page<PostFlatResponse> postFlatResponses = postRepository.findSavedPosts(userId,pageable);
+        Page<PostFlatResponse> postFlatResponses =
+                postRepository.findSavedPosts(
+                        userId,
+                        Status.ACTIVE,
+                        ReportStatus.APPROVED,
+                        Visibility.PUBLIC,
+                        Visibility.FRIEND,
+                        FriendshipStatus.ACCEPTED,
+                        pageable
+                );
 
-        return buildPostResponse(postFlatResponses,pageable);
+        return buildPostResponse(
+                postFlatResponses,
+                pageable
+        );
     }
 
     private Page<PostResponse> buildPostResponse(
