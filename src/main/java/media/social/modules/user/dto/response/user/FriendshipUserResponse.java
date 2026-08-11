@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class FollowUserResponse {
+public class FriendshipUserResponse {
 
     private Long userId;
 

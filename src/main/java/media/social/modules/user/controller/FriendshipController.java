@@ -1,0 +1,149 @@
+package media.social.modules.user.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import media.social.common.ratelimit.annotation.RateLimit;
+import media.social.common.response.ResponseData;
+import media.social.modules.user.dto.response.user.FriendshipUserResponse;
+import media.social.modules.user.service.FriendshipService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/friends")
+@RequiredArgsConstructor
+@Tag(
+        name = "Friendship Controller",
+        description = "Friendship APIs"
+)
+public class FriendshipController {
+
+    private final FriendshipService friendshipService;
+
+    // ==================================================
+    // FRIEND REQUEST
+    // ==================================================
+
+    @PostMapping("/{userId}")
+    @Operation(summary = "Send a friend request")
+    @RateLimit(
+            name = "FRIEND_REQUEST_CREATE",
+            limit = 50,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> sendFriendRequest(
+            @PathVariable Long userId
+    ) {
+
+        friendshipService.sendFriendRequest(userId);
+
+        return ResponseData.success(
+                null,
+                "Friend request sent successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ==================================================
+    // ACCEPT FRIEND REQUEST
+    // ==================================================
+
+    @PostMapping("/{userId}/accept")
+    @Operation(summary = "Accept a friend request")
+    @RateLimit(
+            name = "FRIEND_REQUEST_ACCEPT",
+            limit = 50,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> acceptFriendRequest(
+            @PathVariable Long userId
+    ) {
+
+        friendshipService.acceptFriendRequest(userId);
+
+        return ResponseData.success(
+                null,
+                "Friend request accepted successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ==================================================
+    // REJECT FRIEND REQUEST
+    // ==================================================
+
+    @PostMapping("/{userId}/reject")
+    @Operation(summary = "Reject a friend request")
+    @RateLimit(
+            name = "FRIEND_REQUEST_REJECT",
+            limit = 50,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> rejectFriendRequest(
+            @PathVariable Long userId
+    ) {
+
+        friendshipService.rejectFriendRequest(userId);
+
+        return ResponseData.success(
+                null,
+                "Friend request rejected successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ==================================================
+    // GET FRIENDS OF USER
+    // ==================================================
+
+    @GetMapping("/{userId}")
+    @Operation(summary = "Get friends of a user")
+    @RateLimit(
+            name = "FRIEND_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> getFriends(
+            @PathVariable Long userId,
+            Pageable pageable
+    ) {
+
+        Page<FriendshipUserResponse> page =
+                friendshipService.getFriends(userId, pageable);
+
+        return ResponseData.successPaginate(
+                page,
+                "Get friends successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ==================================================
+    // GET MY FRIENDS
+    // ==================================================
+
+    @GetMapping("/me")
+    @Operation(summary = "Get my friends")
+    @RateLimit(
+            name = "MY_FRIEND_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> getMyFriends(
+            Pageable pageable
+    ) {
+
+        Page<FriendshipUserResponse> page =
+                friendshipService.getMyFriends(pageable);
+
+        return ResponseData.successPaginate(
+                page,
+                "Get my friends successfully",
+                HttpStatus.OK
+        );
+    }
+}
