@@ -27,7 +27,7 @@ public class UserMockService {
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
     private final ProfileRepository profileRepository;
-    private final FollowRepository followRepository;
+    private final FriendshipRepository friendshipRepository;
     private final BlockRepository blockRepository;
     private final PasswordEncoder passwordEncoder;
     private final Faker faker = new Faker(new Locale("vi"));
@@ -101,26 +101,31 @@ public class UserMockService {
             }
         }
         
-        log.info("Generating Follows & Blocks...");
+        log.info("Generating Friendships & Blocks...");
         List<User> allUsers = userRepository.findAll();
-        List<Follow> follows = new ArrayList<>();
+        List<Friendship> friendships = new ArrayList<>();
         List<Block> blocks = new ArrayList<>();
-        Set<String> uniqueFollows = new HashSet<>();
+        Set<String> uniqueFriendships = new HashSet<>();
         Set<String> uniqueBlocks = new HashSet<>();
 
         for (User user : allUsers) {
-            int followsCount = faker.number().numberBetween(5, 15);
-            for (int i = 0; i < followsCount; i++) {
-                User following = allUsers.get(faker.number().numberBetween(0, allUsers.size()));
-                if (!user.getId().equals(following.getId())) {
-                    String key = user.getId() + "-" + following.getId();
-                    if (uniqueFollows.add(key)) {
-                        FollowId followId = new FollowId(user.getId(), following.getId());
-                        follows.add(Follow.builder()
-                                .id(followId)
-                                .follower(user)
-                                .following(following)
+            int friendsCount = faker.number().numberBetween(5, 15);
+            for (int i = 0; i < friendsCount; i++) {
+                User friend = allUsers.get(faker.number().numberBetween(0, allUsers.size()));
+                if (!user.getId().equals(friend.getId())) {
+                    Long minId = Math.min(user.getId(), friend.getId());
+                    Long maxId = Math.max(user.getId(), friend.getId());
+                    String key = minId + "-" + maxId;
+                    if (uniqueFriendships.add(key)) {
+                        User userOne = user.getId().equals(minId) ? user : friend;
+                        User userTwo = user.getId().equals(maxId) ? user : friend;
+                        friendships.add(Friendship.builder()
+                                .userOne(userOne)
+                                .userTwo(userTwo)
+                                .requester(user)
+                                .status(media.social.modules.user.enums.FriendshipStatus.ACCEPTED)
                                 .createdAt(LocalDateTime.now())
+                                .updatedAt(LocalDateTime.now())
                                 .build());
                     }
                 }
@@ -145,7 +150,7 @@ public class UserMockService {
                 }
             }
         }
-        followRepository.saveAll(follows);
+        friendshipRepository.saveAll(friendships);
         blockRepository.saveAll(blocks);
         log.info("User generation complete");
     }

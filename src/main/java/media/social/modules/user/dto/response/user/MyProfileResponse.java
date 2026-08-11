@@ -60,8 +60,6 @@ public class MyProfileResponse {
 
     private OffsetDateTime updatedAt;
 
-    private Long totalFollower;
-
-    private Long totalFollowing;
+    private Long totalFriend;
 
 }

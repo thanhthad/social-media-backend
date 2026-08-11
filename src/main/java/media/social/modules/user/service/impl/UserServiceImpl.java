@@ -2,17 +2,15 @@ package media.social.modules.user.service.impl;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
-import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.dto.projection.UserSearchProjection;
 import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
-import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modules.user.dto.response.user.*;
 import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
-import media.social.modules.user.service.FollowService;
+import media.social.modules.user.service.FriendshipService;
 import media.social.modules.user.service.cache.UserCacheService;
 import media.social.modules.user.service.cache.UserProfileCacheService;
 import media.social.modules.user.service.domain.BlockPolicyService;
@@ -37,10 +35,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Objects;
-
-import static media.social.modules.post.enums.Visibility.*;
 
 @Service
 @AllArgsConstructor
@@ -51,7 +46,7 @@ public class UserServiceImpl implements UserService {
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
     private final UserRoleServiceDomain userRoleServiceDomain;
-    private final FollowService followService;
+    private final FriendshipService friendshipService;
     private final UserProfileCacheService userProfileCacheService;
     private final UserCacheService userCacheService;
     private final BlockPolicyService blockPolicyService;
@@ -65,8 +60,8 @@ public class UserServiceImpl implements UserService {
         PublicUserProfileCacheResponse cache =
                 userProfileCacheService.getUserProfile(userId);
 
-        UserFollowStatCacheResponse followStat =
-                userProfileCacheService.getFollowStat(userId);
+        FriendshipCountResponse totalFriend =
+                userProfileCacheService.getTotalFriend(userId);
 
         return MyProfileResponse.builder()
                 .userId(cache.getId())
@@ -90,12 +85,7 @@ public class UserServiceImpl implements UserService {
                 .socialLinks(cache.getSocialLinks())
                 .createdAt(cache.getCreatedAt())
                 .updatedAt(cache.getUpdatedAt())
-                .totalFollower(
-                        followStat.getTotalFollower()
-                )
-                .totalFollowing(
-                        followStat.getTotalFollowing()
-                )
+                .totalFriend(totalFriend.getTotalFriends())
                 .build();
     }
 
@@ -397,17 +387,18 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public PublicProfileResponse getUserById(Long userId) {
 
-        Long currentUserId =
-                UserContextHolder.getUserId();
+        Long currentUserId = UserContextHolder.getUserId();
 
         if (Objects.equals(userId, currentUserId)) {
             throw new UserAlreadyExistsException(
                     "Please use /me endpoint"
             );
         }
-        if(blockPolicyService.isBlocked(currentUserId,userId)){
-            throw new UserBlockedException("You cannot view this user's posts.");
 
+        if (blockPolicyService.isBlocked(currentUserId, userId)) {
+            throw new UserBlockedException(
+                    "You cannot view this user's profile."
+            );
         }
 
         validateCanViewProfile(
@@ -418,11 +409,14 @@ public class UserServiceImpl implements UserService {
         PublicUserProfileCacheResponse cache =
                 userProfileCacheService.getUserProfile(userId);
 
-        UserFollowStatCacheResponse followStat =
-                userProfileCacheService.getFollowStat(userId);
+        FriendshipCountResponse totalFriend =
+                userProfileCacheService.getTotalFriend(userId);
 
-        Boolean following =
-                followService.isFollowing(userId);
+        boolean friends =
+                friendshipService.areFriends(
+                        currentUserId,
+                        userId
+                );
 
         boolean canViewFullProfile =
                 switch (cache.getVisibility()) {
@@ -430,8 +424,8 @@ public class UserServiceImpl implements UserService {
                     case PUBLIC ->
                             true;
 
-                    case FOLLOWERS ->
-                            following;
+                    case FRIEND ->
+                            friends;
 
                     case PRIVATE ->
                             false;
@@ -444,15 +438,8 @@ public class UserServiceImpl implements UserService {
                         .avatarUrl(cache.getAvatarUrl())
                         .coverUrl(cache.getCoverUrl())
 
-                        .totalFollower(
-                                followStat.getTotalFollower()
-                        )
-                        .totalFollowing(
-                                followStat.getTotalFollowing()
-                        )
-
-                        .isFollowing(following);
-
+                        .totalFriend(totalFriend.getTotalFriends())
+                        .isFriend(friends);
 
         if (canViewFullProfile) {
             builder

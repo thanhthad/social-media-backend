@@ -47,7 +47,7 @@ public class DatingProfileController {
         );
     }
 
-    @PatchMapping("/profile/coordinates")
+    @PutMapping("/profile/coordinates")
     @Operation(summary = "Update my dating coordinates")
     @RateLimit(
             name = "DATING_UPDATE_COORDINATES",

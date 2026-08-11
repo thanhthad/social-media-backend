@@ -4,8 +4,8 @@ import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.projection.AdminUserProjection;
 import media.social.modules.user.dto.projection.UserSearchProjection;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
-import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modules.user.dto.response.user.AdminUserResponse;
+import media.social.modules.user.dto.response.user.FriendshipCountResponse;
 import media.social.modules.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,24 +53,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse(
-        COUNT(DISTINCT follower.id),
-        COUNT(DISTINCT following.id)
+    SELECT new media.social.modules.user.dto.response.user.FriendshipCountResponse(
+        COUNT(f.id)
     )
-    
-    FROM User u
-    
-    LEFT JOIN Follow follower
-    ON follower.following.id = u.id
-    
-    LEFT JOIN Follow following
-    ON following.follower.id = u.id
-    
-    WHERE u.id = :userId
-    
-    GROUP BY u.id
-    """)
-    Optional<UserFollowStatCacheResponse> findFollowStat(
+    FROM Friendship f
+    WHERE (
+        f.userOne.id = :userId
+        OR f.userTwo.id = :userId
+    )
+    AND f.status = media.social.modules.user.enums.FriendshipStatus.ACCEPTED
+""")
+    Optional<FriendshipCountResponse> findFriendshipCount(
             @Param("userId") Long userId
     );
 

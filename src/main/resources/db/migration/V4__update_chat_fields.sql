@@ -19,12 +19,6 @@ CREATE INDEX idx_posts_visibility_created
     ON posts(visibility, created_at DESC);
 
 
--- FOLLOW
-
-CREATE INDEX idx_follow_following
-    ON follows(following_id);
-
-
 -- BLOCK
 
 CREATE INDEX idx_blocks_blocked

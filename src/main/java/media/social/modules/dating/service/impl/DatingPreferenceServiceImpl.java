@@ -12,6 +12,7 @@ import media.social.modules.dating.service.DatingPreferenceService;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.UserRepository;
+import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ public class DatingPreferenceServiceImpl implements DatingPreferenceService {
 
     private final DatingPreferenceRepository datingPreferenceRepository;
     private final UserRepository userRepository;
+    private final UserServiceDomain userServiceDomain;
 
     @Override
     @Transactional
@@ -104,8 +106,14 @@ public class DatingPreferenceServiceImpl implements DatingPreferenceService {
 
     private DatingPreference getDatingPreference(Long userId) {
 
+        User user = userServiceDomain.getByUserId(userId);
+
         return datingPreferenceRepository.findByUserId(userId)
-                .orElseThrow(() -> new PreferenceNotFoundException("Dating preference not found"));
+                .orElseGet(() -> datingPreferenceRepository.save(
+                        DatingPreference.builder()
+                                .user(user)
+                                .build())
+                );
     }
 
     private void validateAge(UpdateDatingPreferenceRequest request) {

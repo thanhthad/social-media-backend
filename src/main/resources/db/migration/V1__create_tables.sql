@@ -176,11 +176,33 @@ CREATE TABLE reactions (
                                UNIQUE(user_id, post_id)
 );
 
-CREATE TABLE follows (
-                         follower_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
-                         following_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
-                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                         PRIMARY KEY (follower_id, following_id)
+CREATE TABLE friendships (
+                             friendship_id BIGSERIAL PRIMARY KEY,
+
+                             user_one_id BIGINT NOT NULL
+                                 REFERENCES users(user_id)
+                                     ON DELETE CASCADE,
+
+                             user_two_id BIGINT NOT NULL
+                                 REFERENCES users(user_id)
+                                     ON DELETE CASCADE,
+
+                             requester_id BIGINT NOT NULL
+                                 REFERENCES users(user_id)
+                                     ON DELETE CASCADE,
+
+                             status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+
+                             visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
+
+                             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                             CONSTRAINT uk_friendship_pair
+                                 UNIQUE (user_one_id, user_two_id),
+
+                             CONSTRAINT chk_friendship_different_users
+                                 CHECK (user_one_id <> user_two_id)
 );
 
 CREATE TABLE saved_posts (

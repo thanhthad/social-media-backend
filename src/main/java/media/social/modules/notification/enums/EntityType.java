@@ -6,6 +6,8 @@ public enum EntityType {
 
     COMMENT,
 
-    USER
+    USER,
+
+    FRIENDSHIP
 
 }

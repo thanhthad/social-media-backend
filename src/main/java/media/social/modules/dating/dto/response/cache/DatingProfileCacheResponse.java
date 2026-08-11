@@ -2,6 +2,7 @@ package media.social.modules.dating.dto.response.cache;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.enums.Gender;
 
@@ -10,6 +11,7 @@ import java.time.OffsetDateTime;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class DatingProfileCacheResponse {
 
     private String username;

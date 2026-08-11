@@ -55,9 +55,7 @@ public class PublicProfileResponse {
 
     private OffsetDateTime updatedAt;
 
-    private Long totalFollower;
+    private Long totalFriend;
 
-    private Long totalFollowing;
-
-    private boolean isFollowing;
+    private boolean isFriend;
 }

@@ -35,13 +35,12 @@ import media.social.modules.post.exception.report.CannotReportOwnPostException;
 import media.social.modules.post.exception.report.ReportAlreadyExistsException;
 import media.social.modules.post.exception.report.ReportAlreadyReviewedException;
 import media.social.modules.post.exception.report.ReportNotFoundException;
+import media.social.modules.post.exception.saved_post.PostFriendsOnlyException;
 import media.social.modules.post.exception.saved_post.SavedPostAlreadyExistsException;
 import media.social.modules.post.exception.saved_post.SavedPostNotFoundException;
 import media.social.modules.user.exception.block.BlockAlreadyExistsException;
 import media.social.modules.user.exception.block.BlockNotFoundException;
 import media.social.modules.user.exception.block.UserBlockedException;
-import media.social.modules.user.exception.follow.FollowAlreadyExistsException;
-import media.social.modules.user.exception.follow.FollowNotFoundException;
 import media.social.modules.user.exception.profile.ProfileNotFoundException;
 import media.social.modules.auth.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modules.auth.exception.refreshtoken.RefreshTokenExpiredException;
@@ -395,6 +394,13 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(PostFriendsOnlyException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePostFriendOnly(PostFriendsOnlyException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
+
+
     //==================BLOCK==================
     @ExceptionHandler(BlockNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleBlockNotFound(BlockNotFoundException ex) {
@@ -506,10 +512,6 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(PostFollowersOnlyException.class)
-    public ResponseEntity<ApiResponse<Object>> handlePostFollowOnly(PostFollowersOnlyException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
 
     @ExceptionHandler(CannotSaveOwnPostException.class)
     public ResponseEntity<ApiResponse<Object>> handleSaveOwnPost(CannotSaveOwnPostException ex) {
@@ -524,17 +526,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidImageException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidImage(InvalidImageException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    //====================FOLLOW==================
-    @ExceptionHandler(FollowAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleFollowAlreadyExists(FollowAlreadyExistsException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(FollowNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleFollowNotFound(FollowNotFoundException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     //====================COMMENT==================
