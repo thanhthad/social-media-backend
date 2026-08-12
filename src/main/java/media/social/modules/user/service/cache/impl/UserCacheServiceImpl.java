@@ -31,7 +31,7 @@ public class UserCacheServiceImpl implements UserCacheService {
 
     @Override
     @CacheEvict(
-            value = "userFollowStat",
+            value = "friendShipCount",
             key = "#userId"
     )
     public void evict(Long userId) {

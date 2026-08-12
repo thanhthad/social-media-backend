@@ -32,7 +32,7 @@ public class UserProfileCacheServiceImpl implements UserProfileCacheService {
     }
 
     @Cacheable(
-            value = "userFollowStat",
+            value = "friendShipCount",
             key = "#userId"
     )
     @Transactional(readOnly = true)

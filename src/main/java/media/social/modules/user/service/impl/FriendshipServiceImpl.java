@@ -35,16 +35,6 @@ public class FriendshipServiceImpl implements FriendshipService {
     private final UserCacheService userCacheService;
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean areFriends(Long userId, Long targetUserId) {
-        return friendshipRepository.areFriends(
-                userId,
-                targetUserId,
-                FriendshipStatus.ACCEPTED
-        );
-    }
-
-    @Override
     @Transactional
     public void sendFriendRequest(Long targetUserId) {
         Long currentUserId = UserContextHolder.getUserId();

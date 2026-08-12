@@ -14,6 +14,7 @@ import media.social.modules.user.service.FriendshipService;
 import media.social.modules.user.service.cache.UserCacheService;
 import media.social.modules.user.service.cache.UserProfileCacheService;
 import media.social.modules.user.service.domain.BlockPolicyService;
+import media.social.modules.user.service.domain.FriendShipDomain;
 import media.social.modules.user.service.domain.UserRoleServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +47,7 @@ public class UserServiceImpl implements UserService {
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
     private final UserRoleServiceDomain userRoleServiceDomain;
-    private final FriendshipService friendshipService;
+    private final FriendShipDomain friendShipDomain;
     private final UserProfileCacheService userProfileCacheService;
     private final UserCacheService userCacheService;
     private final BlockPolicyService blockPolicyService;
@@ -413,7 +414,7 @@ public class UserServiceImpl implements UserService {
                 userProfileCacheService.getTotalFriend(userId);
 
         boolean friends =
-                friendshipService.areFriends(
+                friendShipDomain.areFriends(
                         currentUserId,
                         userId
                 );

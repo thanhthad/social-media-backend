@@ -6,8 +6,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface FriendshipService {
 
-    boolean areFriends(Long userId, Long targetUserId);
-
     void sendFriendRequest(Long targetUserId);
 
     void acceptFriendRequest(Long requesterId);
