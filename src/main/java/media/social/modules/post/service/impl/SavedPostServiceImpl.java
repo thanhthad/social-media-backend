@@ -16,6 +16,7 @@ import media.social.modules.post.service.SavedPostService;
 import media.social.modules.user.entity.User;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.user.service.FriendshipService;
+import media.social.modules.user.service.domain.FriendShipDomain;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,7 @@ public class SavedPostServiceImpl implements SavedPostService {
     private final SavedPostRepository savedPostRepository;
     private final UserServiceDomain userServiceDomain;
     private final PostRepository postRepository;
-    private final FriendshipService friendshipService;
+    private final FriendShipDomain friendShipDomain;
 
     @Override
     @Transactional
@@ -58,7 +59,7 @@ public class SavedPostServiceImpl implements SavedPostService {
                     );
 
             case FRIEND -> {
-                if (!friendshipService.areFriends(userId, ownerId)) {
+                if (!friendShipDomain.areFriends(userId, ownerId)) {
                     throw new PostFriendsOnlyException(
                             "You must be friends with this user to save this post."
                     );

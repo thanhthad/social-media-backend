@@ -30,6 +30,7 @@ import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.post.service.PostService;
 import media.social.modules.user.service.FriendshipService;
 import media.social.modules.user.service.domain.BlockPolicyService;
+import media.social.modules.user.service.domain.FriendShipDomain;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -56,7 +57,7 @@ public class PostServiceImpl implements PostService {
     private final HashtagRepository hashtagRepository;
     private final PostHashtagRepository postHashtagRepository;
     private final BlockPolicyService blockPolicyService;
-    private final FriendshipService friendshipService;
+    private final FriendShipDomain friendShipDomain;
     private final PostDomainService postDomainService;
     private final ReactionRepository reactionRepository;
     private final PostCacheService postCacheService;
@@ -175,7 +176,7 @@ public class PostServiceImpl implements PostService {
                     Visibility.FRIEND,
                     Visibility.PRIVATE
             );
-        } else if (friendshipService.areFriends(viewerId, ownerId)) {
+        } else if (friendShipDomain.areFriends(viewerId, ownerId)) {
 
             visibilities = List.of(
                     Visibility.PUBLIC,
@@ -623,7 +624,7 @@ public class PostServiceImpl implements PostService {
 
         for (MultipartFile file : files) {
 
-            MediaType mediaType = getMediaType(file);
+            MediaType mediaType = cloudinaryService.detectMediaType(file);
 
             UploadFileResponse upload =
                     cloudinaryService.uploadFile(
@@ -643,22 +644,4 @@ public class PostServiceImpl implements PostService {
         postMediaRepository.saveAll(mediaList);
     }
 
-    private MediaType getMediaType(MultipartFile file) {
-
-        String contentType = file.getContentType();
-
-        if (contentType == null) {
-            throw new InvalidImageException("Invalid content type");
-        }
-
-        if (contentType.startsWith("image/")) {
-            return MediaType.IMAGE;
-        }
-
-        if (contentType.startsWith("video/")) {
-            return MediaType.VIDEO;
-        }
-
-        throw new InvalidImageException("Unsupported media type");
-    }
 }
