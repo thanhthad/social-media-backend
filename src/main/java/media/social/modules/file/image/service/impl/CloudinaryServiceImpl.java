@@ -188,6 +188,51 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         );
     }
 
+    @Override
+    public MediaType detectMediaType(MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            throw new InvalidMediaException("File is empty");
+        }
+
+        String contentType = file.getContentType();
+
+        if (contentType != null) {
+
+            if (contentType.startsWith("image/")) {
+                return MediaType.IMAGE;
+            }
+
+            if (contentType.startsWith("video/")) {
+                return MediaType.VIDEO;
+            }
+        }
+
+        String filename = file.getOriginalFilename();
+
+        if (filename == null || !filename.contains(".")) {
+            throw new InvalidMediaException(
+                    "Unable to determine media type"
+            );
+        }
+
+        String extension = filename
+                .substring(filename.lastIndexOf('.') + 1)
+                .toLowerCase();
+
+        if (ALLOWED_IMAGE_EXTENSIONS.contains(extension)) {
+            return MediaType.IMAGE;
+        }
+
+        if (ALLOWED_VIDEO_EXTENSIONS.contains(extension)) {
+            return MediaType.VIDEO;
+        }
+
+        throw new InvalidMediaException(
+                "Unsupported media type"
+        );
+    }
+
     private void validateExtension(
             String filename,
             MediaType mediaType

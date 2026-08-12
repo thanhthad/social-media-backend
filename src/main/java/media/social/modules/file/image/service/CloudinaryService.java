@@ -21,4 +21,6 @@ public interface CloudinaryService {
             MultipartFile file,
             MediaType mediaType
     );
+
+    MediaType detectMediaType(MultipartFile file);
 }
