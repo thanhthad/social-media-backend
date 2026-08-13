@@ -89,6 +89,7 @@ public class StoryServiceImpl implements StoryService {
 
             story.setMedia(media);
         }
+        storyCacheService.evictUserStories(userId);
 
         Story savedStory = storyRepository.save(story);
 
@@ -151,10 +152,10 @@ public class StoryServiceImpl implements StoryService {
 
             return stories.stream()
                     .filter(story ->
-                            Visibility.PUBLIC.name()
+                            Visibility.PUBLIC
                                     .equals(story.getVisibility())
                                     ||
-                                    Visibility.FRIEND.name()
+                                    Visibility.FRIEND
                                             .equals(story.getVisibility())
                     )
                     .toList();
@@ -162,7 +163,7 @@ public class StoryServiceImpl implements StoryService {
 
         return stories.stream()
                 .filter(story ->
-                        Visibility.PUBLIC.name()
+                        Visibility.PUBLIC
                                 .equals(story.getVisibility())
                 )
                 .toList();

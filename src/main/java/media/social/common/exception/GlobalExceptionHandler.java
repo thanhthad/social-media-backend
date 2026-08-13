@@ -38,6 +38,10 @@ import media.social.modules.post.exception.report.ReportNotFoundException;
 import media.social.modules.post.exception.saved_post.PostFriendsOnlyException;
 import media.social.modules.post.exception.saved_post.SavedPostAlreadyExistsException;
 import media.social.modules.post.exception.saved_post.SavedPostNotFoundException;
+import media.social.modules.story.exception.reaction.StoryReactionNotFoundException;
+import media.social.modules.story.exception.story.StoryAccessDeniedException;
+import media.social.modules.story.exception.story.StoryForbiddenException;
+import media.social.modules.story.exception.story.StoryNotFoundException;
 import media.social.modules.user.exception.block.BlockAlreadyExistsException;
 import media.social.modules.user.exception.block.BlockNotFoundException;
 import media.social.modules.user.exception.block.UserBlockedException;
@@ -79,6 +83,47 @@ public class GlobalExceptionHandler {
         return UserContextHolder.getUserId();
     }
 
+    // ======================= STORY & REACTION =======================
+
+    @ExceptionHandler(StoryReactionNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryReactionNotFound(
+            StoryReactionNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(StoryAccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryAccessDenied(
+            StoryAccessDeniedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED
+        );
+    }
+
+    @ExceptionHandler(StoryForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryForbidden(
+            StoryForbiddenException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(StoryNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryNotFound(
+            StoryNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
 
     // ================= PREFERENCE =================
     @ExceptionHandler(PreferenceNotFoundException.class)

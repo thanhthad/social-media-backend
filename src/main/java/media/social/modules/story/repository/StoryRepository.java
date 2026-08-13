@@ -61,7 +61,6 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
     @Query("""
         SELECT new media.social.modules.story.dto.response.StoryFeedResponse(
             s.user.id,
-            u.username,
             pr.avatarUrl,
             s.content,
             s.visibility,

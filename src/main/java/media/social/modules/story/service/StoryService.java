@@ -21,7 +21,6 @@ public interface StoryService {
             Long targetUserId
     );
 
-
     List<UserStoryResponse> getUserStories(
             Long targetUserId
     );

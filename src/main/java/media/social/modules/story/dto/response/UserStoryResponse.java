@@ -2,6 +2,7 @@ package media.social.modules.story.dto.response;
 
 import lombok.*;
 import media.social.modules.post.enums.MediaType;
+import media.social.modules.post.enums.Visibility;
 
 import java.time.LocalDateTime;
 
@@ -22,7 +23,7 @@ public class UserStoryResponse {
 
     private String content;
 
-    private String visibility;
+    private Visibility visibility;
 
     private MediaType mediaType;
 
