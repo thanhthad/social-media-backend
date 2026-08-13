@@ -78,13 +78,6 @@ public class DatingDiscoveryServiceImpl implements DatingDiscoveryService {
         });
     }
 
-    /**
-     * V1 Compatibility Score
-     *
-     * Interest  = 10%
-     * Age       = 30%
-     * Distance  = 60%
-     */
     private int calculateCompatibilityScore(
             DatingDiscoveryProjection candidate,
             DatingProfile currentProfile
@@ -114,14 +107,6 @@ public class DatingDiscoveryServiceImpl implements DatingDiscoveryService {
         return (int) Math.round(score);
     }
 
-    /**
-     * Interest Score
-     *
-     * 0 interests -> 0
-     * 1 interest  -> 50
-     * 2 interests -> 75
-     * 3+ interests -> 100
-     */
     private double calculateInterestScore(
             Long commonInterestCount
     ) {
@@ -139,15 +124,7 @@ public class DatingDiscoveryServiceImpl implements DatingDiscoveryService {
         };
     }
 
-    /**
-     * Age Score
-     *
-     * 0 tuổi lệch -> 100
-     * 1 tuổi     -> 90
-     * 2 tuổi     -> 80
-     * ...
-     * 10+ tuổi   -> 0
-     */
+
     private double calculateAgeScore(
             Integer targetAge,
             LocalDate currentBirthday
@@ -174,15 +151,7 @@ public class DatingDiscoveryServiceImpl implements DatingDiscoveryService {
         );
     }
 
-    /**
-     * Distance Score
-     *
-     * 0 km  -> 100
-     * 5 km  -> 90
-     * 10 km -> 80
-     * ...
-     * 50+ km -> 0
-     */
+
     private double calculateDistanceScore(
             Double distanceKm
     ) {

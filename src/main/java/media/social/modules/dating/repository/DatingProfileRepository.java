@@ -87,9 +87,9 @@ public interface DatingProfileRepository
     @Query(
             value = """
             SELECT
-                target.user_id AS user_id,
-                target.display_name AS display_name,
-                profile.avatar_url AS avatar_url,
+                target.user_id AS "userId",
+                target.display_name AS "displayName",
+                profile.avatar_url AS "avatarUrl",
                 CAST(
                     EXTRACT(
                         YEAR FROM AGE(target.birthday)
@@ -109,9 +109,9 @@ public interface DatingProfileRepository
                             4326
                         ) AS geography
                     )
-                ) / 1000.0 AS distance_km,
+                ) / 1000.0 AS "distanceKm",
                 COUNT(DISTINCT common_interest.interest_id)
-                    AS common_interest_count
+                    AS "commonInterestCount"
 
             FROM dating_profiles me
 
@@ -209,8 +209,8 @@ public interface DatingProfileRepository
                 me.latitude,
                 me.longitude
             ORDER BY
-                common_interest_count DESC,
-                distance_km ASC
+                "commonInterestCount" DESC,
+                "distanceKm" ASC
             """,
 
             countQuery = """

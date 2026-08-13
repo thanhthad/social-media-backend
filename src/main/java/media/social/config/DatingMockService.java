@@ -51,6 +51,21 @@ public class DatingMockService {
 
     private final Faker faker = new Faker(new Locale("vi"));
 
+    private record CityLocation(String name, double latitude, double longitude) {}
+
+    private static final List<CityLocation> VIETNAM_CITIES = List.of(
+            new CityLocation("Hà Nội", 21.0285, 105.8542),
+            new CityLocation("Hải Phòng", 20.8449, 106.6881),
+            new CityLocation("Đà Nẵng", 16.0544, 108.2022),
+            new CityLocation("Huế", 16.4637, 107.5909),
+            new CityLocation("Nha Trang", 12.2388, 109.1967),
+            new CityLocation("Đà Lạt", 11.9404, 108.4583),
+            new CityLocation("TP.HCM", 10.8231, 106.6297),
+            new CityLocation("Cần Thơ", 10.0452, 105.7469),
+            new CityLocation("Vũng Tàu", 10.4114, 107.1362),
+            new CityLocation("Biên Hòa", 10.9574, 106.842)
+    );
+
     @Transactional
     public void init() {
 
@@ -135,6 +150,17 @@ public class DatingMockService {
                     ? Gender.MALE
                     : Gender.FEMALE;
 
+            // Pick a random city
+            CityLocation city = VIETNAM_CITIES.get(faker.number().numberBetween(0, VIETNAM_CITIES.size()));
+            
+            // Randomize coordinates within ~10km radius of the city center
+            // 1 degree is approx 111 km. So 0.1 degree is ~11km.
+            double latOffset = ThreadLocalRandom.current().nextDouble(-0.1, 0.1);
+            double lngOffset = ThreadLocalRandom.current().nextDouble(-0.1, 0.1);
+            
+            double finalLatitude = city.latitude() + latOffset;
+            double finalLongitude = city.longitude() + lngOffset;
+
             DatingProfile profile = DatingProfile.builder()
                     .user(user)
                     .displayName(faker.name().firstName())
@@ -153,22 +179,10 @@ public class DatingMockService {
                     )
                     .occupation(faker.job().title())
                     .education("University")
-                    .latitude(
-                            BigDecimal.valueOf(
-                                    20.95
-                                            + faker.number()
-                                            .randomDouble(4, 0, 1)
-                            )
-                    )
-                    .longitude(
-                            BigDecimal.valueOf(
-                                    105.75
-                                            + faker.number()
-                                            .randomDouble(4, 0, 1)
-                            )
-                    )
+                    .latitude(BigDecimal.valueOf(finalLatitude))
+                    .longitude(BigDecimal.valueOf(finalLongitude))
                     .country("Vietnam")
-                    .city("Hà Nội")
+                    .city(city.name())
                     .active(true)
                     .visibility(Visibility.PUBLIC)
                     .build();

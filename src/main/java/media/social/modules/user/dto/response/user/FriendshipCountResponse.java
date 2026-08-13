@@ -1,11 +1,13 @@
 package media.social.modules.user.dto.response.user;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FriendshipCountResponse {
+
     private Long totalFriends;
 }
