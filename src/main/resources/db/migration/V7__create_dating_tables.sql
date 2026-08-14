@@ -117,21 +117,37 @@ CREATE TABLE dating_swipes (
 -- =====================================
 CREATE TABLE dating_matches (
                                 match_id BIGSERIAL PRIMARY KEY,
+
                                 user_one_id BIGINT NOT NULL,
                                 user_two_id BIGINT NOT NULL,
+
+                                conversation_id BIGINT UNIQUE,
+
                                 status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
-                                matched_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                                matched_at TIMESTAMP WITH TIME ZONE
+                                                            DEFAULT CURRENT_TIMESTAMP,
+
                                 last_message_at TIMESTAMP WITH TIME ZONE,
+
                                 CONSTRAINT chk_match_not_self
                                     CHECK (user_one_id <> user_two_id),
+
                                 CONSTRAINT fk_match_user_one
                                     FOREIGN KEY (user_one_id)
                                         REFERENCES users(user_id)
                                         ON DELETE CASCADE,
+
                                 CONSTRAINT fk_match_user_two
                                     FOREIGN KEY (user_two_id)
                                         REFERENCES users(user_id)
                                         ON DELETE CASCADE,
+
+                                CONSTRAINT fk_match_conversation
+                                    FOREIGN KEY (conversation_id)
+                                        REFERENCES conversations(conversation_id)
+                                        ON DELETE SET NULL,
+
                                 CONSTRAINT uk_match_pair
                                     UNIQUE (user_one_id, user_two_id)
 );
@@ -158,3 +174,29 @@ CREATE TABLE dating_reports (
                                 CONSTRAINT fk_dating_report_admin FOREIGN KEY(reviewed_by)
                                     REFERENCES users(user_id)
 );
+
+CREATE TABLE dating_profile_photos (
+                                       photo_id BIGSERIAL PRIMARY KEY,
+
+                                       dating_profile_id BIGINT NOT NULL,
+
+                                       public_id VARCHAR(255) NOT NULL,
+
+                                       image_url TEXT NOT NULL,
+
+                                       display_order INTEGER NOT NULL DEFAULT 0,
+
+                                       is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+
+                                       created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                                       CONSTRAINT fk_dating_photo_profile
+                                           FOREIGN KEY (dating_profile_id)
+                                               REFERENCES dating_profiles(dating_profile_id)
+                                               ON DELETE CASCADE
+);
+
+-- Một profile chỉ có tối đa một ảnh primary
+CREATE UNIQUE INDEX uk_dating_profile_primary_photo
+    ON dating_profile_photos (dating_profile_id)
+    WHERE is_primary = TRUE;
