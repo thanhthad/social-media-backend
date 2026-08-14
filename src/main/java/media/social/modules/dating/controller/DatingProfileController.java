@@ -34,19 +34,6 @@ public class DatingProfileController {
         );
     }
 
-    @PostMapping("/me")
-    @Operation(summary = "Create dating profile")
-    @RateLimit(name = "DATING_CREATE_PROFILE", limit = 5, windowSeconds = 60)
-    public ResponseEntity<?> createProfile(
-            @Valid @RequestBody CreateDatingProfileRequest request
-    ) {
-        return ResponseData.success(
-                datingProfileService.createProfile(request),
-                "Create dating profile successfully",
-                HttpStatus.CREATED
-        );
-    }
-
     @PutMapping("/profile/coordinates")
     @Operation(summary = "Update my dating coordinates")
     @RateLimit(

@@ -67,51 +67,6 @@ public class DatingProfileServiceImpl implements DatingProfileService {
 
     @Override
     @Transactional
-    public DatingProfileResponse createProfile(CreateDatingProfileRequest request) {
-
-        Long userId = UserContextHolder.getUserId();
-
-        if (datingProfileRepository.existsByUserId(userId)) {
-            throw new BadRequestException("Dating profile already exists");
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        DatingProfile profile = DatingProfile.builder()
-                .user(user)
-                .displayName(request.getDisplayName())
-                .bio(request.getBio())
-                .gender(request.getGender())
-                .birthday(request.getBirthday())
-                .height(request.getHeight())
-                .occupation(request.getOccupation())
-                .education(request.getEducation())
-                .country(request.getCountry())
-                .city(request.getCity())
-                .district(request.getDistrict())
-                .build();
-
-        datingProfileRepository.save(profile);
-
-        return DatingProfileResponse.builder()
-                .displayName(profile.getDisplayName())
-                .bio(profile.getBio())
-                .gender(profile.getGender())
-                .birthday(profile.getBirthday())
-                .height(profile.getHeight())
-                .occupation(profile.getOccupation())
-                .education(profile.getEducation())
-                .country(profile.getCountry())
-                .city(profile.getCity())
-                .district(profile.getDistrict())
-                .visibility(profile.getVisibility())
-                .active(profile.getActive())
-                .build();
-    }
-
-    @Override
-    @Transactional
     public DatingProfileResponse updateBasicInfo(UpdateDatingBasicInfoRequest request) {
 
         Long userId = UserContextHolder.getUserId();

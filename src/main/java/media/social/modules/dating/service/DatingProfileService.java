@@ -7,10 +7,6 @@ public interface DatingProfileService {
 
     MyDatingProfileResponse getMe();
 
-    DatingProfileResponse createProfile(
-            CreateDatingProfileRequest request
-    );
-
     DatingProfileResponse updateBasicInfo(
             UpdateDatingBasicInfoRequest request
     );
