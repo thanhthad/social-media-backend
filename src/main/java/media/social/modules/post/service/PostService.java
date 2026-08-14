@@ -3,6 +3,7 @@ package media.social.modules.post.service;
 import media.social.modules.post.dto.request.post.CreatePostRequest;
 import media.social.modules.post.dto.request.post.UpdatePostContent;
 import media.social.modules.post.dto.request.post.UpdatePostMedia;
+import media.social.modules.post.dto.request.post.UpdatePostVisibility;
 import media.social.modules.post.dto.response.post.PostResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,9 @@ public interface PostService {
 
     void deletePostMedia(Long PostMediaId);
 
-    void updatePostContent(Long postId,UpdatePostContent content);
+    void updatePostContent(Long postId, UpdatePostContent request);
+
+    void updatePostVisibility(Long postId, UpdatePostVisibility request);
 
     void updatePostMedia(Long postId, UpdatePostMedia media);
 

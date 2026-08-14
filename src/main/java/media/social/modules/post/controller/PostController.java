@@ -8,6 +8,7 @@ import media.social.common.response.ResponseData;
 import media.social.modules.post.dto.request.post.CreatePostRequest;
 import media.social.modules.post.dto.request.post.UpdatePostContent;
 import media.social.modules.post.dto.request.post.UpdatePostMedia;
+import media.social.modules.post.dto.request.post.UpdatePostVisibility;
 import media.social.modules.post.service.PostService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -135,6 +136,28 @@ public class PostController {
         return ResponseData.success(
                 null,
                 "Update post successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ================= UPDATE POST VISIBILITY =================
+    @PatchMapping("/{postId}/visibility")
+    @Operation(summary = "Update post visibility")
+    @RateLimit(
+            name = "POST_UPDATE_VISIBILITY",
+            limit = 40,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> updateVisibility(
+            @PathVariable Long postId,
+            @RequestBody @Valid UpdatePostVisibility request
+    ) {
+
+        postService.updatePostVisibility(postId, request);
+
+        return ResponseData.success(
+                null,
+                "Update post visibility successfully",
                 HttpStatus.OK
         );
     }

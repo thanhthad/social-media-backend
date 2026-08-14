@@ -11,6 +11,7 @@ import media.social.modules.auth.exception.password.PasswordResetTokenInvalidExc
 import media.social.modules.auth.exception.password.PasswordResetTokenUsedException;
 import media.social.modules.auth.exception.verification.*;
 import media.social.modules.conversation.exception.*;
+import media.social.modules.dating.exception.photo.*;
 import media.social.modules.dating.exception.preference.PreferenceNotFoundException;
 import media.social.modules.dating.exception.profile.BadRequestException;
 import media.social.modules.dating.exception.profile.CoordinatesNotFoundException;
@@ -81,6 +82,58 @@ public class GlobalExceptionHandler {
 
     private Long getUserId(){
         return UserContextHolder.getUserId();
+    }
+
+    // ======================= DATING PROFILE PHOTO =======================
+
+    @ExceptionHandler(DatingProfilePhotoAlreadyPrimaryException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoAlreadyPrimary(
+            DatingProfilePhotoAlreadyPrimaryException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingProfilePhotoLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoLimitExceeded(
+            DatingProfilePhotoLimitExceededException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingProfilePhotoNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoNotFound(
+            DatingProfilePhotoNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(InvalidDatingProfilePhotoException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidDatingProfilePhoto(
+            InvalidDatingProfilePhotoException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(UnauthorizedDatingProfilePhotoException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorizedDatingProfilePhoto(
+            UnauthorizedDatingProfilePhotoException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
     }
 
     // ======================= STORY & REACTION =======================

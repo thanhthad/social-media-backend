@@ -12,7 +12,6 @@ CREATE TABLE users (
                        password_hash VARCHAR(255),
                        provider VARCHAR(50) NOT NULL DEFAULT 'LOCAL',
                        email_verified BOOLEAN NOT NULL DEFAULT FALSE,
-                       email_verified BOOLEAN NOT NULL DEFAULT FALSE,
                        status VARCHAR(50),
                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

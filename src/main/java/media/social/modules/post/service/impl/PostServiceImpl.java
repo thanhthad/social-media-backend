@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.post.dto.projection.PostFlatProjection;
+import media.social.modules.post.dto.request.post.UpdatePostVisibility;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
 import media.social.modules.post.entity.*;
 import media.social.modules.post.enums.MediaType;
@@ -433,22 +434,36 @@ public class PostServiceImpl implements PostService {
 
         postDomainService.checkOwner(post);
 
-        boolean emptyContent =
-                request.getContent() == null ||
-                        request.getContent().isBlank();
-
         long mediaCount = postMediaRepository.countByPostId(postId);
 
-        if (emptyContent && mediaCount == 0) {
+        if (request.getContent().isBlank() && mediaCount == 0) {
             throw new IllegalArgumentException(
                     "Post must contain content or media."
             );
         }
 
         post.setContent(request.getContent());
-        post.setVisibility(request.getVisibility());
 
         updatePostHashtags(post, request.getContent());
+    }
+
+    @Override
+    @Transactional
+    public void updatePostVisibility(
+            Long postId,
+            UpdatePostVisibility request
+    ) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() ->
+                        new PostNotFoundException(
+                                "Post not found with id: " + postId
+                        )
+                );
+
+        postDomainService.checkOwner(post);
+
+        post.setVisibility(request.getVisibility());
     }
 
     @Override

@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Builder
 public class CreateStoryRequest {
 
+    @NotNull(message = "Story content must not be null")
     @Size(
             max = 500,
             message = "Story content must not exceed 500 characters"
@@ -22,5 +23,6 @@ public class CreateStoryRequest {
     @NotNull(message = "Visibility must not be null")
     private Visibility visibility;
 
+    @NotNull(message = "Story file must not be null")
     private MultipartFile file;
 }

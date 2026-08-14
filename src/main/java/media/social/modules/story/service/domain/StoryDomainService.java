@@ -4,12 +4,10 @@ import lombok.RequiredArgsConstructor;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.story.entity.Story;
 import media.social.modules.story.repository.StoryRepository;
-import media.social.modules.user.service.FriendshipService;
 import media.social.modules.user.service.domain.FriendShipDomain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Service
