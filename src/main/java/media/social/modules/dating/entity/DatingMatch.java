@@ -2,6 +2,7 @@ package media.social.modules.dating.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import media.social.modules.conversation.entity.Conversation;
 import media.social.modules.dating.enums.DatingMatchStatus;
 import media.social.modules.user.entity.User;
 
@@ -46,12 +47,20 @@ public class DatingMatch {
     )
     private User userTwo;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "conversation_id",
+            unique = true
+    )
+    private Conversation conversation;
+
     @Enumerated(EnumType.STRING)
     @Column(
             nullable = false,
             length = 30
     )
-    private DatingMatchStatus status;
+    @Builder.Default
+    private DatingMatchStatus status = DatingMatchStatus.ACTIVE;
 
     @Column(
             nullable = false,
@@ -64,6 +73,7 @@ public class DatingMatch {
     @PrePersist
     public void prePersist() {
         matchedAt = OffsetDateTime.now();
+
         if (status == null) {
             status = DatingMatchStatus.ACTIVE;
         }
