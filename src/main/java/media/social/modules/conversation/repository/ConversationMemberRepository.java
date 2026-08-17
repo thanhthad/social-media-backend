@@ -4,6 +4,7 @@ import media.social.modules.conversation.dto.response.ConversationMemberResponse
 import media.social.modules.conversation.entity.Conversation;
 import media.social.modules.conversation.entity.ConversationMember;
 import media.social.modules.conversation.entity.ConversationMemberId;
+import media.social.modules.conversation.enums.ConversationType;
 import media.social.modules.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,13 +33,15 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     );
 
     @Query("""
-        SELECT cm.conversation
-        FROM ConversationMember cm
-        WHERE cm.user.id = :userId
-        ORDER BY cm.conversation.lastMessageAt DESC
-    """)
+    SELECT cm.conversation
+    FROM ConversationMember cm
+    WHERE cm.user.id = :userId
+      AND cm.conversation.type <> :excludedType
+    ORDER BY cm.conversation.lastMessageAt DESC
+""")
     List<Conversation> findConversationsByUserId(
-            @Param("userId") Long userId
+            @Param("userId") Long userId,
+            @Param("excludedType") ConversationType excludedType
     );
 
     @Query("""

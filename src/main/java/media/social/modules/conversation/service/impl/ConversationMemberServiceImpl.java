@@ -51,6 +51,10 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
             throw new IllegalArgumentException("This is a PRIVATE conversation");
         }
 
+        if(conversation.getType().equals(ConversationType.DATING)){
+            throw new IllegalArgumentException("This is a PRIVATE conversation");
+        }
+
         if (conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId)) {
             throw new UserInMemberAlreadyExists("User already exists");
         }
@@ -83,6 +87,10 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
             throw new IllegalArgumentException("This is a PRIVATE conversation");
         }
 
+        if(conversation.getType().equals(ConversationType.DATING)){
+            throw new IllegalArgumentException("This is a PRIVATE conversation");
+        }
+
         if (!conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId)) {
             throw new MemberNotFoundException("Member not found");
         }
@@ -103,13 +111,6 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
         }
 
         conversationMemberRepository.deleteByConversationIdAndUserId(conversationId, userId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isMember(Long conversationId, Long userId) {
-
-        return conversationMemberRepository.existsByConversationIdAndUserId(conversationId, userId);
     }
 
     @Override

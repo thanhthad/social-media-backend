@@ -1,6 +1,7 @@
 package media.social.modules.conversation.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import media.social.modules.auth.Enum.Status;
 import media.social.modules.conversation.dto.request.CreateGroupRequest;
 import media.social.modules.conversation.dto.request.UpdateGroupNameRequest;
 import media.social.modules.conversation.dto.response.ConversationListResponse;
@@ -375,8 +376,10 @@ public class ConversationServiceImpl implements ConversationService {
         Long userId = UserContextHolder.getUserId();
 
         List<Conversation> conversations =
-                conversationMemberRepository
-                        .findConversationsByUserId(userId);
+                conversationMemberRepository.findConversationsByUserId(
+                        userId,
+                        ConversationType.DATING
+                );
 
         return conversations.stream()
                 .map(c -> mapToConversationListResponse(c, userId))
@@ -540,7 +543,7 @@ public class ConversationServiceImpl implements ConversationService {
         Long userId = UserContextHolder.getUserId();
 
         return datingMatchRepository
-                .findMyDatingConversations(userId)
+                .findMyDatingConversations(userId, Status.BANNED)
                 .stream()
                 .map(projection -> {
 
