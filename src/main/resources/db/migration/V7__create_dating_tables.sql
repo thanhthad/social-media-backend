@@ -121,8 +121,6 @@ CREATE TABLE dating_matches (
                                 user_one_id BIGINT NOT NULL,
                                 user_two_id BIGINT NOT NULL,
 
-                                conversation_id BIGINT UNIQUE,
-
                                 status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
 
                                 matched_at TIMESTAMP WITH TIME ZONE
@@ -142,11 +140,6 @@ CREATE TABLE dating_matches (
                                     FOREIGN KEY (user_two_id)
                                         REFERENCES users(user_id)
                                         ON DELETE CASCADE,
-
-                                CONSTRAINT fk_match_conversation
-                                    FOREIGN KEY (conversation_id)
-                                        REFERENCES conversations(conversation_id)
-                                        ON DELETE SET NULL,
 
                                 CONSTRAINT uk_match_pair
                                     UNIQUE (user_one_id, user_two_id)

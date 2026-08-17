@@ -47,13 +47,6 @@ public class DatingMatch {
     )
     private User userTwo;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "conversation_id",
-            unique = true
-    )
-    private Conversation conversation;
-
     @Enumerated(EnumType.STRING)
     @Column(
             nullable = false,

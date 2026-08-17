@@ -28,32 +28,60 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
 
     @Override
     public DatingSwipeResponse swipe(CreateDatingSwipeRequest request) {
+
         Long swiperId = UserContextHolder.getUserId();
 
         if (swiperId.equals(request.getTargetUserId())) {
-            throw new IllegalArgumentException("You cannot swipe yourself");
+            throw new IllegalArgumentException(
+                    "You cannot swipe yourself"
+            );
         }
 
         User swiper = userRepository.findById(swiperId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found")
+                );
 
-        User target = userRepository.findById(request.getTargetUserId())
-                .orElseThrow(() -> new UserNotFoundException("Target user not found"));
+        User target = userRepository.findById(
+                request.getTargetUserId()
+        ).orElseThrow(() ->
+                new UserNotFoundException("Target user not found")
+        );
 
         DatingSwipe swipe = datingSwipeRepository
-                .findBySwiperIdAndTargetId(swiperId, request.getTargetUserId())
-                .orElseGet(() -> DatingSwipe.builder()
-                        .swiper(swiper)
-                        .target(target)
-                        .build());
-
-        if(datingSwipeRepository.existsBySwiperIdAndTargetId(request.getTargetUserId(),swiperId)){
-            datingMatchService.createMatch(swiper,target);
-        }
+                .findBySwiperIdAndTargetId(
+                        swiperId,
+                        target.getId()
+                )
+                .orElseGet(() ->
+                        DatingSwipe.builder()
+                                .swiper(swiper)
+                                .target(target)
+                                .build()
+                );
 
         swipe.setAction(request.getAction());
 
-        DatingSwipe savedSwipe = datingSwipeRepository.save(swipe);
+        DatingSwipe savedSwipe =
+                datingSwipeRepository.save(swipe);
+
+        if (request.getAction() == DatingSwipeAction.LIKE) {
+
+            boolean isMatched =
+                    datingSwipeRepository
+                            .existsBySwiperIdAndTargetIdAndAction(
+                                    target.getId(),
+                                    swiper.getId(),
+                                    DatingSwipeAction.LIKE
+                            );
+
+            if (isMatched) {
+                datingMatchService.createMatch(
+                        swiper,
+                        target
+                );
+            }
+        }
 
         return mapToResponse(savedSwipe);
     }

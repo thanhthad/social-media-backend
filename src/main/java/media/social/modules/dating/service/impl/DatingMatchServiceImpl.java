@@ -45,11 +45,10 @@ public class DatingMatchServiceImpl implements DatingMatchService {
                 userTwo.getId()
         );
 
-        if (datingMatchRepository
-                .existsByUserOneIdAndUserTwoId(
-                        firstUserId,
-                        secondUserId
-                )) {
+        if (datingMatchRepository.existsByUserOneIdAndUserTwoId(
+                firstUserId,
+                secondUserId
+        )) {
             return;
         }
 
@@ -62,42 +61,37 @@ public class DatingMatchServiceImpl implements DatingMatchService {
                 : userOne;
 
         Conversation conversation = Conversation.builder()
-                .type(ConversationType.PRIVATE)
+                .type(ConversationType.DATING)
                 .build();
 
         conversationRepository.save(conversation);
 
-        ConversationMember member1 =
+        ConversationMember conversationMember1 =
                 ConversationMember.builder()
-                        .id(
-                                new ConversationMemberId(
-                                        conversation.getId(),
-                                        firstUser.getId()
-                                )
-                        )
+                        .id(new ConversationMemberId(
+                                conversation.getId(),
+                                firstUser.getId()
+                        ))
                         .conversation(conversation)
                         .user(firstUser)
                         .build();
 
-        ConversationMember member2 =
+        ConversationMember conversationMember2 =
                 ConversationMember.builder()
-                        .id(
-                                new ConversationMemberId(
-                                        conversation.getId(),
-                                        secondUser.getId()
-                                )
-                        )
+                        .id(new ConversationMemberId(
+                                conversation.getId(),
+                                secondUser.getId()
+                        ))
                         .conversation(conversation)
                         .user(secondUser)
                         .build();
 
-        conversationMemberRepository.save(member1);
-        conversationMemberRepository.save(member2);
+        conversationMemberRepository.save(conversationMember1);
+        conversationMemberRepository.save(conversationMember2);
 
         DatingMatch match = DatingMatch.builder()
                 .userOne(firstUser)
                 .userTwo(secondUser)
-                .conversation(conversation)
                 .build();
 
         datingMatchRepository.save(match);
