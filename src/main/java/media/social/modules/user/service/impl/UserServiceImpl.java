@@ -10,7 +10,6 @@ import media.social.modules.user.dto.response.user.*;
 import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
-import media.social.modules.user.service.FriendshipService;
 import media.social.modules.user.service.cache.UserCacheService;
 import media.social.modules.user.service.cache.UserProfileCacheService;
 import media.social.modules.user.service.domain.BlockPolicyService;
