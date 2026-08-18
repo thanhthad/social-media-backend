@@ -577,4 +577,75 @@ class FriendshipServiceImplTest {
             assertTrue(result.isEmpty());
         }
     }
+
+    @Test
+    void sendFriendRequest_reverseIdOrder_userOneIsTarget() {
+        Long currentUserId = 10L;
+        Long targetUserId = 2L;
+        // currentUserId > targetUserId → userOneId=2, userTwoId=10
+
+        User currentUser = new User();
+        currentUser.setId(currentUserId);
+
+        User targetUser = new User();
+        targetUser.setId(targetUserId);
+
+        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
+            mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.ADMIN)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
+            when(friendshipRepository.findByUserOne_IdAndUserTwo_Id(targetUserId, currentUserId))
+                    .thenReturn(java.util.Optional.empty());
+            when(userRepository.findById(currentUserId)).thenReturn(java.util.Optional.of(currentUser));
+            when(userRepository.findById(targetUserId)).thenReturn(java.util.Optional.of(targetUser));
+
+            friendshipService.sendFriendRequest(targetUserId);
+
+            ArgumentCaptor<Friendship> captor = ArgumentCaptor.forClass(Friendship.class);
+            verify(friendshipRepository).save(captor.capture());
+            Friendship saved = captor.getValue();
+            // userOne should be targetUser (smaller ID), userTwo should be currentUser (larger ID)
+            assertEquals(targetUserId, saved.getUserOne().getId());
+            assertEquals(currentUserId, saved.getUserTwo().getId());
+            assertEquals(currentUser, saved.getRequester());
+            assertEquals(FriendshipStatus.PENDING, saved.getStatus());
+        }
+    }
+
+    @Test
+    void acceptFriendRequest_notPartOfFriendship_throwsAccessDeniedException() {
+        Long currentUserId = 5L;
+        Long requesterId = 1L;
+        // userOneId=1, userTwoId=5
+
+        User requester = new User();
+        requester.setId(requesterId);
+
+        // Friendship where currentUser is NOT userOne and NOT userTwo (edge case)
+        User otherUser1 = new User();
+        otherUser1.setId(3L);
+        User otherUser2 = new User();
+        otherUser2.setId(4L);
+
+        Friendship friendship = Friendship.builder()
+                .userOne(otherUser1)
+                .userTwo(otherUser2)
+                .requester(requester)
+                .status(FriendshipStatus.PENDING)
+                .build();
+
+        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
+            mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            when(userRoleServiceDomain.hasRole(requesterId, RoleName.ADMIN)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(requesterId, RoleName.MODERATOR)).thenReturn(false);
+            when(friendshipRepository.findByUserOne_IdAndUserTwo_Id(requesterId, currentUserId))
+                    .thenReturn(java.util.Optional.of(friendship));
+
+            assertThrows(AccessDeniedException.class,
+                    () -> friendshipService.acceptFriendRequest(requesterId));
+            verify(friendshipRepository, never()).save(any());
+        }
+    }
 }
