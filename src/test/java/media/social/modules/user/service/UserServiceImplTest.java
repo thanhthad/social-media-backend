@@ -985,6 +985,46 @@ class UserServiceImplTest {
         }
     }
 
+    @Test
+    void getUserById_friendVisibility_notFriends_hidesFullDetails() {
+        Long currentUserId = 1L;
+        Long targetUserId = 2L;
+
+        PublicUserProfileCacheResponse cache = PublicUserProfileCacheResponse.builder()
+                .id(targetUserId)
+                .username("friend_only_user")
+                .fullName("Friend Only User")
+                .bio("Friend Only Bio")
+                .visibility(Visibility.FRIEND)
+                .build();
+
+        FriendshipCountResponse friendCount = FriendshipCountResponse.builder()
+                .totalFriends(5L)
+                .build();
+
+        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
+            mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+            when(blockPolicyService.isBlocked(currentUserId, targetUserId)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(currentUserId, RoleName.ADMIN)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(currentUserId, RoleName.MODERATOR)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.ADMIN)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
+            when(userProfileCacheService.getUserProfile(targetUserId)).thenReturn(cache);
+            when(userProfileCacheService.getTotalFriend(targetUserId)).thenReturn(friendCount);
+            when(friendShipDomain.areFriends(currentUserId, targetUserId)).thenReturn(false);
+
+            PublicProfileResponse response = userService.getUserById(targetUserId);
+
+            assertNotNull(response);
+            // Visibility FRIEND nhưng không phải bạn bè -> không trả fullName, bio
+            assertNull(response.getFullName());
+            assertNull(response.getBio());
+            assertEquals("friend_only_user", response.getUsername());
+            assertEquals(5L, response.getTotalFriend());
+            assertFalse(response.isFriend());
+        }
+    }
+
     // =========================================================
     // findUsersByName()
     // =========================================================
