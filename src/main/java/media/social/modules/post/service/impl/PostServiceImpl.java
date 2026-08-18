@@ -604,7 +604,6 @@ public class PostServiceImpl implements PostService {
 
             postHashtagRepository.delete(relation);
 
-            postHashtagRepository.delete(relation);
             hashtagRepository.deleteIfUnused(hashtag.getHashtagId());
         }
     }
