@@ -1,0 +1,41 @@
+package media.social.modules.dating.dto.response.profile;
+
+import lombok.Builder;
+import lombok.Data;
+import media.social.modules.user.enums.Gender;
+
+import java.time.LocalDate;
+
+@Data
+@Builder
+public class PublicDatingProfileResponse {
+
+    private String username;
+
+    private String avatarUrl;
+
+    private String coverUrl;
+
+    private String displayName;
+
+    private String bio;
+
+    private Gender gender;
+
+    private LocalDate birthday;
+
+    private Integer height;
+
+    private String occupation;
+
+    private String education;
+
+    private String country;
+
+    private String city;
+
+    private String district;
+
+    private Double distanceKm;
+    private String distanceMessage;
+}

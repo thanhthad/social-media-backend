@@ -12,6 +12,10 @@ public enum NotificationType {
 
     COMMENT_REACTION,
 
-    FOLLOW
+    FOLLOW,
+
+    FRIEND_REQUEST,
+
+    FRIEND_ACCEPTED
 
 }

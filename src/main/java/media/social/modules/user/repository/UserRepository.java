@@ -1,10 +1,11 @@
 package media.social.modules.user.repository;
 
 import media.social.modules.auth.Enum.Status;
+import media.social.modules.user.dto.projection.AdminUserProjection;
+import media.social.modules.user.dto.projection.UserSearchProjection;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
-import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modules.user.dto.response.user.AdminUserResponse;
-import media.social.modules.user.dto.response.user.UserSearchResponse;
+import media.social.modules.user.dto.response.user.FriendshipCountResponse;
 import media.social.modules.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,25 +22,30 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
     SELECT new media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse(
         u.id,
-        u.username,
         u.email,
+        u.username,
         p.avatarUrl,
+        p.coverUrl,
         p.bio,
         p.fullName,
+        p.website,
         p.phone,
         p.dateOfBirth,
         p.gender,
-        p.location,
-    
-        u.createdAt,
-        u.updatedAt
+        p.country,
+        p.city,
+        p.district,
+        p.occupation,
+        p.company,
+        p.education,
+        p.visibility,
+        p.socialLinks,
+        p.createdAt,
+        p.updatedAt
     )
-    
     FROM User u
-    
     LEFT JOIN Profile p
-    ON p.user.id = u.id
-    
+        ON p.user.id = u.id
     WHERE u.id = :userId
     """)
     Optional<PublicUserProfileCacheResponse> findCurrentUserProfileCache(
@@ -47,24 +53,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse(
-        COUNT(DISTINCT follower.id),
-        COUNT(DISTINCT following.id)
+    SELECT new media.social.modules.user.dto.response.user.FriendshipCountResponse(
+        COUNT(f.id)
     )
-    
-    FROM User u
-    
-    LEFT JOIN Follow follower
-    ON follower.following.id = u.id
-    
-    LEFT JOIN Follow following
-    ON following.follower.id = u.id
-    
-    WHERE u.id = :userId
-    
-    GROUP BY u.id
-    """)
-    Optional<UserFollowStatCacheResponse> findFollowStat(
+    FROM Friendship f
+    WHERE (
+        f.userOne.id = :userId
+        OR f.userTwo.id = :userId
+    )
+    AND f.status = media.social.modules.user.enums.FriendshipStatus.ACCEPTED
+""")
+    Optional<FriendshipCountResponse> findFriendshipCount(
             @Param("userId") Long userId
     );
 
@@ -96,21 +95,61 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    @Query("""
-    SELECT new media.social.modules.user.dto.response.user.UserSearchResponse(
-        u.id,
-        u.username,
-        p.avatarUrl,
-        p.fullName
-    )
-    FROM User u
-    JOIN u.profile p
-    WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))
-    AND u.status = :status
-    """)
-    Page<UserSearchResponse> searchUsers(
+    @Query(value = """
+        SELECT 
+            u.user_id AS id,
+            u.username AS username,
+            p.avatar_url AS avatarUrl,
+            p.full_name AS fullName
+    
+        FROM users u
+    
+        JOIN profiles p 
+            ON p.user_id = u.user_id
+    
+        WHERE similarity(u.username, :username) > 0.3
+    
+        AND u.status = :status
+    
+        AND NOT EXISTS (
+            SELECT 1
+            FROM blocks b
+            WHERE 
+                (b.blocker_id = :viewerId 
+                 AND b.blocked_id = u.user_id)
+                OR
+                (b.blocker_id = u.user_id 
+                 AND b.blocked_id = :viewerId)
+        )
+    
+        ORDER BY similarity(u.username, :username) DESC
+    """,
+                countQuery = """
+        SELECT COUNT(*)
+        FROM users u
+    
+        WHERE similarity(u.username, :username) > 0.3
+    
+        AND u.status = :status
+    
+        AND NOT EXISTS (
+            SELECT 1
+            FROM blocks b
+            WHERE 
+                (b.blocker_id = :viewerId 
+                 AND b.blocked_id = u.user_id)
+    
+                OR
+    
+                (b.blocker_id = u.user_id 
+                 AND b.blocked_id = :viewerId)
+        )
+    """,
+            nativeQuery = true)
+    Page<UserSearchProjection> searchUsers(
             @Param("username") String username,
-            @Param("status") Status status,
+            @Param("status") String status,
+            @Param("viewerId") Long viewerId,
             Pageable pageable
     );
 
@@ -134,23 +173,39 @@ public interface UserRepository extends JpaRepository<User, Long> {
             Pageable pageable
     );
 
-    @Query("""
-    SELECT new media.social.modules.user.dto.response.user.AdminUserResponse(
-        u.id,
-        u.username,
-        u.status,
-        p.avatarUrl,
-        u.createdAt,
-        u.lastLoginAt,
-        u.lastActiveAt
+    @Query(
+            value = """
+        SELECT
+            u.user_id AS id,
+            u.username AS username,
+            u.status AS status,
+            p.avatar_url AS avatarUrl,
+            u.created_at AS createdAt,
+            u.last_login_at AS lastLoginAt,
+            u.last_active_at AS lastActiveAt
+
+        FROM users u
+
+        LEFT JOIN profiles p
+            ON p.user_id = u.user_id
+
+        WHERE similarity(u.username, :username) > 0.3
+
+        ORDER BY similarity(u.username, :username) DESC,
+                 u.created_at DESC
+        """,
+
+            countQuery = """
+        SELECT COUNT(*)
+
+        FROM users u
+
+        WHERE similarity(u.username, :username) > 0.3
+        """,
+
+            nativeQuery = true
     )
-    FROM User u
-    LEFT JOIN u.profile p
-    WHERE LOWER(u.username)
-    LIKE LOWER(CONCAT('%', :username, '%'))
-    ORDER BY u.createdAt DESC
-    """)
-    Page<AdminUserResponse> searchAdminUsers(
+    Page<AdminUserProjection> searchAdminUsers(
             @Param("username") String username,
             Pageable pageable
     );

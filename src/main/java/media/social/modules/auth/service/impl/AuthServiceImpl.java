@@ -7,6 +7,8 @@ import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.exception.password.AccountAlreadyLockedException;
 import media.social.modules.auth.exception.verification.EmailAlreadyVerifiedException;
 import media.social.modules.auth.service.PasswordResetService;
+import media.social.modules.dating.entity.DatingProfile;
+import media.social.modules.dating.repository.DatingProfileRepository;
 import media.social.modules.user.exception.user.ForbiddenException;
 import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.user.entity.*;
@@ -33,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Service
 @AllArgsConstructor
@@ -49,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailVerificationService emailVerificationService;
     private final PasswordResetService passwordResetService;
     private final UserServiceDomain userServiceDomain;
+    private final DatingProfileRepository datingProfileRepository;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -130,8 +134,15 @@ public class AuthServiceImpl implements AuthService {
 
         Profile profile = Profile.builder()
                 .user(saved)
-                .createdAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
                 .build();
+
+        DatingProfile datingProfile = DatingProfile.builder()
+                .user(user)
+                .build();
+
+        datingProfileRepository.save(datingProfile);
+
         profileRepository.save(profile);
 
         UserRole userRole =UserRole.builder()

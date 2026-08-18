@@ -2,15 +2,18 @@ package media.social.modules.user.service.impl;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
+import media.social.modules.user.dto.projection.UserSearchProjection;
+import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
-import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
 import media.social.modules.user.dto.response.user.*;
+import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
-import media.social.modules.user.service.FollowService;
 import media.social.modules.user.service.cache.UserCacheService;
 import media.social.modules.user.service.cache.UserProfileCacheService;
+import media.social.modules.user.service.domain.BlockPolicyService;
+import media.social.modules.user.service.domain.FriendShipDomain;
 import media.social.modules.user.service.domain.UserRoleServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +23,8 @@ import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.request.user.ChangePasswordRequest;
 import media.social.modules.user.dto.request.user.UpdateAvatarRequest;
-import media.social.modules.user.dto.request.user.UpdateProfileRequest;
 import media.social.modules.user.entity.Profile;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.mapper.ProfileMapper;
-import media.social.modules.user.mapper.UserMapper;
 import media.social.modules.user.repository.ProfileRepository;
 import media.social.modules.user.repository.UserRepository;
 import media.social.modules.auth.security.context.UserContextHolder;
@@ -37,63 +37,198 @@ import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
-
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
     private final ProfileRepository profileRepository;
-    private final ProfileMapper profileMapper;
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
     private final UserRoleServiceDomain userRoleServiceDomain;
-    private final FollowService followService;
+    private final FriendShipDomain friendShipDomain;
     private final UserProfileCacheService userProfileCacheService;
     private final UserCacheService userCacheService;
-
+    private final BlockPolicyService blockPolicyService;
 
     @Override
     @Transactional(readOnly = true)
-    public UserProfileResponse getMe() {
-        
+    public MyProfileResponse getMe() {
+
         Long userId = UserContextHolder.getUserId();
-        
-        PublicUserProfileCacheResponse userProfile =
+
+        PublicUserProfileCacheResponse cache =
                 userProfileCacheService.getUserProfile(userId);
 
-        UserFollowStatCacheResponse userFollowStatCacheResponse =
-                userProfileCacheService.getFollowStat(userId);
+        FriendshipCountResponse totalFriend =
+                userProfileCacheService.getTotalFriend(userId);
 
-        return userMapper.toUserProfileResponse(userProfile,userFollowStatCacheResponse);
+        return MyProfileResponse.builder()
+                .userId(cache.getId())
+                .email(cache.getEmail())
+                .username(cache.getUsername())
+                .avatarUrl(cache.getAvatarUrl())
+                .coverUrl(cache.getCoverUrl())
+                .bio(cache.getBio())
+                .fullName(cache.getFullName())
+                .website(cache.getWebsite())
+                .phone(cache.getPhone())
+                .dateOfBirth(cache.getDateOfBirth())
+                .gender(cache.getGender())
+                .country(cache.getCountry())
+                .city(cache.getCity())
+                .district(cache.getDistrict())
+                .occupation(cache.getOccupation())
+                .company(cache.getCompany())
+                .education(cache.getEducation())
+                .visibility(cache.getVisibility())
+                .socialLinks(cache.getSocialLinks())
+                .createdAt(cache.getCreatedAt())
+                .updatedAt(cache.getUpdatedAt())
+                .totalFriend(totalFriend.getTotalFriends())
+                .build();
     }
 
     @Override
     @Transactional
-    public ProfileResponse updateMe(UpdateProfileRequest request) {
+    public ProfileResponse updateBasicProfile(UpdateBasicProfileRequest request) {
 
         Long userId = UserContextHolder.getUserId();
 
-        User user = userRepository.findByIdWithProfile(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found")
-        );
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
 
-        profileMapper.updateProfileFromRequest(request, user.getProfile());
+        Profile profile = user.getProfile();
 
-        profileRepository.save(user.getProfile());
+        profile.setFullName(request.getFullName());
+        profile.setBio(request.getBio());
+        profile.setDateOfBirth(request.getDateOfBirth());
+        profile.setGender(request.getGender());
 
-        userCacheService.evictProfile(user.getId());
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
-                .fullName(request.getFullName())
-                .bio(request.getBio())
-                .phone(request.getPhone())
-                .dateOfBirth(request.getDateOfBirth())
-                .gender(request.getGender())
-                .location(request.getLocation())
+                .fullName(profile.getFullName())
+                .bio(profile.getBio())
+                .dateOfBirth(profile.getDateOfBirth())
+                .gender(profile.getGender())
                 .build();
+    }
 
+    @Override
+    @Transactional
+    public ProfileResponse updateContact(UpdateContactRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        profile.setPhone(request.getPhone());
+        profile.setWebsite(request.getWebsite());
+        profile.setCountry(request.getCountry());
+        profile.setCity(request.getCity());
+        profile.setDistrict(request.getDistrict());
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .phone(profile.getPhone())
+                .website(profile.getWebsite())
+                .country(profile.getCountry())
+                .city(profile.getCity())
+                .district(profile.getDistrict())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse updateCareer(UpdateCareerRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        profile.setOccupation(request.getOccupation());
+        profile.setCompany(request.getCompany());
+        profile.setEducation(request.getEducation());
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .occupation(profile.getOccupation())
+                .company(profile.getCompany())
+                .education(profile.getEducation())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse updateSocialLinks(UpdateSocialLinksRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        profile.setSocialLinks(request.getSocialLinks());
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .socialLinks(profile.getSocialLinks())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse updateProfileVisibility(
+            UpdateProfileVisibilityRequest request
+    ) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        profile.setVisibility(
+                request.getVisibility()
+        );
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .profileVisibility(profile.getVisibility())
+                .build();
     }
 
     @Override
@@ -115,6 +250,56 @@ public class UserServiceImpl implements UserService {
 
         return UserProfileResponse.builder()
                 .username(request.getUserName())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse updateCover(UpdateCoverRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        Profile profile = user.getProfile();
+
+        cloudinaryService.validateFile(
+                request.getFile(),
+                MediaType.IMAGE
+        );
+
+        UploadFileResponse upload =
+                cloudinaryService.uploadFile(
+                        request.getFile(),
+                        "covers",
+                        MediaType.IMAGE
+                );
+
+        if(profile.getCoverPublicId() != null){
+
+            cloudinaryService.deleteFile(
+                    profile.getCoverPublicId(),
+                    MediaType.IMAGE
+            );
+        }
+
+        profile.setCoverUrl(
+                upload.getFileUrl()
+        );
+
+        profile.setCoverPublicId(
+                upload.getPublicId()
+        );
+
+        profileRepository.save(profile);
+
+        userCacheService.evictProfile(userId);
+
+        return ProfileResponse.builder()
+                .coverUrl(profile.getCoverUrl())
                 .build();
     }
 
@@ -157,9 +342,8 @@ public class UserServiceImpl implements UserService {
         userCacheService.evictProfile(user.getId());
 
         return ProfileResponse.builder()
-                .avatarUrl(upload.getFileUrl())
+                .avatarUrl(profile.getAvatarUrl())
                 .build();
-
     }
 
     @Override
@@ -201,13 +385,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public PublicUserProfileResponse getUserById(Long userId) {
-        Long currentUserId =
-                UserContextHolder.getUserId();
+    public PublicProfileResponse getUserById(Long userId) {
+
+        Long currentUserId = UserContextHolder.getUserId();
 
         if (Objects.equals(userId, currentUserId)) {
             throw new UserAlreadyExistsException(
                     "Please use /me endpoint"
+            );
+        }
+
+        if (blockPolicyService.isBlocked(currentUserId, userId)) {
+            throw new UserBlockedException(
+                    "You cannot view this user's profile."
             );
         }
 
@@ -219,25 +409,62 @@ public class UserServiceImpl implements UserService {
         PublicUserProfileCacheResponse cache =
                 userProfileCacheService.getUserProfile(userId);
 
-        UserFollowStatCacheResponse userFollowStatCacheResponse =
-                userProfileCacheService.getFollowStat(userId);
+        FriendshipCountResponse totalFriend =
+                userProfileCacheService.getTotalFriend(userId);
 
-        Boolean following =
-                followService.isFollowing(userId);
+        boolean friends =
+                friendShipDomain.areFriends(
+                        currentUserId,
+                        userId
+                );
 
-        return PublicUserProfileResponse.builder()
-                .id(cache.getId())
-                .username(cache.getUsername())
-                .avatarUrl(cache.getAvatarUrl())
-                .bio(cache.getBio())
-                .fullName(cache.getFullName())
-                .dateOfBirth(cache.getDateOfBirth())
-                .gender(cache.getGender())
-                .location(cache.getLocation())
-                .totalFollower(userFollowStatCacheResponse.getTotalFollower())
-                .totalFollowing(userFollowStatCacheResponse.getTotalFollowing())
-                .following(following)
-                .build();
+        boolean canViewFullProfile =
+                switch (cache.getVisibility()) {
+
+                    case PUBLIC ->
+                            true;
+
+                    case FRIEND ->
+                            friends;
+
+                    case PRIVATE ->
+                            false;
+                };
+
+        PublicProfileResponse.PublicProfileResponseBuilder builder =
+                PublicProfileResponse.builder()
+                        .userId(cache.getId())
+                        .username(cache.getUsername())
+                        .avatarUrl(cache.getAvatarUrl())
+                        .coverUrl(cache.getCoverUrl())
+
+                        .totalFriend(totalFriend.getTotalFriends())
+                        .isFriend(friends);
+
+        if (canViewFullProfile) {
+            builder
+                    .bio(cache.getBio())
+                    .fullName(cache.getFullName())
+                    .website(cache.getWebsite())
+
+                    .dateOfBirth(cache.getDateOfBirth())
+                    .gender(cache.getGender())
+
+                    .country(cache.getCountry())
+                    .city(cache.getCity())
+                    .district(cache.getDistrict())
+
+                    .occupation(cache.getOccupation())
+                    .company(cache.getCompany())
+                    .education(cache.getEducation())
+
+                    .socialLinks(cache.getSocialLinks())
+
+                    .createdAt(cache.getCreatedAt())
+                    .updatedAt(cache.getUpdatedAt());
+        }
+
+        return builder.build();
     }
 
     private void validateCanViewProfile(
@@ -291,13 +518,28 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable) {
-        Page<UserSearchResponse> userPage = userRepository.searchUsers(
-                username,
-                Status.ACTIVE,
-                pageable
-        );
+    public Page<UserSearchResponse> findUsersByName(
+            String username,
+            Pageable pageable
+    ) {
 
-        return userPage;
+        Long viewerId = UserContextHolder.getUserId();
+
+        Page<UserSearchProjection> projections =
+                userRepository.searchUsers(
+                        username,
+                        Status.ACTIVE.name(),
+                        viewerId,
+                        pageable
+                );
+
+        return projections.map(user ->
+                UserSearchResponse.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .avatarUrl(user.getAvatarUrl())
+                        .fullName(user.getFullName())
+                        .build()
+        );
     }
 }

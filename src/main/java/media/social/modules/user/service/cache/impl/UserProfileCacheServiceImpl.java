@@ -2,7 +2,7 @@ package media.social.modules.user.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
-import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
+import media.social.modules.user.dto.response.user.FriendshipCountResponse;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.UserRepository;
 import media.social.modules.user.service.cache.UserProfileCacheService;
@@ -25,36 +25,21 @@ public class UserProfileCacheServiceImpl implements UserProfileCacheService {
     @Override
     public PublicUserProfileCacheResponse getUserProfile(Long userId) {
 
-        PublicUserProfileCacheResponse user = userRepository.findCurrentUserProfileCache(userId).orElseThrow(
-                () -> new UserNotFoundException("User not found")
-        );
-
-        return PublicUserProfileCacheResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .avatarUrl(user.getAvatarUrl())
-                .bio(user.getBio())
-                .fullName(user.getFullName())
-                .phone(user.getPhone())
-                .dateOfBirth(user.getDateOfBirth())
-                .gender(user.getGender())
-                .location(user.getLocation())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
-
+        return userRepository.findCurrentUserProfileCache(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
     }
 
     @Cacheable(
-            value = "userFollowStat",
+            value = "friendShipCount",
             key = "#userId"
     )
     @Transactional(readOnly = true)
-    public UserFollowStatCacheResponse getFollowStat(
+    public FriendshipCountResponse getTotalFriend(
             Long userId
     ){
-        return userRepository.findFollowStat(userId)
+        return userRepository.findFriendshipCount(userId)
                 .orElseThrow(
                         () -> new UserNotFoundException(
                                 "User not found"

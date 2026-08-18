@@ -21,16 +21,16 @@ public interface PostMediaRepository extends JpaRepository<PostMedia, Long> {
     long countByPostId(Long postId);
 
     @Query("""
-SELECT new media.social.modules.post.dto.response.post.PostMediaResponse(
-    pm.id,
-    pm.url,
-    pm.mediaType
-)
-
-FROM PostMedia pm
-
-WHERE pm.post.id = :postId
-""")
+    SELECT new media.social.modules.post.dto.response.post.PostMediaResponse(
+        pm.id,
+        pm.url,
+        pm.mediaType
+    )
+    
+    FROM PostMedia pm
+    
+    WHERE pm.post.id = :postId
+    """)
     List<PostMediaResponse> findMediaResponseByPostId(Long postId);
 
 }

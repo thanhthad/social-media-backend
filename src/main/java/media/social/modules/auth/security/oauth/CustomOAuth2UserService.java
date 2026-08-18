@@ -2,6 +2,8 @@ package media.social.modules.auth.security.oauth;
 
 import lombok.RequiredArgsConstructor;
 import media.social.modules.auth.Enum.AuthProvider;
+import media.social.modules.dating.entity.DatingProfile;
+import media.social.modules.dating.repository.DatingProfileRepository;
 import media.social.modules.user.entity.Profile;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.repository.ProfileRepository;
@@ -18,6 +20,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final DatingProfileRepository datingProfileRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest request)
@@ -44,6 +47,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                             .fullName(name)
                             .avatarUrl(avatarUrl)
                             .build();
+
+                    DatingProfile datingProfile = DatingProfile.builder()
+                            .user(saved)
+                            .build();
+                    datingProfileRepository.save(datingProfile);
 
                     profileRepository.save(profile);
                     return saved;

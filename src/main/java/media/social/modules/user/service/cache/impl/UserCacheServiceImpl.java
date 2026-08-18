@@ -8,6 +8,7 @@ import media.social.modules.user.repository.UserRepository;
 import media.social.modules.user.service.cache.UserCacheService;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,29 +20,22 @@ public class UserCacheServiceImpl implements UserCacheService {
     private final CacheManager cacheManager;
     private final UserRepository userRepository;
 
-    public void evictProfile(Long userId){
+    @Override
+    @CacheEvict(
+            value = "userProfile",
+            key = "#userId"
+    )
+    public void evictProfile(Long userId) {
 
-        Cache cache =
-                cacheManager.getCache("userProfile");
-
-
-        if(cache != null){
-            cache.evict(userId);
-        }
     }
 
     @Override
-    public void evict(Long userId){
+    @CacheEvict(
+            value = "friendShipCount",
+            key = "#userId"
+    )
+    public void evict(Long userId) {
 
-        Cache cache =
-                cacheManager.getCache(
-                        "userFollowStat"
-                );
-
-
-        if(cache != null){
-            cache.evict(userId);
-        }
     }
 
     @Override

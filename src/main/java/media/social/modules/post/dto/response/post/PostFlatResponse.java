@@ -1,5 +1,7 @@
 package media.social.modules.post.dto.response.post;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import media.social.modules.post.enums.ReactionType;
@@ -9,29 +11,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
 public class PostFlatResponse {
-
-    public PostFlatResponse(
-            Long id,
-            String content,
-            Visibility visibility,
-            LocalDateTime createdAt,
-            Long userId,
-            String username,
-            String avatarUrl,
-            Long commentCount,
-            Long reactionCount
-    ) {
-        this.id = id;
-        this.content = content;
-        this.visibility = visibility;
-        this.createdAt = createdAt;
-        this.userId = userId;
-        this.username = username;
-        this.avatarUrl = avatarUrl;
-        this.commentCount = commentCount;
-        this.reactionCount = reactionCount;
-    }
 
     private Long id;
     private String content;
@@ -45,6 +27,4 @@ public class PostFlatResponse {
     private Long commentCount;
     private Long reactionCount;
 
-    private Boolean reacted;
-    private ReactionType myReactionType;
 }

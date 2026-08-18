@@ -11,6 +11,15 @@ import media.social.modules.auth.exception.password.PasswordResetTokenInvalidExc
 import media.social.modules.auth.exception.password.PasswordResetTokenUsedException;
 import media.social.modules.auth.exception.verification.*;
 import media.social.modules.conversation.exception.*;
+import media.social.modules.dating.exception.photo.*;
+import media.social.modules.dating.exception.preference.PreferenceNotFoundException;
+import media.social.modules.dating.exception.profile.BadRequestException;
+import media.social.modules.dating.exception.profile.CoordinatesNotFoundException;
+import media.social.modules.dating.exception.profile.DatingProfileNotFoundException;
+import media.social.modules.dating.exception.report.CannotReportOwnProfileException;
+import media.social.modules.dating.exception.report.DatingReportAlreadyExistsException;
+import media.social.modules.dating.exception.report.DatingReportAlreadyReviewedException;
+import media.social.modules.dating.exception.report.DatingReportNotFoundException;
 import media.social.modules.file.image.exception.CloudinaryDeleteException;
 import media.social.modules.file.image.exception.CloudinaryUploadException;
 import media.social.modules.file.image.exception.InvalidMediaException;
@@ -27,13 +36,16 @@ import media.social.modules.post.exception.report.CannotReportOwnPostException;
 import media.social.modules.post.exception.report.ReportAlreadyExistsException;
 import media.social.modules.post.exception.report.ReportAlreadyReviewedException;
 import media.social.modules.post.exception.report.ReportNotFoundException;
+import media.social.modules.post.exception.saved_post.PostFriendsOnlyException;
 import media.social.modules.post.exception.saved_post.SavedPostAlreadyExistsException;
 import media.social.modules.post.exception.saved_post.SavedPostNotFoundException;
+import media.social.modules.story.exception.reaction.StoryReactionNotFoundException;
+import media.social.modules.story.exception.story.StoryAccessDeniedException;
+import media.social.modules.story.exception.story.StoryForbiddenException;
+import media.social.modules.story.exception.story.StoryNotFoundException;
 import media.social.modules.user.exception.block.BlockAlreadyExistsException;
 import media.social.modules.user.exception.block.BlockNotFoundException;
 import media.social.modules.user.exception.block.UserBlockedException;
-import media.social.modules.user.exception.follow.FollowAlreadyExistsException;
-import media.social.modules.user.exception.follow.FollowNotFoundException;
 import media.social.modules.user.exception.profile.ProfileNotFoundException;
 import media.social.modules.auth.exception.refreshtoken.InvalidRefreshTokenException;
 import media.social.modules.auth.exception.refreshtoken.RefreshTokenExpiredException;
@@ -70,6 +82,183 @@ public class GlobalExceptionHandler {
 
     private Long getUserId(){
         return UserContextHolder.getUserId();
+    }
+
+    // ======================= DATING PROFILE PHOTO =======================
+
+    @ExceptionHandler(DatingProfilePhotoAlreadyPrimaryException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoAlreadyPrimary(
+            DatingProfilePhotoAlreadyPrimaryException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingProfilePhotoLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoLimitExceeded(
+            DatingProfilePhotoLimitExceededException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingProfilePhotoNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoNotFound(
+            DatingProfilePhotoNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(InvalidDatingProfilePhotoException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidDatingProfilePhoto(
+            InvalidDatingProfilePhotoException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(UnauthorizedDatingProfilePhotoException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorizedDatingProfilePhoto(
+            UnauthorizedDatingProfilePhotoException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    // ======================= STORY & REACTION =======================
+
+    @ExceptionHandler(StoryReactionNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryReactionNotFound(
+            StoryReactionNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(StoryAccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryAccessDenied(
+            StoryAccessDeniedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED
+        );
+    }
+
+    @ExceptionHandler(StoryForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryForbidden(
+            StoryForbiddenException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(StoryNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryNotFound(
+            StoryNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    // ================= PREFERENCE =================
+    @ExceptionHandler(PreferenceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePreferenceNotFound(
+            PreferenceNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    // ================= PROFILE =================
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadRequest(
+            BadRequestException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(CoordinatesNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCoordinatesNotFound(
+            CoordinatesNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(DatingProfileNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfileNotFound(
+            DatingProfileNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    // ================= REPORT =================
+    @ExceptionHandler(CannotReportOwnProfileException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCannotReportOwnProfile(
+            CannotReportOwnProfileException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingReportAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportAlreadyExists(
+            DatingReportAlreadyExistsException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(DatingReportAlreadyReviewedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportAlreadyReviewed(
+            DatingReportAlreadyReviewedException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingReportNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportNotFound(
+            DatingReportNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
     }
 
     @ExceptionHandler(ResourceAccessException.class)
@@ -303,6 +492,13 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(PostFriendsOnlyException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePostFriendOnly(PostFriendsOnlyException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
+
+
     //==================BLOCK==================
     @ExceptionHandler(BlockNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleBlockNotFound(BlockNotFoundException ex) {
@@ -414,10 +610,6 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(PostFollowersOnlyException.class)
-    public ResponseEntity<ApiResponse<Object>> handlePostFollowOnly(PostFollowersOnlyException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
 
     @ExceptionHandler(CannotSaveOwnPostException.class)
     public ResponseEntity<ApiResponse<Object>> handleSaveOwnPost(CannotSaveOwnPostException ex) {
@@ -432,17 +624,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidImageException.class)
     public ResponseEntity<ApiResponse<Object>> handleInvalidImage(InvalidImageException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    //====================FOLLOW==================
-    @ExceptionHandler(FollowAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleFollowAlreadyExists(FollowAlreadyExistsException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(FollowNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleFollowNotFound(FollowNotFoundException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     //====================COMMENT==================

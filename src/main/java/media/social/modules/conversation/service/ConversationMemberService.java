@@ -12,11 +12,6 @@ public interface ConversationMemberService {
             Long userId
     );
 
-    boolean isMember(
-            Long conversationId,
-            Long userId
-    );
-
     void updateLastReadMessage(
             Long conversationId,
             Long messageId

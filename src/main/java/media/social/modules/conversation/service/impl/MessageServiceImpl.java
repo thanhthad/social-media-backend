@@ -53,6 +53,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public MessageResponse create(CreateMessageRequest request) {
+
         validateMessage(request);
 
         Long userId = UserContextHolder.getUserId();

@@ -4,9 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import media.social.modules.post.enums.Visibility;
+import media.social.modules.user.enums.Gender;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.Map;
 
 @Getter
 @Builder
@@ -16,26 +19,44 @@ public class PublicUserProfileCacheResponse {
 
     private Long id;
 
-    private String username;
-
     private String email;
 
+    private String username;
+
     private String avatarUrl;
+
+    private String coverUrl;
 
     private String bio;
 
     private String fullName;
 
+    private String website;
+
     private String phone;
 
     private LocalDate dateOfBirth;
 
-    private String gender;
+    private Gender gender;
 
-    private String location;
+    private String country;
 
-    private LocalDateTime createdAt;
+    private String city;
 
-    private LocalDateTime updatedAt;
+    private String district;
+
+    private String occupation;
+
+    private String company;
+
+    private String education;
+
+    private Visibility visibility;
+
+    private Map<String,String> socialLinks;
+
+    private OffsetDateTime createdAt;
+
+    private OffsetDateTime updatedAt;
 
 }

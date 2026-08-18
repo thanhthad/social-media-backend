@@ -3,10 +3,14 @@ version: "3.9"
 services:
 
   postgres:
-    image: postgres:17
+    image: postgis/postgis:17-3.5
     container_name: social-postgres
-
     restart: unless-stopped
+
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
 
     environment:
       POSTGRES_DB: social
@@ -20,16 +24,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d social"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   redis:
     image: redis:7-alpine
     container_name: social-redis
-
     restart: unless-stopped
 
     ports:
@@ -52,22 +49,18 @@ services:
       dockerfile: Dockerfile
 
     container_name: social-backend
-
     restart: unless-stopped
 
     depends_on:
       postgres:
-        condition: service_healthy
-
+        condition: service_started
       redis:
         condition: service_healthy
-
 
     ports:
       - "8080:8080"
 
     environment:
-
       SPRING_PROFILES_ACTIVE: docker
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/social
@@ -78,7 +71,5 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
 
 volumes:
-
   postgres_data:
-
   redis_data:

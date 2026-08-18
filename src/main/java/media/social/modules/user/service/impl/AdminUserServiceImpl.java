@@ -40,10 +40,21 @@ public class AdminUserServiceImpl implements AdminUserService {
             String username,
             Pageable pageable
     ) {
+
         return userRepository.searchAdminUsers(
-                username,
-                pageable
-        );
+                        username,
+                        pageable
+                )
+                .map(user -> AdminUserResponse.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .status(user.getStatus())
+                        .avatarUrl(user.getAvatarUrl())
+                        .createdAt(user.getCreatedAt())
+                        .lastLoginAt(user.getLastLoginAt())
+                        .lastActiveAt(user.getLastActiveAt())
+                        .build()
+                );
     }
 
     @Override

@@ -5,9 +5,9 @@ import media.social.modules.post.entity.Post;
 import media.social.modules.post.entity.SavedPost;
 import media.social.modules.post.entity.SavedPostId;
 import media.social.modules.post.exception.post.CannotSaveOwnPostException;
-import media.social.modules.post.exception.post.PostFollowersOnlyException;
 import media.social.modules.post.exception.post.PostNotFoundException;
 import media.social.modules.post.exception.post.PostPrivateException;
+import media.social.modules.post.exception.saved_post.PostFriendsOnlyException;
 import media.social.modules.post.exception.saved_post.SavedPostAlreadyExistsException;
 import media.social.modules.post.exception.saved_post.SavedPostNotFoundException;
 import media.social.modules.post.repository.PostRepository;
@@ -15,7 +15,8 @@ import media.social.modules.post.repository.SavedPostRepository;
 import media.social.modules.post.service.SavedPostService;
 import media.social.modules.user.entity.User;
 import media.social.modules.auth.security.context.UserContextHolder;
-import media.social.modules.user.service.FollowService;
+import media.social.modules.user.service.FriendshipService;
+import media.social.modules.user.service.domain.FriendShipDomain;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,42 +28,64 @@ public class SavedPostServiceImpl implements SavedPostService {
     private final SavedPostRepository savedPostRepository;
     private final UserServiceDomain userServiceDomain;
     private final PostRepository postRepository;
-    private final FollowService followService;
+    private final FriendShipDomain friendShipDomain;
 
     @Override
     @Transactional
     public void savePost(Long postId) {
+
         Long userId = UserContextHolder.getUserId();
 
         User user = userServiceDomain.getByUserId(userId);
 
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException("Post not found"));
+                .orElseThrow(() ->
+                        new PostNotFoundException("Post not found")
+                );
 
-        if (post.getUser().getId().equals(userId)) {
-            throw new CannotSaveOwnPostException("You cannot save your own post.");
+        Long ownerId = post.getUser().getId();
+
+        if (ownerId.equals(userId)) {
+            throw new CannotSaveOwnPostException(
+                    "You cannot save your own post."
+            );
         }
-        switch (post.getVisibility()) {
-            case PRIVATE ->
-                    throw new PostPrivateException("You cannot save this private post.");
 
-            case FOLLOWERS -> {
-                if (!followService.isFollowing(post.getUser().getId())) {
-                    throw new PostFollowersOnlyException(
-                            "You must follow this user to save this post.");
+        switch (post.getVisibility()) {
+
+            case PRIVATE ->
+                    throw new PostPrivateException(
+                            "You cannot save this private post."
+                    );
+
+            case FRIEND -> {
+                if (!friendShipDomain.areFriends(userId, ownerId)) {
+                    throw new PostFriendsOnlyException(
+                            "You must be friends with this user to save this post."
+                    );
                 }
             }
+
             case PUBLIC -> {
+                // Anyone can save a public post
             }
         }
-        if (savedPostRepository.existsByUser_IdAndPost_Id(userId, postId)) {
-            throw new SavedPostAlreadyExistsException("You have already saved this post.");
+
+        if (savedPostRepository.existsByUser_IdAndPost_Id(
+                userId,
+                postId
+        )) {
+            throw new SavedPostAlreadyExistsException(
+                    "You have already saved this post."
+            );
         }
+
         SavedPost savedPost = SavedPost.builder()
                 .id(new SavedPostId(userId, postId))
                 .user(user)
                 .post(post)
                 .build();
+
         savedPostRepository.save(savedPost);
     }
 

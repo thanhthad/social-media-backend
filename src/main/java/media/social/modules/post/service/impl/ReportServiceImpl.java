@@ -7,19 +7,20 @@ import media.social.modules.post.dto.response.report.ReportDetailResponse;
 import media.social.modules.post.entity.Post;
 import media.social.modules.post.entity.Report;
 import media.social.modules.post.enums.ReportStatus;
-import media.social.modules.post.exception.post.PostFollowersOnlyException;
 import media.social.modules.post.exception.post.PostNotFoundException;
 import media.social.modules.post.exception.post.PostPrivateException;
 import media.social.modules.post.exception.report.CannotReportOwnPostException;
 import media.social.modules.post.exception.report.ReportAlreadyExistsException;
 import media.social.modules.post.exception.report.ReportAlreadyReviewedException;
 import media.social.modules.post.exception.report.ReportNotFoundException;
+import media.social.modules.post.exception.saved_post.PostFriendsOnlyException;
 import media.social.modules.post.repository.PostRepository;
 import media.social.modules.post.repository.ReportRepository;
 import media.social.modules.post.service.ReportService;
 import media.social.modules.user.entity.User;
 import media.social.modules.auth.security.context.UserContextHolder;
-import media.social.modules.user.service.FollowService;
+import media.social.modules.user.service.FriendshipService;
+import media.social.modules.user.service.domain.FriendShipDomain;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,43 +34,55 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final PostRepository postRepository;
     private final UserServiceDomain userServiceDomain;
-    private final FollowService followService;
+    private final FriendShipDomain friendShipDomain;
 
     @Override
     @Transactional
-    public void create(
-            CreateReportRequest request
-    ) {
+    public void create(CreateReportRequest request) {
+
         Long userId = UserContextHolder.getUserId();
+
         if (reportRepository.existsByReporter_IdAndPost_Id(
                 userId,
                 request.getPostId()
         )) {
-            throw new ReportAlreadyExistsException("You already send report for this post");
+            throw new ReportAlreadyExistsException(
+                    "You already sent a report for this post"
+            );
         }
+
         User user = userServiceDomain.getByUserId(userId);
 
         Post post = postRepository.findById(request.getPostId())
-                .orElseThrow(() -> new PostNotFoundException("Post not found"));
+                .orElseThrow(() ->
+                        new PostNotFoundException("Post not found")
+                );
 
-        if (post.getUser().getId().equals(userId)) {
-            throw new CannotReportOwnPostException("You cannot report your own post.");
+        Long ownerId = post.getUser().getId();
+
+        if (ownerId.equals(userId)) {
+            throw new CannotReportOwnPostException(
+                    "You cannot report your own post."
+            );
         }
 
         switch (post.getVisibility()) {
-            case PRIVATE ->
-                    throw new PostPrivateException("You cannot report this private post.");
 
-            case FOLLOWERS -> {
-                if (!followService.isFollowing(post.getUser().getId())) {
-                    throw new PostFollowersOnlyException(
-                            "You must follow this user to report this post.");
+            case PRIVATE ->
+                    throw new PostPrivateException(
+                            "You cannot report this private post."
+                    );
+            case FRIEND -> {
+                if (!friendShipDomain.areFriends(userId, ownerId)) {
+                    throw new PostFriendsOnlyException(
+                            "You must be friends with this user to report this post."
+                    );
                 }
             }
             case PUBLIC -> {
+                // Anyone can report a public post
             }
         }
-
         Report report = Report.builder()
                 .reporter(user)
                 .post(post)

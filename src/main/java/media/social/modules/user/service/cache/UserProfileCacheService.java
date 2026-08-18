@@ -1,8 +1,7 @@
 package media.social.modules.user.service.cache;
 
-
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
-import media.social.modules.user.dto.response.cache.UserFollowStatCacheResponse;
+import media.social.modules.user.dto.response.user.FriendshipCountResponse;
 
 public interface UserProfileCacheService {
 
@@ -10,7 +9,7 @@ public interface UserProfileCacheService {
             Long userId
     );
 
-    UserFollowStatCacheResponse getFollowStat(
+    FriendshipCountResponse getTotalFriend(
             Long userId
     );
 
