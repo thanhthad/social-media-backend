@@ -1,6 +1,8 @@
 package media.social.modules.conversation.service.impl;
 
 import lombok.AllArgsConstructor;
+import media.social.modules.conversation.dto.projection.ConversationMemberProjection;
+import media.social.modules.conversation.dto.response.ConversationMemberResponse;
 import media.social.modules.conversation.entity.Conversation;
 import media.social.modules.conversation.entity.ConversationMember;
 import media.social.modules.conversation.entity.ConversationMemberId;
@@ -18,6 +20,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class ConversationMemberServiceImpl implements ConversationMemberService {
@@ -26,6 +30,28 @@ public class ConversationMemberServiceImpl implements ConversationMemberService 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final UserServiceDomain userServiceDomain;
+
+    @Transactional(readOnly = true)
+    public List<ConversationMemberResponse> getConversationMembers(
+            Long conversationId
+    ) {
+
+        return conversationMemberRepository
+                .findMembersProjectionByConversationId(conversationId)
+                .stream()
+                .map(this::mapToMemberResponse)
+                .toList();
+    }
+
+    private ConversationMemberResponse mapToMemberResponse(
+            ConversationMemberProjection member
+    ) {
+        return ConversationMemberResponse.builder()
+                .userId(member.getUserId())
+                .username(member.getUsername())
+                .avatarUrl(member.getAvatarUrl())
+                .build();
+    }
 
     @Override
     @Transactional

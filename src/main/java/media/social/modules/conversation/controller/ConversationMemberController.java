@@ -6,10 +6,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
+import media.social.modules.conversation.dto.response.ConversationMemberResponse;
 import media.social.modules.conversation.service.ConversationMemberService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/conversation-members")
@@ -22,6 +25,33 @@ import org.springframework.web.bind.annotation.*;
 public class ConversationMemberController {
 
     private final ConversationMemberService conversationMemberService;
+
+    // ================= GET CONVERSATION MEMBERS =================
+    @Operation(
+            summary = "Get conversation members",
+            description = "Get all members of a conversation"
+    )
+    @GetMapping("/{conversationId}/members")
+    @RateLimit(
+            name = "CONVERSATION_GET_MEMBERS",
+            limit = 60,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> getConversationMembers(
+            @PathVariable Long conversationId
+    ) {
+
+        List<ConversationMemberResponse> members =
+                conversationMemberService.getConversationMembers(
+                        conversationId
+                );
+
+        return ResponseData.success(
+                members,
+                "Get conversation members successfully",
+                HttpStatus.OK
+        );
+    }
 
     // ================= ADD MEMBER =================
     @Operation(

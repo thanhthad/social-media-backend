@@ -1,5 +1,7 @@
 package media.social.modules.conversation.repository;
 
+import media.social.modules.conversation.dto.projection.ConversationMemberProjection;
+import media.social.modules.conversation.dto.projection.UnreadCountProjection;
 import media.social.modules.conversation.dto.response.ConversationMemberResponse;
 import media.social.modules.conversation.entity.Conversation;
 import media.social.modules.conversation.entity.ConversationMember;
@@ -60,6 +62,20 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     );
 
     @Query("""
+    SELECT
+        u.id AS userId,
+        u.username AS username,
+        p.avatarUrl AS avatarUrl
+    FROM ConversationMember cm
+    JOIN cm.user u
+    LEFT JOIN u.profile p
+    WHERE cm.conversation.id = :conversationId
+""")
+    List<ConversationMemberProjection> findMembersProjectionByConversationId(
+            @Param("conversationId") Long conversationId
+    );
+
+    @Query("""
     SELECT c
     FROM Conversation c
     JOIN ConversationMember cm1
@@ -79,4 +95,27 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
             @Param("userId") Long userId,
             @Param("targetUserId") Long targetUserId
     );
+
+    @Query("""
+    SELECT
+        cm.conversation.id AS conversationId,
+        COUNT(m.id) AS unreadCount
+    FROM ConversationMember cm
+    LEFT JOIN Message m
+        ON m.conversation.id = cm.conversation.id
+        AND m.sender.id <> :userId
+        AND m.deleted = false
+        AND (
+            cm.lastReadMessage IS NULL
+            OR m.id > cm.lastReadMessage.id
+        )
+    WHERE cm.user.id = :userId
+      AND cm.conversation.id IN :conversationIds
+    GROUP BY cm.conversation.id
+""")
+    List<UnreadCountProjection> countUnreadMessagesByConversationIds(
+            @Param("userId") Long userId,
+            @Param("conversationIds") List<Long> conversationIds
+    );
+
 }
