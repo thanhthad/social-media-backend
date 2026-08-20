@@ -1,27 +1,25 @@
 package media.social.modules.conversation.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modules.auth.Enum.Status;
+import media.social.modules.conversation.dto.projection.ConversationListProjection;
+import media.social.modules.conversation.dto.projection.DatingConversationListProjection;
+import media.social.modules.conversation.dto.projection.UnreadCountProjection;
 import media.social.modules.conversation.dto.request.CreateGroupRequest;
 import media.social.modules.conversation.dto.request.UpdateGroupNameRequest;
 import media.social.modules.conversation.dto.response.ConversationListResponse;
 import media.social.modules.conversation.dto.response.ConversationMemberResponse;
 import media.social.modules.conversation.dto.response.ConversationResponse;
-import media.social.modules.conversation.dto.response.LastMessageResponse;
+import media.social.modules.conversation.dto.response.DatingConversationListResponse;
 import media.social.modules.conversation.entity.Conversation;
 import media.social.modules.conversation.entity.ConversationMember;
 import media.social.modules.conversation.entity.ConversationMemberId;
-import media.social.modules.conversation.entity.Message;
 import media.social.modules.conversation.enums.ConversationType;
 import media.social.modules.conversation.exception.ConversationNotFoundException;
 import media.social.modules.conversation.repository.ConversationMemberRepository;
 import media.social.modules.conversation.repository.ConversationRepository;
-import media.social.modules.conversation.repository.MessageRepository;
 import media.social.modules.conversation.service.ConversationService;
 import media.social.modules.conversation.service.domain.ConversationDomainService;
 import media.social.modules.conversation.websocket.ConversationPublisher;
-import media.social.modules.dating.dto.response.conversation.DatingConversationListResponse;
-import media.social.modules.dating.repository.DatingMatchRepository;
 import media.social.modules.file.image.dto.response.UploadFileResponse;
 import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.post.enums.MediaType;
@@ -34,7 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -44,11 +44,9 @@ public class ConversationServiceImpl implements ConversationService {
     private final ConversationMemberRepository conversationMemberRepository;
     private final ConversationRepository conversationRepository;
     private final ConversationDomainService conversationService;
-    private final MessageRepository messageRepository;
     private final UserServiceDomain userServiceDomain;
     private final CloudinaryService cloudinaryService;
     private final ConversationPublisher conversationPublisher;
-    private final DatingMatchRepository datingMatchRepository;
 
     @Override
     @Transactional
@@ -369,136 +367,6 @@ public class ConversationServiceImpl implements ConversationService {
         );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ConversationListResponse> getMyConversations() {
-
-        Long userId = UserContextHolder.getUserId();
-
-        List<Conversation> conversations =
-                conversationMemberRepository.findConversationsByUserId(
-                        userId,
-                        ConversationType.DATING
-                );
-
-        return conversations.stream()
-                .map(c -> mapToConversationListResponse(c, userId))
-                .toList();
-    }
-
-    private ConversationListResponse mapToConversationListResponse(
-            Conversation conversation,
-            Long currentUserId
-    ) {
-
-        List<ConversationMemberResponse> members =
-                conversationMemberRepository
-                        .findMembersByConversationId(
-                                conversation.getId()
-                        );
-
-        String displayName;
-        String avatarUrl;
-
-        if (conversation.getType() == ConversationType.PRIVATE) {
-
-            ConversationMemberResponse target =
-                    members.stream()
-                            .filter(m ->
-                                    !m.getUserId().equals(currentUserId)
-                            )
-                            .findFirst()
-                            .orElseThrow();
-
-            displayName = target.getUsername();
-            avatarUrl = target.getAvatarUrl();
-
-        } else {
-
-            displayName = conversation.getName();
-            avatarUrl = conversation.getAvatarUrl();
-        }
-
-        LastMessageResponse lastMessage = null;
-
-        if(conversation.getLastMessage() != null) {
-            Message message =
-                    conversation.getLastMessage();
-            lastMessage =
-                    LastMessageResponse.builder()
-                            .id(message.getId())
-                            .preview(
-                                    buildPreview(message)
-                            )
-                            .senderId(
-                                    message.getSender()
-                                            .getId()
-                            )
-                            .senderName(
-                                    message.getSender()
-                                            .getUsername()
-                            )
-                            .createdAt(
-                                    message.getCreatedAt()
-                            )
-                            .build();
-        }
-
-        long unreadCount =
-                messageRepository.countUnreadMessages(
-                        conversation.getId(),
-                        currentUserId
-                );
-
-        return ConversationListResponse.builder()
-                .id(conversation.getId())
-                .type(conversation.getType())
-                .displayName(displayName)
-                .avatarUrl(avatarUrl)
-                .lastMessage(lastMessage)
-                .unreadCount(unreadCount)
-                .createdAt(conversation.getCreatedAt())
-                .build();
-    }
-
-    private String buildPreview(Message message) {
-
-        if (message.getContent() != null &&
-                !message.getContent().isBlank()) {
-            return message.getContent();
-        }
-
-        int imageCount = message.getMedia()
-                .stream()
-                .filter(m -> m.getMediaType() == MediaType.IMAGE)
-                .toList()
-                .size();
-
-        int videoCount = message.getMedia()
-                .stream()
-                .filter(m -> m.getMediaType() == MediaType.VIDEO)
-                .toList()
-                .size();
-
-        if (imageCount > 0 && videoCount == 0) {
-            return imageCount == 1
-                    ? "Đã gửi một hình ảnh"
-                    : "Đã gửi " + imageCount + " hình ảnh";
-        }
-
-        if (videoCount > 0 && imageCount == 0) {
-            return videoCount == 1
-                    ? "Đã gửi một video"
-                    : "Đã gửi " + videoCount + " video";
-        }
-
-        if (imageCount > 0 && videoCount > 0) {
-            return "Đã gửi tệp đính kèm";
-        }
-
-        return "";
-    }
-
     private ConversationResponse mapToResponse(
             Conversation conversation,
             Long currentUserId
@@ -538,63 +406,133 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ConversationListResponse> getMyConversations() {
+
+        Long userId = UserContextHolder.getUserId();
+
+        List<ConversationListProjection> conversations =
+                conversationRepository.findConversationList(
+                        userId,
+                        ConversationType.PRIVATE,
+                        ConversationType.DATING
+                );
+
+        if (conversations.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> conversationIds =
+                conversations.stream()
+                        .map(ConversationListProjection::getConversationId)
+                        .toList();
+
+        List<UnreadCountProjection> unreadCounts =
+                conversationMemberRepository
+                        .countUnreadMessagesByConversationIds(
+                                userId,
+                                conversationIds
+                        );
+
+        Map<Long, Long> unreadCountMap =
+                unreadCounts.stream()
+                        .collect(Collectors.toMap(
+                                UnreadCountProjection::getConversationId,
+                                UnreadCountProjection::getUnreadCount
+                        ));
+
+        return conversations.stream()
+                .map(c ->
+                        mapToConversationListResponse(
+                                c,
+                                unreadCountMap.getOrDefault(
+                                        c.getConversationId(),
+                                        0L
+                                )
+                        )
+                )
+                .toList();
+    }
+
+    private ConversationListResponse mapToConversationListResponse(
+            ConversationListProjection c,
+            Long unreadCount
+    ) {
+
+        return ConversationListResponse.builder()
+                .conversation_id(c.getConversationId())
+                .user_id(c.getUserId())
+                .type(c.getType())
+                .displayName(c.getDisplayName())
+                .avatarUrl(c.getAvatarUrl())
+                .preview(c.getPreview())
+                .lastMessageAt(c.getLastMessageAt())
+                .unreadCount(unreadCount)
+                .build();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
     public List<DatingConversationListResponse> getMyDatingConversations() {
 
         Long userId = UserContextHolder.getUserId();
 
-        return datingMatchRepository
-                .findMyDatingConversations(userId, Status.BANNED)
-                .stream()
-                .map(projection -> {
+        List<DatingConversationListProjection> conversations =
+                conversationRepository.findDatingConversationList(
+                        userId,
+                        ConversationType.DATING
+                );
 
-                    Long conversationId =
-                            projection.getConversationId();
+        if (conversations.isEmpty()) {
+            return List.of();
+        }
 
-                    long unreadCount =
-                            messageRepository.countUnreadMessages(
-                                    conversationId,
-                                    userId
-                            );
+        List<Long> conversationIds =
+                conversations.stream()
+                        .map(DatingConversationListProjection::getConversationId)
+                        .toList();
 
-                    Conversation conversation =
-                            conversationRepository
-                                    .findById(conversationId)
-                                    .orElseThrow();
+        List<UnreadCountProjection> unreadCounts =
+                conversationMemberRepository
+                        .countUnreadMessagesByConversationIds(
+                                userId,
+                                conversationIds
+                        );
 
-                    LastMessageResponse lastMessage = null;
+        Map<Long, Long> unreadCountMap =
+                unreadCounts.stream()
+                        .collect(Collectors.toMap(
+                                UnreadCountProjection::getConversationId,
+                                UnreadCountProjection::getUnreadCount
+                        ));
 
-                    if (conversation.getLastMessage() != null) {
-                        Message message =
-                                conversation.getLastMessage();
-
-                        lastMessage =
-                                LastMessageResponse.builder()
-                                        .id(message.getId())
-                                        .preview(buildPreview(message))
-                                        .senderId(
-                                                message.getSender().getId()
-                                        )
-                                        .senderName(
-                                                message.getSender().getUsername()
-                                        )
-                                        .createdAt(
-                                                message.getCreatedAt()
-                                        )
-                                        .build();
-                    }
-
-                    return DatingConversationListResponse.builder()
-                            .conversationId(conversationId)
-                            .matchId(projection.getMatchId())
-                            .userId(projection.getUserId())
-                            .displayName(projection.getDisplayName())
-                            .avatarUrl(projection.getAvatarUrl())
-                            .lastMessage(lastMessage)
-                            .unreadCount(unreadCount)
-                            .matchedAt(projection.getMatchedAt())
-                            .lastMessageAt(projection.getLastMessageAt())
-                            .build();
-                })
+        return conversations.stream()
+                .map(c ->
+                        mapToDatingConversationListResponse(
+                                c,
+                                unreadCountMap.getOrDefault(
+                                        c.getConversationId(),
+                                        0L
+                                )
+                        )
+                )
                 .toList();
+    }
+
+    private DatingConversationListResponse mapToDatingConversationListResponse(
+            DatingConversationListProjection c,
+            Long unreadCount
+    ) {
+
+        return DatingConversationListResponse.builder()
+                .conversation_id(c.getConversationId())
+                .datingProfile_id(c.getDatingProfileId())
+                .type(c.getType())
+                .displayName(c.getDisplayName())
+                .avatarUrl(c.getAvatarUrl())
+                .preview(c.getPreview())
+                .lastMessageAt(c.getLastMessageAt())
+                .unreadCount(unreadCount)
+                .build();
     }
 }

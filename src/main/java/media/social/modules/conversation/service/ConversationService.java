@@ -4,7 +4,7 @@ import media.social.modules.conversation.dto.request.CreateGroupRequest;
 import media.social.modules.conversation.dto.request.UpdateGroupNameRequest;
 import media.social.modules.conversation.dto.response.ConversationListResponse;
 import media.social.modules.conversation.dto.response.ConversationResponse;
-import media.social.modules.dating.dto.response.conversation.DatingConversationListResponse;
+import media.social.modules.conversation.dto.response.DatingConversationListResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

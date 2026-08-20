@@ -10,7 +10,9 @@ import java.time.OffsetDateTime;
 @Builder
 public class ConversationListResponse {
 
-    private Long id;
+    private Long conversation_id;
+
+    private Long user_id;
 
     private ConversationType type;
 
@@ -18,10 +20,10 @@ public class ConversationListResponse {
 
     private String avatarUrl;
 
-    private LastMessageResponse lastMessage;
+    private String preview;
+
+    private OffsetDateTime lastMessageAt;
 
     private Long unreadCount;
-
-    private OffsetDateTime createdAt;
 
 }
