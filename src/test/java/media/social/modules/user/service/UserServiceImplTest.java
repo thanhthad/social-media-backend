@@ -14,6 +14,7 @@ import media.social.modules.user.dto.request.user.ChangePasswordRequest;
 import media.social.modules.user.dto.request.user.UpdateAvatarRequest;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
+import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
 import media.social.modules.user.dto.response.user.*;
 import media.social.modules.user.entity.Profile;
 import media.social.modules.user.entity.User;

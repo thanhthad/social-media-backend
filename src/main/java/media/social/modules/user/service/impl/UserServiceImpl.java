@@ -6,6 +6,7 @@ import media.social.modules.user.dto.projection.UserSearchProjection;
 import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
+import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
 import media.social.modules.user.dto.response.user.*;
 import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;

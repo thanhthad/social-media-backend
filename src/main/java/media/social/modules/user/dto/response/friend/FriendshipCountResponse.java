@@ -1,4 +1,4 @@
-package media.social.modules.user.dto.response.user;
+package media.social.modules.user.dto.response.friend;
 
 import lombok.*;
 

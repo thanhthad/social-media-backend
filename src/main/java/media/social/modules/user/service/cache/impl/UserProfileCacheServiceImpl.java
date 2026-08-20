@@ -2,7 +2,7 @@ package media.social.modules.user.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
-import media.social.modules.user.dto.response.user.FriendshipCountResponse;
+import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.UserRepository;
 import media.social.modules.user.service.cache.UserProfileCacheService;
