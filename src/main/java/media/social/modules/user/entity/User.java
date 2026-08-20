@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.Status;
+import media.social.modules.dating.entity.DatingProfile;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -64,6 +65,9 @@ public class User {
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Profile profile;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private DatingProfile datingProfile;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
