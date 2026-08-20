@@ -7,6 +7,8 @@ import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
 import media.social.modules.notification.service.NotificationService;
 import media.social.modules.post.enums.Visibility;
+import media.social.modules.user.dto.response.friend.FriendSuggestionResponse;
+import media.social.modules.user.dto.response.friend.MutualFriendResponse;
 import media.social.modules.user.dto.response.user.FriendshipUserResponse;
 import media.social.modules.user.entity.Friendship;
 import media.social.modules.user.entity.User;
@@ -22,6 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -209,6 +213,49 @@ public class FriendshipServiceImpl implements FriendshipService {
                 FriendshipStatus.ACCEPTED,
                 pageable
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FriendSuggestionResponse> getSuggestedUsers() {
+
+        Long currentUserId = UserContextHolder.getUserId();
+
+        List<Object[]> results =
+                friendshipRepository.findSuggestedUsers(currentUserId);
+
+        return results.stream()
+                .map(row -> new FriendSuggestionResponse(
+                        ((Number) row[0]).longValue(),
+                        (String) row[1],
+                        (String) row[2],
+                        ((Number) row[3]).longValue()
+                ))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MutualFriendResponse> getMutualFriends(
+            Long targetUserId
+    ) {
+        Long currentUserId = UserContextHolder.getUserId();
+
+        userServiceDomain.validateUserExists(targetUserId);
+
+        List<Object[]> results =
+                friendshipRepository.findMutualFriends(
+                        currentUserId,
+                        targetUserId
+                );
+
+        return results.stream()
+                .map(row -> new MutualFriendResponse(
+                        ((Number) row[0]).longValue(),
+                        (String) row[1],
+                        (String) row[2]
+                ))
+                .toList();
     }
 
     private void validateFriendshipTarget(

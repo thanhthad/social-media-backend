@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
@@ -96,5 +97,104 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
             @Param("friendVisibility") Visibility friendVisibility,
             @Param("acceptedStatus") FriendshipStatus acceptedStatus,
             Pageable pageable
+    );
+
+
+    @Query(value = """
+    WITH friend_pairs AS (
+        SELECT
+            user_one_id AS user_id,
+            user_two_id AS friend_id
+        FROM friendships
+        WHERE status = 'ACCEPTED'
+
+        UNION ALL
+
+        SELECT
+            user_two_id AS user_id,
+            user_one_id AS friend_id
+        FROM friendships
+        WHERE status = 'ACCEPTED'
+    )
+
+    SELECT
+        f2.friend_id AS suggested_user_id,
+        u.username,
+        p.avatar_url,
+        COUNT(*) AS mutual_count
+
+    FROM friend_pairs f1
+
+    JOIN friend_pairs f2
+        ON f1.friend_id = f2.user_id
+
+    JOIN users u
+        ON u.user_id = f2.friend_id
+
+    LEFT JOIN profiles p
+        ON p.user_id = u.user_id
+
+    WHERE f1.user_id = :currentUserId
+      AND f2.friend_id <> :currentUserId
+
+      AND NOT EXISTS (
+          SELECT 1
+          FROM friend_pairs f3
+          WHERE f3.user_id = :currentUserId
+            AND f3.friend_id = f2.friend_id
+      )
+
+    GROUP BY
+        f2.friend_id,
+        u.username,
+        p.avatar_url
+
+    ORDER BY mutual_count DESC
+    """, nativeQuery = true)
+    List<Object[]> findSuggestedUsers(
+            @Param("currentUserId") Long currentUserId
+    );
+
+    @Query(value = """
+    WITH friend_pairs AS (
+        SELECT
+            user_one_id AS user_id,
+            user_two_id AS friend_id
+        FROM friendships
+        WHERE status = 'ACCEPTED'
+
+        UNION ALL
+
+        SELECT
+            user_two_id AS user_id,
+            user_one_id AS friend_id
+        FROM friendships
+        WHERE status = 'ACCEPTED'
+    )
+
+    SELECT
+        u.user_id AS userId,
+        u.username AS username,
+        p.avatar_url AS avatarUrl
+
+    FROM friend_pairs f1
+
+    JOIN friend_pairs f2
+        ON f1.friend_id = f2.friend_id
+
+    JOIN users u
+        ON u.user_id = f1.friend_id
+
+    LEFT JOIN profiles p
+        ON p.user_id = u.user_id
+
+    WHERE f1.user_id = :currentUserId
+      AND f2.user_id = :targetUserId
+
+    ORDER BY u.username
+    """, nativeQuery = true)
+    List<Object[]> findMutualFriends(
+            @Param("currentUserId") Long currentUserId,
+            @Param("targetUserId") Long targetUserId
     );
 }
