@@ -1,6 +1,7 @@
 package media.social.modules.dating.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
+import media.social.modules.dating.dto.projection.DatingProfileCacheProjection;
 import media.social.modules.dating.dto.response.cache.DatingProfileCacheResponse;
 import media.social.modules.dating.exception.profile.DatingProfileNotFoundException;
 import media.social.modules.dating.repository.DatingProfileRepository;
@@ -25,10 +26,30 @@ public class DatingProfileCacheServiceImpl
     @Transactional(readOnly = true)
     public DatingProfileCacheResponse getDatingProfile(Long userId) {
 
-        return datingProfileRepository
+        DatingProfileCacheProjection projection = datingProfileRepository
                 .findDatingProfileCache(userId)
                 .orElseThrow(() ->
                         new DatingProfileNotFoundException("Dating profile not found"));
+
+        return new DatingProfileCacheResponse(
+                projection.getUsername(),
+                projection.getAvatarUrl(),
+                projection.getCoverUrl(),
+                projection.getDisplayName(),
+                projection.getBio(),
+                projection.getGender(),
+                projection.getBirthday(),
+                projection.getHeight(),
+                projection.getOccupation(),
+                projection.getEducation(),
+                projection.getCountry(),
+                projection.getCity(),
+                projection.getDistrict(),
+                projection.getActive(),
+                projection.getVisibility(),
+                projection.getCreatedAt(),
+                projection.getUpdatedAt()
+        );
     }
 
     @Override

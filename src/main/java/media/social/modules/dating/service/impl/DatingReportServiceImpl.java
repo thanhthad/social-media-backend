@@ -114,19 +114,46 @@ public class DatingReportServiceImpl
             Pageable pageable
     ) {
 
-        return datingReportRepository.getAll(pageable);
+        return datingReportRepository.getAll(pageable)
+                .map(projection -> DatingReportDetailResponse.builder()
+                        .reportId(projection.getReportId())
+                        .reporterId(projection.getReporterId())
+                        .reporterUsername(projection.getReporterUsername())
+                        .reporterAvatar(projection.getReporterAvatar())
+                        .reportedUserId(projection.getReportedUserId())
+                        .reportedUsername(projection.getReportedUsername())
+                        .reportedAvatar(projection.getReportedAvatar())
+                        .reason(projection.getReason())
+                        .status(projection.getStatus())
+                        .reviewedBy(projection.getReviewedBy())
+                        .reviewedByUsername(projection.getReviewedByUsername())
+                        .reviewedAt(projection.getReviewedAt())
+                        .createdAt(projection.getCreatedAt())
+                        .build());
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<DatingReportDetailResponse> getByStatus(
             Pageable pageable,
-            DatingReportStatus reportStatus
+            DatingReportStatus status
     ) {
 
-        return datingReportRepository.getByStatus(
-                reportStatus,
-                pageable
-        );
+        return datingReportRepository.getByStatus(status, pageable)
+                .map(projection -> DatingReportDetailResponse.builder()
+                        .reportId(projection.getReportId())
+                        .reporterId(projection.getReporterId())
+                        .reporterUsername(projection.getReporterUsername())
+                        .reporterAvatar(projection.getReporterAvatar())
+                        .reportedUserId(projection.getReportedUserId())
+                        .reportedUsername(projection.getReportedUsername())
+                        .reportedAvatar(projection.getReportedAvatar())
+                        .reason(projection.getReason())
+                        .status(projection.getStatus())
+                        .reviewedBy(projection.getReviewedBy())
+                        .reviewedByUsername(projection.getReviewedByUsername())
+                        .reviewedAt(projection.getReviewedAt())
+                        .createdAt(projection.getCreatedAt())
+                        .build());
     }
 }

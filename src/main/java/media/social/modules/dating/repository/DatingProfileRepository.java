@@ -1,5 +1,6 @@
 package media.social.modules.dating.repository;
 
+import media.social.modules.dating.dto.projection.DatingProfileCacheProjection;
 import media.social.modules.dating.dto.response.cache.DatingProfileCacheResponse;
 import media.social.modules.dating.dto.response.projection.DatingDiscoveryProjection;
 import media.social.modules.dating.dto.response.projection.DatingDistanceProjection;
@@ -23,31 +24,32 @@ public interface DatingProfileRepository
     boolean existsByUserId(Long userId);
 
     @Query("""
-    SELECT new media.social.modules.dating.dto.response.cache.DatingProfileCacheResponse(
-        u.username,
-        p.avatarUrl,
-        p.coverUrl,
-        dp.displayName,
-        dp.bio,
-        dp.gender,
-        dp.birthday,
-        dp.height,
-        dp.occupation,
-        dp.education,
-        dp.country,
-        dp.city,
-        dp.district,
-        dp.active,
-        dp.visibility,
-        dp.createdAt,
-        dp.updatedAt
-    )
+    SELECT
+        u.username AS username,
+        p.avatarUrl AS avatarUrl,
+        p.coverUrl AS coverUrl,
+        dp.displayName AS displayName,
+        dp.bio AS bio,
+        dp.gender AS gender,
+        dp.birthday AS birthday,
+        dp.height AS height,
+        dp.occupation AS occupation,
+        dp.education AS education,
+        dp.country AS country,
+        dp.city AS city,
+        dp.district AS district,
+        dp.active AS active,
+        dp.visibility AS visibility,
+        dp.createdAt AS createdAt,
+        dp.updatedAt AS updatedAt
     FROM DatingProfile dp
     JOIN dp.user u
     LEFT JOIN u.profile p
     WHERE u.id = :userId
-    """)
-    Optional<DatingProfileCacheResponse> findDatingProfileCache(Long userId);
+""")
+    Optional<DatingProfileCacheProjection> findDatingProfileCache(
+            @Param("userId") Long userId
+    );
 
     @Query(value = """
     SELECT
