@@ -2,6 +2,7 @@ package media.social.modules.conversation.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import media.social.modules.conversation.dto.projection.ConversationListProjection;
+import media.social.modules.conversation.dto.projection.ConversationMemberProjection;
 import media.social.modules.conversation.dto.projection.DatingConversationListProjection;
 import media.social.modules.conversation.dto.projection.UnreadCountProjection;
 import media.social.modules.conversation.dto.request.CreateGroupRequest;
@@ -370,30 +371,46 @@ public class ConversationServiceImpl implements ConversationService {
     private ConversationResponse mapToResponse(
             Conversation conversation,
             Long currentUserId
-    ){
-        List<ConversationMemberResponse> members =
+    ) {
+
+        List<ConversationMemberProjection> projections =
                 conversationMemberRepository
-                        .findMembersByConversationId(
+                        .findMembersProjectionByConversationId(
                                 conversation.getId()
                         );
+
+        List<ConversationMemberResponse> members =
+                projections.stream()
+                        .map(m -> ConversationMemberResponse.builder()
+                                .userId(m.getUserId())
+                                .username(m.getUsername())
+                                .avatarUrl(m.getAvatarUrl())
+                                .build()
+                        )
+                        .toList();
+
         String displayName;
         String avatarUrl;
-        if(conversation.getType()
-                == ConversationType.PRIVATE){
+
+        if (conversation.getType() == ConversationType.PRIVATE) {
+
             ConversationMemberResponse target =
                     members.stream()
                             .filter(m ->
-                                    !m.getUserId()
-                                            .equals(currentUserId)
+                                    !m.getUserId().equals(currentUserId)
                             )
                             .findFirst()
                             .orElseThrow();
+
             displayName = target.getUsername();
             avatarUrl = target.getAvatarUrl();
-        }else {
+
+        } else {
+
             displayName = conversation.getName();
             avatarUrl = conversation.getAvatarUrl();
         }
+
         return ConversationResponse.builder()
                 .id(conversation.getId())
                 .type(conversation.getType())

@@ -47,21 +47,6 @@ public interface ConversationMemberRepository extends JpaRepository<Conversation
     );
 
     @Query("""
-    SELECT new media.social.modules.conversation.dto.response.ConversationMemberResponse(
-        u.id,
-        u.username,
-        p.avatarUrl
-    )
-    FROM ConversationMember cm
-    JOIN cm.user u
-    LEFT JOIN u.profile p
-    WHERE cm.conversation.id = :conversationId
-""")
-    List<ConversationMemberResponse> findMembersByConversationId(
-            @Param("conversationId") Long conversationId
-    );
-
-    @Query("""
     SELECT
         u.id AS userId,
         u.username AS username,
