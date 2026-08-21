@@ -116,10 +116,20 @@ public class NotificationServiceImpl implements NotificationService {
 
         Long userId = UserContextHolder.getUserId();
 
-        return notificationRepository.findMyNotifications(
-                userId,
-                pageable
-        );
+        return notificationRepository
+                .findMyNotifications(userId, pageable)
+                .map(row -> NotificationResponse.builder()
+                        .notificationId(row.getNotificationId())
+                        .senderId(row.getSenderId())
+                        .senderUsername(row.getSenderUsername())
+                        .senderAvatar(row.getSenderAvatar())
+                        .type(row.getType())
+                        .entityType(row.getEntityType())
+                        .entityId(row.getEntityId())
+                        .isRead(row.getIsRead())
+                        .createdAt(row.getCreatedAt())
+                        .build()
+                );
     }
 
     @Override

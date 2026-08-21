@@ -1,5 +1,6 @@
 package media.social.modules.notification.repository;
 
+import media.social.modules.notification.dto.projection.NotificationProjection;
 import media.social.modules.notification.dto.response.NotificationResponse;
 import media.social.modules.notification.entity.Notification;
 import media.social.modules.notification.enums.EntityType;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -40,25 +42,24 @@ public interface NotificationRepository
     );
 
     @Query("""
-        SELECT new media.social.modules.notification.dto.response.NotificationResponse(
-            n.id,
-            s.id,
-            s.username,
-            p.avatarUrl,
-            n.type,
-            n.entityType,
-            n.entityId,
-            n.isRead,
-            n.createdAt
-        )
+        SELECT
+            n.id AS notificationId,
+            s.id AS senderId,
+            s.username AS senderUsername,
+            p.avatarUrl AS senderAvatar,
+            n.type AS type,
+            n.entityType AS entityType,
+            n.entityId AS entityId,
+            n.isRead AS isRead,
+            n.createdAt AS createdAt
         FROM Notification n
         JOIN n.sender s
         LEFT JOIN s.profile p
         WHERE n.receiver.id = :receiverId
         ORDER BY n.createdAt DESC
     """)
-    Page<NotificationResponse> findMyNotifications(
-            Long receiverId,
+    Page<NotificationProjection> findMyNotifications(
+            @Param("receiverId") Long receiverId,
             Pageable pageable
     );
 
