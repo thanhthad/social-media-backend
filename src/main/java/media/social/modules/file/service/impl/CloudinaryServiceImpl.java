@@ -105,6 +105,10 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             String publicId,
             MediaType mediaType
     ) {
+        if (publicId == null || publicId.isBlank()) {
+            log.info("Cloudinary delete skipped | publicId is null or empty");
+            return;
+        }
 
         try {
 

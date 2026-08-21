@@ -45,6 +45,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     Profile profile = Profile.builder()
                             .user(saved)
                             .fullName(name)
+                            .coverUrl("https://res.cloudinary.com/dousreizx/image/upload/v1786763990/background_wdp99j.jpg")
                             .avatarUrl(avatarUrl)
                             .build();
 
