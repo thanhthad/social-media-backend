@@ -3,6 +3,8 @@ package media.social.modules.story.service.domain;
 import lombok.RequiredArgsConstructor;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.story.entity.Story;
+import media.social.modules.story.exception.story.StoryAccessDeniedException;
+import media.social.modules.story.exception.story.StoryNotFoundException;
 import media.social.modules.story.repository.StoryRepository;
 import media.social.modules.user.service.domain.FriendShipDomain;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,7 @@ public class StoryDomainService {
 
         return storyRepository.findById(storyId)
                 .orElseThrow(
-                        () -> new media.social.modules.story.exception.story.StoryNotFoundException(
+                        () -> new StoryNotFoundException(
                                 "Story not found: " + storyId
                         )
                 );
@@ -36,7 +38,7 @@ public class StoryDomainService {
                         LocalDateTime.now()
                 )
                 .orElseThrow(
-                        () -> new media.social.modules.story.exception.story.StoryNotFoundException(
+                        () -> new StoryNotFoundException(
                                 "Story not found or expired: " + storyId
                         )
                 );
@@ -48,7 +50,7 @@ public class StoryDomainService {
     ) {
 
         if (story.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new media.social.modules.story.exception.story.StoryNotFoundException(
+            throw new StoryNotFoundException(
                     "Story has expired"
             );
         }
@@ -63,7 +65,7 @@ public class StoryDomainService {
             return;
         }
         if (visibility == Visibility.PRIVATE) {
-            throw new media.social.modules.story.exception.story.StoryAccessDeniedException(
+            throw new StoryAccessDeniedException(
                     "You do not have permission to view this story"
             );
         }
@@ -76,7 +78,7 @@ public class StoryDomainService {
                     );
 
             if (!isFriend) {
-                throw new media.social.modules.story.exception.story.StoryAccessDeniedException(
+                throw new StoryAccessDeniedException(
                         "You must be friends with the story owner"
                 );
             }
@@ -84,7 +86,7 @@ public class StoryDomainService {
             return;
         }
 
-        throw new media.social.modules.story.exception.story.StoryAccessDeniedException(
+        throw new StoryAccessDeniedException(
                 "You do not have permission to view this story"
         );
     }
@@ -95,7 +97,7 @@ public class StoryDomainService {
     ) {
 
         if (!story.getUser().getId().equals(userId)) {
-            throw new media.social.modules.story.exception.story.StoryAccessDeniedException(
+            throw new StoryAccessDeniedException(
                     "You are not the owner of this story"
             );
         }

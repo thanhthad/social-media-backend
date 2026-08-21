@@ -7,7 +7,9 @@ import media.social.modules.file.image.dto.response.UploadFileResponse;
 import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.enums.Visibility;
+import media.social.modules.story.dto.projection.StoryFeedProjection;
 import media.social.modules.story.dto.projection.StoryInteractionProjection;
+import media.social.modules.story.dto.projection.UserStoryProjection;
 import media.social.modules.story.dto.request.CreateStoryRequest;
 import media.social.modules.story.dto.request.UpdateStoryVisibilityRequest;
 import media.social.modules.story.dto.response.MyStoryResponse;
@@ -101,14 +103,26 @@ public class StoryServiceImpl implements StoryService {
 
         Long viewerId = UserContextHolder.getUserId();
 
-        return storyRepository.findFeed(
-                viewerId,
-                LocalDateTime.now(),
-                FriendshipStatus.ACCEPTED,
-                Visibility.PUBLIC,
-                Visibility.FRIEND,
-                Status.ACTIVE
-        );
+        List<StoryFeedProjection> projections =
+                storyRepository.findFeed(
+                        viewerId,
+                        LocalDateTime.now(),
+                        FriendshipStatus.ACCEPTED,
+                        Visibility.PUBLIC,
+                        Visibility.FRIEND,
+                        Status.ACTIVE
+                );
+
+        return projections.stream()
+                .map(row -> StoryFeedResponse.builder()
+                        .userId(row.getUserId())
+                        .avatarUrl(row.getAvatarUrl())
+                        .content(row.getContent())
+                        .visibility(row.getVisibility())
+                        .mediaType(row.getMediaType())
+                        .url(row.getUrl())
+                        .build())
+                .toList();
     }
 
     @Override
@@ -116,15 +130,32 @@ public class StoryServiceImpl implements StoryService {
 
         Long viewerId = UserContextHolder.getUserId();
 
-        return storyRepository.findUserStories(
-                viewerId,
-                targetUserId,
-                LocalDateTime.now(),
-                FriendshipStatus.ACCEPTED,
-                Visibility.PUBLIC,
-                Visibility.FRIEND,
-                Status.ACTIVE
-        );
+        List<UserStoryProjection> projections =
+                storyRepository.findUserStories(
+                        viewerId,
+                        targetUserId,
+                        LocalDateTime.now(),
+                        FriendshipStatus.ACCEPTED,
+                        Visibility.PUBLIC,
+                        Visibility.FRIEND,
+                        Status.ACTIVE
+                );
+
+        return projections.stream()
+                .map(row -> UserStoryResponse.builder()
+                        .storyId(row.getStoryId())
+                        .userId(row.getUserId())
+                        .username(row.getUsername())
+                        .avatarUrl(row.getAvatarUrl())
+                        .content(row.getContent())
+                        .visibility(row.getVisibility())
+                        .mediaType(row.getMediaType())
+                        .url(row.getUrl())
+                        .expiresAt(row.getExpiresAt())
+                        .createdAt(row.getCreatedAt())
+                        .updatedAt(row.getUpdatedAt())
+                        .build())
+                .toList();
     }
 
     @Override
