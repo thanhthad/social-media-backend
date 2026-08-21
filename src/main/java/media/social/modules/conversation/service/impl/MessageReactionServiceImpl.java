@@ -133,7 +133,18 @@ public class MessageReactionServiceImpl
         getMessage(messageId);
 
         return messageReactionRepository
-                .findUsersReacted(messageId);
+                .findUsersReacted(messageId)
+                .stream()
+                .map(projection ->
+                        new MessageReactionUserResponse(
+                                projection.getUserId(),
+                                projection.getUserName(),
+                                projection.getAvatarUrl(),
+                                projection.getReactionType(),
+                                projection.getCreatedAt()
+                        )
+                )
+                .toList();
     }
 
     private MessageReactionResponse buildReactionResponse(
