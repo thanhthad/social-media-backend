@@ -46,14 +46,32 @@ class AdminUserServiceImplTest {
     void getAllUsers_success() {
         Status status = Status.ACTIVE;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<AdminUserResponse> expectedPage = new PageImpl<>(Collections.emptyList());
 
-        when(userRepository.findAllAdminUsers(status, pageable)).thenReturn(expectedPage);
+        AdminUserProjection mockProjection = mock(AdminUserProjection.class);
+        when(mockProjection.getId()).thenReturn(1L);
+        when(mockProjection.getUsername()).thenReturn("testuser");
+        when(mockProjection.getStatus()).thenReturn(Status.ACTIVE);
+        when(mockProjection.getAvatarUrl()).thenReturn("http://avatar.url");
+        LocalDateTime now = LocalDateTime.now();
+        when(mockProjection.getCreatedAt()).thenReturn(now);
+        when(mockProjection.getLastLoginAt()).thenReturn(now);
+        when(mockProjection.getLastActiveAt()).thenReturn(now);
+
+        Page<AdminUserProjection> projectionPage = new PageImpl<>(List.of(mockProjection));
+        when(userRepository.findAllAdminUsers(status, pageable)).thenReturn(projectionPage);
 
         Page<AdminUserResponse> result = adminUserService.getAllUsers(status, pageable);
 
         assertNotNull(result);
-        assertSame(expectedPage, result);
+        assertEquals(1, result.getTotalElements());
+        AdminUserResponse response = result.getContent().get(0);
+        assertEquals(1L, response.getId());
+        assertEquals("testuser", response.getUsername());
+        assertEquals(Status.ACTIVE, response.getStatus());
+        assertEquals("http://avatar.url", response.getAvatarUrl());
+        assertEquals(now, response.getCreatedAt());
+        assertEquals(now, response.getLastLoginAt());
+        assertEquals(now, response.getLastActiveAt());
         verify(userRepository).findAllAdminUsers(status, pageable);
     }
 

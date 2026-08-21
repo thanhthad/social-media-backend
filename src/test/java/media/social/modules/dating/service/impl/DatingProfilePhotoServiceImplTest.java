@@ -11,8 +11,8 @@ import media.social.modules.dating.exception.photo.InvalidDatingProfilePhotoExce
 import media.social.modules.dating.exception.photo.UnauthorizedDatingProfilePhotoException;
 import media.social.modules.dating.repository.DatingProfilePhotoRepository;
 import media.social.modules.dating.repository.DatingProfileRepository;
-import media.social.modules.file.image.dto.response.UploadFileResponse;
-import media.social.modules.file.image.service.CloudinaryService;
+import media.social.modules.file.dto.response.UploadFileResponse;
+import media.social.modules.file.service.CloudinaryService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.exception.user.UserNotFoundException;

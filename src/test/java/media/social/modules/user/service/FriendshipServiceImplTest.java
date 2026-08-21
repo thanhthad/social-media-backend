@@ -6,6 +6,9 @@ import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
 import media.social.modules.notification.service.NotificationService;
 import media.social.modules.post.enums.Visibility;
+import media.social.modules.user.dto.projection.FriendshipUserProjection;
+import media.social.modules.user.dto.response.friend.FriendSuggestionResponse;
+import media.social.modules.user.dto.response.friend.MutualFriendResponse;
 import media.social.modules.user.dto.response.user.FriendshipUserResponse;
 import media.social.modules.user.entity.Friendship;
 import media.social.modules.user.entity.User;
@@ -30,6 +33,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -445,8 +449,11 @@ class FriendshipServiceImplTest {
         Long viewerId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
 
-        FriendshipUserResponse friend = new FriendshipUserResponse(2L, "user2", "http://avatar.url");
-        Page<FriendshipUserResponse> expected = new PageImpl<>(List.of(friend));
+        FriendshipUserProjection projection = mock(FriendshipUserProjection.class);
+        when(projection.getUserId()).thenReturn(2L);
+        when(projection.getUsername()).thenReturn("user2");
+        when(projection.getAvatarUrl()).thenReturn("http://avatar.url");
+        Page<FriendshipUserProjection> expected = new PageImpl<>(List.of(projection));
 
         try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
             ctx.when(UserContextHolder::getUserId).thenReturn(viewerId);
@@ -461,6 +468,10 @@ class FriendshipServiceImplTest {
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
+            FriendshipUserResponse first = result.getContent().get(0);
+            assertEquals(2L, first.getUserId());
+            assertEquals("user2", first.getUsername());
+            assertEquals("http://avatar.url", first.getAvatarUrl());
             verify(friendshipRepository).getMyFriends(viewerId, FriendshipStatus.ACCEPTED, pageable);
             verify(friendshipRepository, never()).getFriends(any(), any(), any(), any(), any(), any(), any());
         }
@@ -472,8 +483,11 @@ class FriendshipServiceImplTest {
         Long targetUserId = 2L;
         Pageable pageable = PageRequest.of(0, 10);
 
-        FriendshipUserResponse friend = new FriendshipUserResponse(3L, "user3", "http://avatar.url");
-        Page<FriendshipUserResponse> expected = new PageImpl<>(List.of(friend));
+        FriendshipUserProjection projection = mock(FriendshipUserProjection.class);
+        when(projection.getUserId()).thenReturn(3L);
+        when(projection.getUsername()).thenReturn("user3");
+        when(projection.getAvatarUrl()).thenReturn("http://avatar.url");
+        Page<FriendshipUserProjection> expected = new PageImpl<>(List.of(projection));
 
         try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
             ctx.when(UserContextHolder::getUserId).thenReturn(viewerId);
@@ -492,6 +506,10 @@ class FriendshipServiceImplTest {
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
+            FriendshipUserResponse first = result.getContent().get(0);
+            assertEquals(3L, first.getUserId());
+            assertEquals("user3", first.getUsername());
+            assertEquals("http://avatar.url", first.getAvatarUrl());
             verify(friendshipRepository).getFriends(
                     targetUserId, viewerId,
                     FriendshipStatus.ACCEPTED,
@@ -509,7 +527,7 @@ class FriendshipServiceImplTest {
         Long targetUserId = 2L;
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<FriendshipUserResponse> emptyPage = new PageImpl<>(List.of());
+        Page<FriendshipUserProjection> emptyPage = new PageImpl<>(List.of());
 
         try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
             ctx.when(UserContextHolder::getUserId).thenReturn(viewerId);
@@ -527,54 +545,49 @@ class FriendshipServiceImplTest {
     }
 
     // =========================================================
-    // getMyFriends()
+    // getSuggestedUsers() & getMutualFriends()
     // =========================================================
 
     @Test
-    void getMyFriends_success() {
+    void getSuggestedUsers_success() {
         Long currentUserId = 1L;
-        Pageable pageable  = PageRequest.of(0, 10);
-
-        FriendshipUserResponse friend = new FriendshipUserResponse(2L, "user2", "http://avatar.url");
-        Page<FriendshipUserResponse> expected = new PageImpl<>(List.of(friend));
+        List<Object[]> rows = Collections.singletonList(new Object[]{2L, "user2", "http://avatar.url", 5L});
 
         try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
             ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+            when(friendshipRepository.findSuggestedUsers(currentUserId)).thenReturn(rows);
 
-            when(friendshipRepository.getMyFriends(currentUserId, FriendshipStatus.ACCEPTED, pageable))
-                    .thenReturn(expected);
-
-            Page<FriendshipUserResponse> result = friendshipService.getMyFriends(pageable);
+            List<FriendSuggestionResponse> result = friendshipService.getSuggestedUsers();
 
             assertNotNull(result);
-            assertEquals(1, result.getTotalElements());
-
-            FriendshipUserResponse first = result.getContent().get(0);
-            assertEquals(2L,               first.getUserId());
-            assertEquals("user2",           first.getUsername());
-            assertEquals("http://avatar.url", first.getAvatarUrl());
-
-            verify(friendshipRepository).getMyFriends(currentUserId, FriendshipStatus.ACCEPTED, pageable);
+            assertEquals(1, result.size());
+            assertEquals(2L, result.get(0).getUserId());
+            assertEquals("user2", result.get(0).getUsername());
+            assertEquals("http://avatar.url", result.get(0).getAvatarUrl());
+            assertEquals(5L, result.get(0).getMutualCount());
+            verify(friendshipRepository).findSuggestedUsers(currentUserId);
         }
     }
 
     @Test
-    void getMyFriends_emptyList_returnsEmptyPage() {
+    void getMutualFriends_success() {
         Long currentUserId = 1L;
-        Pageable pageable  = PageRequest.of(0, 10);
-
-        Page<FriendshipUserResponse> emptyPage = new PageImpl<>(List.of());
+        Long targetUserId = 2L;
+        List<Object[]> rows = Collections.singletonList(new Object[]{3L, "user3", "http://avatar.url"});
 
         try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
             ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+            doNothing().when(userServiceDomain).validateUserExists(targetUserId);
+            when(friendshipRepository.findMutualFriends(currentUserId, targetUserId)).thenReturn(rows);
 
-            when(friendshipRepository.getMyFriends(currentUserId, FriendshipStatus.ACCEPTED, pageable))
-                    .thenReturn(emptyPage);
-
-            Page<FriendshipUserResponse> result = friendshipService.getMyFriends(pageable);
+            List<MutualFriendResponse> result = friendshipService.getMutualFriends(targetUserId);
 
             assertNotNull(result);
-            assertTrue(result.isEmpty());
+            assertEquals(1, result.size());
+            assertEquals(3L, result.get(0).getUserId());
+            assertEquals("user3", result.get(0).getUsername());
+            assertEquals("http://avatar.url", result.get(0).getAvatarUrl());
+            verify(friendshipRepository).findMutualFriends(currentUserId, targetUserId);
         }
     }
 

@@ -4,6 +4,8 @@ import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
 import media.social.modules.notification.service.NotificationService;
+import media.social.modules.post.dto.projection.CommentProjection;
+import media.social.modules.post.dto.projection.RootCommentProjection;
 import media.social.modules.post.dto.request.comment.CreateCommentRequest;
 import media.social.modules.post.dto.request.comment.UpdateCommentContent;
 import media.social.modules.post.dto.response.comment.CommentResponse;
@@ -289,20 +291,15 @@ class CommentServiceImplTest {
         UpdateCommentContent request = new UpdateCommentContent();
         request.setContent("Updated content");
 
-        CommentResponse expectedResponse = CommentResponse.builder()
-                .commentId(commentId)
-                .content("Updated content")
-                .build();
-
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
 
             when(commentRepository.updateContent(commentId, userId, "Updated content")).thenReturn(1);
-            when(commentRepository.findCommentResponse(commentId, userId)).thenReturn(Optional.of(expectedResponse));
 
             CommentResponse result = commentService.updateComment(commentId, request);
 
             assertNotNull(result);
+            assertEquals(commentId, result.getCommentId());
             assertEquals("Updated content", result.getContent());
         }
     }
@@ -321,7 +318,6 @@ class CommentServiceImplTest {
             when(commentRepository.updateContent(commentId, userId, "Updated content")).thenReturn(0);
 
             assertThrows(CommentNotFoundException.class, () -> commentService.updateComment(commentId, request));
-            verify(commentRepository, never()).findCommentResponse(any(), any());
         }
     }
 
@@ -330,8 +326,9 @@ class CommentServiceImplTest {
         Long userId = 1L;
         Long postId = 10L;
         Pageable pageable = PageRequest.of(0, 10);
-        CommentResponse response = CommentResponse.builder().commentId(100L).build();
-        Page<CommentResponse> expectedPage = new PageImpl<>(List.of(response));
+        RootCommentProjection projection = mock(RootCommentProjection.class);
+        when(projection.getCommentId()).thenReturn(100L);
+        Page<RootCommentProjection> expectedPage = new PageImpl<>(List.of(projection));
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
@@ -342,7 +339,7 @@ class CommentServiceImplTest {
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
-            assertSame(expectedPage, result);
+            assertEquals(100L, result.getContent().get(0).getCommentId());
         }
     }
 
@@ -351,8 +348,9 @@ class CommentServiceImplTest {
         Long userId = 1L;
         Long parentId = 50L;
         Pageable pageable = PageRequest.of(0, 10);
-        CommentResponse response = CommentResponse.builder().commentId(101L).build();
-        Page<CommentResponse> expectedPage = new PageImpl<>(List.of(response));
+        CommentProjection projection = mock(CommentProjection.class);
+        when(projection.getCommentId()).thenReturn(101L);
+        Page<CommentProjection> expectedPage = new PageImpl<>(List.of(projection));
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
@@ -363,7 +361,7 @@ class CommentServiceImplTest {
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
-            assertSame(expectedPage, result);
+            assertEquals(101L, result.getContent().get(0).getCommentId());
         }
     }
 }

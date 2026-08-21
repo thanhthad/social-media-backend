@@ -2,15 +2,15 @@ package media.social.modules.post.service.impl;
 
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.security.context.UserContextHolder;
-import media.social.modules.file.image.dto.response.UploadFileResponse;
-import media.social.modules.file.image.service.CloudinaryService;
+import media.social.modules.file.dto.response.UploadFileResponse;
+import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.post.dto.projection.ListPostMediaProjection;
 import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.request.post.CreatePostRequest;
 import media.social.modules.post.dto.request.post.UpdatePostContent;
 import media.social.modules.post.dto.request.post.UpdatePostMedia;
 import media.social.modules.post.dto.request.post.UpdatePostVisibility;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
-import media.social.modules.post.dto.response.post.PostFlatResponse;
 import media.social.modules.post.dto.response.post.PostResponse;
 import media.social.modules.post.entity.*;
 import media.social.modules.post.enums.MediaType;
@@ -40,7 +40,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -75,20 +74,20 @@ class PostServiceImplTest {
     void getFeed_success() {
         Long viewerId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
-        PostFlatResponse flat = PostFlatResponse.builder()
-                .id(10L)
-                .content("Hello")
-                .commentCount(0L)
-                .reactionCount(0L)
-                .build();
-        Page<PostFlatResponse> flatPage = new PageImpl<>(List.of(flat));
+        PostFlatProjection flat = mock(PostFlatProjection.class);
+        when(flat.getId()).thenReturn(10L);
+        when(flat.getContent()).thenReturn("Hello");
+        when(flat.getVisibility()).thenReturn(Visibility.PUBLIC);
+        when(flat.getCommentCount()).thenReturn(0L);
+        when(flat.getReactionCount()).thenReturn(0L);
 
-        PostMedia media = PostMedia.builder()
-                .id(100L)
-                .post(Post.builder().id(10L).build())
-                .url("http://media.url")
-                .mediaType(MediaType.IMAGE)
-                .build();
+        Page<PostFlatProjection> flatPage = new PageImpl<>(List.of(flat));
+
+        ListPostMediaProjection media = mock(ListPostMediaProjection.class);
+        when(media.getPostId()).thenReturn(10L);
+        when(media.getPostMediaId()).thenReturn(100L);
+        when(media.getUrl()).thenReturn("http://media.url");
+        when(media.getType()).thenReturn(MediaType.IMAGE);
 
         Reaction reaction = Reaction.builder()
                 .post(Post.builder().id(10L).build())
@@ -98,9 +97,9 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findFeed(viewerId, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
+            when(postRepository.findFeed(viewerId, Status.ACTIVE, ReportStatus.APPROVED, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
                     .thenReturn(flatPage);
-            when(postMediaRepository.findByPostIdIn(List.of(10L))).thenReturn(List.of(media));
+            when(postMediaRepository.findMediaByPostIds(List.of(10L))).thenReturn(List.of(media));
             when(reactionRepository.findMyReactions(viewerId, List.of(10L))).thenReturn(List.of(reaction));
 
             Page<PostResponse> result = postService.getFeed(pageable);
@@ -120,12 +119,12 @@ class PostServiceImplTest {
     void getFeed_empty_returnsEmptyPage() {
         Long viewerId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<PostFlatResponse> emptyFlatPage = new PageImpl<>(Collections.emptyList());
+        Page<PostFlatProjection> emptyFlatPage = new PageImpl<>(Collections.emptyList());
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findFeed(viewerId, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
+            when(postRepository.findFeed(viewerId, Status.ACTIVE, ReportStatus.APPROVED, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
                     .thenReturn(emptyFlatPage);
 
             Page<PostResponse> result = postService.getFeed(pageable);
@@ -139,7 +138,7 @@ class PostServiceImplTest {
     void getExplore_success() {
         Long viewerId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<PostFlatResponse> flatPage = new PageImpl<>(Collections.emptyList());
+        Page<PostFlatProjection> flatPage = new PageImpl<>(Collections.emptyList());
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
@@ -158,12 +157,12 @@ class PostServiceImplTest {
     void getAllPostMe_success() {
         Long userId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<PostFlatResponse> flatPage = new PageImpl<>(Collections.emptyList());
+        Page<PostFlatProjection> flatPage = new PageImpl<>(Collections.emptyList());
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
 
-            when(postRepository.findAllPostMe(userId, pageable)).thenReturn(flatPage);
+            when(postRepository.findAllPostMe(userId, Status.ACTIVE, ReportStatus.APPROVED, pageable)).thenReturn(flatPage);
 
             Page<PostResponse> result = postService.getAllPostMe(pageable);
 
@@ -192,7 +191,7 @@ class PostServiceImplTest {
         Long viewerId = 1L;
         Long targetUserId = 2L;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<PostFlatResponse> flatPage = new PageImpl<>(Collections.emptyList());
+        Page<PostFlatProjection> flatPage = new PageImpl<>(Collections.emptyList());
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
@@ -260,7 +259,6 @@ class PostServiceImplTest {
             when(postCacheService.getPost(eq(postId), eq(List.of(Visibility.PUBLIC, Visibility.FRIEND, Visibility.PRIVATE))))
                     .thenReturn(cacheDTO);
             when(reactionRepository.findByUserIdAndPostId(userId, postId)).thenReturn(Optional.empty());
-            when(postMediaRepository.findMediaResponseByPostId(postId)).thenReturn(Collections.emptyList());
 
             PostResponse result = postService.getPostById(postId);
 
@@ -289,7 +287,6 @@ class PostServiceImplTest {
             when(postCacheService.getPost(eq(postId), eq(List.of(Visibility.PUBLIC, Visibility.FRIEND))))
                     .thenReturn(cacheDTO);
             when(reactionRepository.findByUserIdAndPostId(viewerId, postId)).thenReturn(Optional.empty());
-            when(postMediaRepository.findMediaResponseByPostId(postId)).thenReturn(Collections.emptyList());
 
             PostResponse result = postService.getPostById(postId);
 
@@ -316,7 +313,6 @@ class PostServiceImplTest {
             when(postCacheService.getPost(eq(postId), eq(List.of(Visibility.PUBLIC))))
                     .thenReturn(cacheDTO);
             when(reactionRepository.findByUserIdAndPostId(viewerId, postId)).thenReturn(Optional.empty());
-            when(postMediaRepository.findMediaResponseByPostId(postId)).thenReturn(Collections.emptyList());
 
             PostResponse result = postService.getPostById(postId);
 
@@ -347,7 +343,7 @@ class PostServiceImplTest {
             when(postRepository.searchByContent(viewerId, "search", Status.ACTIVE.name(), ReportStatus.APPROVED.name(),
                     Visibility.PUBLIC.name(), Visibility.FRIEND.name(), FriendshipStatus.ACCEPTED.name(), pageable))
                     .thenReturn(projectionPage);
-            when(postMediaRepository.findByPostIdIn(List.of(10L))).thenReturn(Collections.emptyList());
+            when(postMediaRepository.findMediaByPostIds(List.of(10L))).thenReturn(Collections.emptyList());
             when(reactionRepository.findMyReactions(viewerId, List.of(10L))).thenReturn(Collections.emptyList());
 
             Page<PostResponse> result = postService.searchByContent(" search ", pageable);
@@ -362,7 +358,7 @@ class PostServiceImplTest {
     void searchByHashtag_success() {
         Long viewerId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<PostFlatResponse> flatPage = new PageImpl<>(Collections.emptyList());
+        Page<PostFlatProjection> flatPage = new PageImpl<>(Collections.emptyList());
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
@@ -382,7 +378,7 @@ class PostServiceImplTest {
     void getAllSavedPost_success() {
         Long userId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
-        Page<PostFlatResponse> flatPage = new PageImpl<>(Collections.emptyList());
+        Page<PostFlatProjection> flatPage = new PageImpl<>(Collections.emptyList());
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);

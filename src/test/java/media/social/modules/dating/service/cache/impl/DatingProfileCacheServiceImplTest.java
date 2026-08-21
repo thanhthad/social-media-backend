@@ -1,5 +1,6 @@
 package media.social.modules.dating.service.cache.impl;
 
+import media.social.modules.dating.dto.projection.DatingProfileCacheProjection;
 import media.social.modules.dating.dto.response.cache.DatingProfileCacheResponse;
 import media.social.modules.dating.exception.profile.DatingProfileNotFoundException;
 import media.social.modules.dating.repository.DatingProfileRepository;
@@ -33,16 +34,20 @@ class DatingProfileCacheServiceImplTest {
     void getDatingProfile_found_returnsCacheResponse() {
         // Arrange
         Long userId = 1L;
-        DatingProfileCacheResponse expectedResponse = new DatingProfileCacheResponse();
+        DatingProfileCacheProjection projection = mock(DatingProfileCacheProjection.class);
+        when(projection.getUsername()).thenReturn("alice");
+        when(projection.getDisplayName()).thenReturn("Alice");
+
         when(datingProfileRepository.findDatingProfileCache(userId))
-                .thenReturn(Optional.of(expectedResponse));
+                .thenReturn(Optional.of(projection));
 
         // Act
         DatingProfileCacheResponse actualResponse = datingProfileCacheService.getDatingProfile(userId);
 
         // Assert
         assertThat(actualResponse).isNotNull();
-        assertThat(actualResponse).isSameAs(expectedResponse);
+        assertThat(actualResponse.getUsername()).isEqualTo("alice");
+        assertThat(actualResponse.getDisplayName()).isEqualTo("Alice");
         verify(datingProfileRepository, times(1)).findDatingProfileCache(userId);
     }
 

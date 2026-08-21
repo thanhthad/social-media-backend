@@ -2,12 +2,14 @@ package media.social.modules.story.service.impl;
 
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.security.context.UserContextHolder;
-import media.social.modules.file.image.dto.response.UploadFileResponse;
-import media.social.modules.file.image.service.CloudinaryService;
+import media.social.modules.file.dto.response.UploadFileResponse;
+import media.social.modules.file.service.CloudinaryService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.enums.ReactionType;
+import media.social.modules.story.dto.projection.StoryFeedProjection;
 import media.social.modules.story.dto.projection.StoryInteractionProjection;
+import media.social.modules.story.dto.projection.UserStoryProjection;
 import media.social.modules.story.dto.request.CreateStoryRequest;
 import media.social.modules.story.dto.request.UpdateStoryVisibilityRequest;
 import media.social.modules.story.dto.response.MyStoryResponse;
@@ -20,7 +22,6 @@ import media.social.modules.story.exception.story.StoryNotFoundException;
 import media.social.modules.story.repository.StoryRepository;
 import media.social.modules.story.repository.StoryViewRepository;
 import media.social.modules.story.service.cache.StoryCacheService;
-import media.social.modules.story.service.impl.StoryServiceImpl;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.enums.FriendshipStatus;
 import media.social.modules.user.service.domain.FriendShipDomain;
@@ -138,7 +139,10 @@ class StoryServiceImplTest {
     @Test
     void getFeed_success() {
         Long viewerId = 1L;
-        List<StoryFeedResponse> expectedFeed = List.of(new StoryFeedResponse());
+        StoryFeedProjection projection = mock(StoryFeedProjection.class);
+        when(projection.getUserId()).thenReturn(2L);
+        when(projection.getContent()).thenReturn("Story content");
+        List<StoryFeedProjection> expectedFeed = List.of(projection);
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
@@ -149,7 +153,9 @@ class StoryServiceImplTest {
             List<StoryFeedResponse> result = storyService.getFeed();
 
             assertNotNull(result);
-            assertSame(expectedFeed, result);
+            assertEquals(1, result.size());
+            assertEquals(2L, result.get(0).getUserId());
+            assertEquals("Story content", result.get(0).getContent());
         }
     }
 
@@ -157,7 +163,11 @@ class StoryServiceImplTest {
     void getUserStoriesBeforeExpire_success() {
         Long viewerId = 1L;
         Long targetUserId = 2L;
-        List<UserStoryResponse> expectedStories = List.of(new UserStoryResponse());
+        UserStoryProjection projection = mock(UserStoryProjection.class);
+        when(projection.getStoryId()).thenReturn(10L);
+        when(projection.getUserId()).thenReturn(targetUserId);
+        when(projection.getContent()).thenReturn("User story content");
+        List<UserStoryProjection> expectedStories = List.of(projection);
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
@@ -168,7 +178,10 @@ class StoryServiceImplTest {
             List<UserStoryResponse> result = storyService.getUserStoriesBeforeExpire(targetUserId);
 
             assertNotNull(result);
-            assertSame(expectedStories, result);
+            assertEquals(1, result.size());
+            assertEquals(10L, result.get(0).getStoryId());
+            assertEquals(targetUserId, result.get(0).getUserId());
+            assertEquals("User story content", result.get(0).getContent());
         }
     }
 

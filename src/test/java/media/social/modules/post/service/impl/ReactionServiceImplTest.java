@@ -4,6 +4,7 @@ import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
 import media.social.modules.notification.service.NotificationService;
+import media.social.modules.post.dto.projection.UserReactionProjection;
 import media.social.modules.post.dto.response.reaction.ReactionCountResponse;
 import media.social.modules.post.dto.response.reaction.UserReactionResponse;
 import media.social.modules.post.entity.Post;
@@ -218,8 +219,14 @@ class ReactionServiceImplTest {
         Long postId = 10L;
         ReactionType type = ReactionType.LIKE;
         Pageable pageable = PageRequest.of(0, 10);
-        UserReactionResponse response = mock(UserReactionResponse.class);
-        Page<UserReactionResponse> expectedPage = new PageImpl<>(List.of(response));
+        UserReactionProjection projection = mock(UserReactionProjection.class);
+        when(projection.getId()).thenReturn(1L);
+        when(projection.getEmail()).thenReturn("test@example.com");
+        when(projection.getAvatarUrl()).thenReturn("http://avatar.url");
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        when(projection.getCreatedAt()).thenReturn(now);
+
+        Page<UserReactionProjection> expectedPage = new PageImpl<>(List.of(projection));
 
         when(reactionRepository.findUsersReacted(postId, type, pageable)).thenReturn(expectedPage);
 
@@ -227,7 +234,10 @@ class ReactionServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertSame(expectedPage, result);
+        assertEquals(1L, result.getContent().get(0).getId());
+        assertEquals("test@example.com", result.getContent().get(0).getEmail());
+        assertEquals("http://avatar.url", result.getContent().get(0).getAvatarUrl());
+        assertEquals(now, result.getContent().get(0).getCreatedAt());
         verify(postDomainService).getByPostId(postId);
     }
 }

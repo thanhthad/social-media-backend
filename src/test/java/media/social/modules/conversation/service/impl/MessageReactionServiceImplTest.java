@@ -1,6 +1,7 @@
 package media.social.modules.conversation.service.impl;
 
 import media.social.modules.auth.security.context.UserContextHolder;
+import media.social.modules.conversation.dto.projection.MessageReactionUserProjection;
 import media.social.modules.conversation.dto.response.MessageReactionResponse;
 import media.social.modules.conversation.dto.response.MessageReactionUserResponse;
 import media.social.modules.conversation.entity.Message;
@@ -228,18 +229,24 @@ class MessageReactionServiceImplTest {
     @Test
     void getUsersReacted_success() {
         Message message = Message.builder().id(MESSAGE_ID).build();
-        MessageReactionUserResponse userResp = new MessageReactionUserResponse(
-                1L, "alice", "https://example.com/avatar.png", ReactionType.LIKE, OffsetDateTime.now()
-        );
+        MessageReactionUserProjection projection = mock(MessageReactionUserProjection.class);
+        when(projection.getUserId()).thenReturn(1L);
+        when(projection.getUserName()).thenReturn("alice");
+        when(projection.getAvatarUrl()).thenReturn("https://example.com/avatar.png");
+        when(projection.getReactionType()).thenReturn(ReactionType.LIKE);
+        OffsetDateTime now = OffsetDateTime.now();
+        when(projection.getCreatedAt()).thenReturn(now);
 
         when(messageRepository.findById(MESSAGE_ID)).thenReturn(Optional.of(message));
-        when(messageReactionRepository.findUsersReacted(MESSAGE_ID)).thenReturn(List.of(userResp));
+        when(messageReactionRepository.findUsersReacted(MESSAGE_ID)).thenReturn(List.of(projection));
 
         List<MessageReactionUserResponse> responses = messageReactionService.getUsersReacted(MESSAGE_ID);
 
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getUserId()).isEqualTo(1L);
         assertThat(responses.get(0).getUserName()).isEqualTo("alice");
+        assertThat(responses.get(0).getAvatarUrl()).isEqualTo("https://example.com/avatar.png");
         assertThat(responses.get(0).getReactionType()).isEqualTo(ReactionType.LIKE);
+        assertThat(responses.get(0).getCreatedAt()).isEqualTo(now);
     }
 }

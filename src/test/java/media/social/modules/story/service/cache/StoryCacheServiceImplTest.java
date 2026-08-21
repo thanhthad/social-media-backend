@@ -1,6 +1,7 @@
 package media.social.modules.story.service.cache;
 
 import media.social.modules.auth.Enum.Status;
+import media.social.modules.story.dto.projection.UserStoryProjection;
 import media.social.modules.story.dto.response.UserStoryResponse;
 import media.social.modules.story.repository.StoryRepository;
 import media.social.modules.story.service.cache.impl.StoryCacheServiceImpl;
@@ -29,15 +30,23 @@ class StoryCacheServiceImplTest {
     @Test
     void getUserStories_success() {
         Long targetUserId = 1L;
-        List<UserStoryResponse> expectedResponse = Collections.emptyList();
+        UserStoryProjection projection = mock(UserStoryProjection.class);
+        when(projection.getStoryId()).thenReturn(10L);
+        when(projection.getUserId()).thenReturn(targetUserId);
+        when(projection.getUsername()).thenReturn("username");
+        when(projection.getContent()).thenReturn("content");
 
         when(storyRepository.findActiveStoriesByUserId(eq(targetUserId), any(LocalDateTime.class), eq(Status.ACTIVE)))
-                .thenReturn(expectedResponse);
+                .thenReturn(List.of(projection));
 
         List<UserStoryResponse> result = storyCacheService.getUserStories(targetUserId);
 
         assertNotNull(result);
-        assertSame(expectedResponse, result);
+        assertEquals(1, result.size());
+        assertEquals(10L, result.get(0).getStoryId());
+        assertEquals(targetUserId, result.get(0).getUserId());
+        assertEquals("username", result.get(0).getUsername());
+        assertEquals("content", result.get(0).getContent());
         verify(storyRepository).findActiveStoriesByUserId(eq(targetUserId), any(LocalDateTime.class), eq(Status.ACTIVE));
     }
 

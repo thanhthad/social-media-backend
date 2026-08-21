@@ -20,9 +20,9 @@ import media.social.modules.dating.exception.report.CannotReportOwnProfileExcept
 import media.social.modules.dating.exception.report.DatingReportAlreadyExistsException;
 import media.social.modules.dating.exception.report.DatingReportAlreadyReviewedException;
 import media.social.modules.dating.exception.report.DatingReportNotFoundException;
-import media.social.modules.file.image.exception.CloudinaryDeleteException;
-import media.social.modules.file.image.exception.CloudinaryUploadException;
-import media.social.modules.file.image.exception.InvalidMediaException;
+import media.social.modules.file.exception.CloudinaryDeleteException;
+import media.social.modules.file.exception.CloudinaryUploadException;
+import media.social.modules.file.exception.InvalidMediaException;
 import media.social.modules.notification.exception.NotificationAlreadyExistsException;
 import media.social.modules.notification.exception.NotificationNotFoundException;
 import media.social.modules.post.exception.comment.CanNotCommentYourself;

@@ -2,12 +2,12 @@ package media.social.modules.conversation.service.impl;
 
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.conversation.dto.projection.ConversationListProjection;
+import media.social.modules.conversation.dto.projection.ConversationMemberProjection;
 import media.social.modules.conversation.dto.projection.DatingConversationListProjection;
 import media.social.modules.conversation.dto.projection.UnreadCountProjection;
 import media.social.modules.conversation.dto.request.CreateGroupRequest;
 import media.social.modules.conversation.dto.request.UpdateGroupNameRequest;
 import media.social.modules.conversation.dto.response.ConversationListResponse;
-import media.social.modules.conversation.dto.response.ConversationMemberResponse;
 import media.social.modules.conversation.dto.response.ConversationResponse;
 import media.social.modules.conversation.dto.response.DatingConversationListResponse;
 import media.social.modules.conversation.entity.Conversation;
@@ -18,8 +18,8 @@ import media.social.modules.conversation.repository.ConversationMemberRepository
 import media.social.modules.conversation.repository.ConversationRepository;
 import media.social.modules.conversation.service.domain.ConversationDomainService;
 import media.social.modules.conversation.websocket.ConversationPublisher;
-import media.social.modules.file.image.dto.response.UploadFileResponse;
-import media.social.modules.file.image.service.CloudinaryService;
+import media.social.modules.file.dto.response.UploadFileResponse;
+import media.social.modules.file.service.CloudinaryService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.service.domain.UserServiceDomain;
@@ -98,8 +98,13 @@ class ConversationServiceImplTest {
                 .type(ConversationType.PRIVATE)
                 .build();
 
-        ConversationMemberResponse m1 = ConversationMemberResponse.builder().userId(USER_ID).username("alice").build();
-        ConversationMemberResponse m2 = ConversationMemberResponse.builder().userId(TARGET_USER_ID).username("bob").build();
+        ConversationMemberProjection m1 = mock(ConversationMemberProjection.class);
+        when(m1.getUserId()).thenReturn(USER_ID);
+        when(m1.getUsername()).thenReturn("alice");
+
+        ConversationMemberProjection m2 = mock(ConversationMemberProjection.class);
+        when(m2.getUserId()).thenReturn(TARGET_USER_ID);
+        when(m2.getUsername()).thenReturn("bob");
 
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
             mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
@@ -108,7 +113,7 @@ class ConversationServiceImplTest {
             when(userServiceDomain.getByUserId(TARGET_USER_ID)).thenReturn(targetUser);
             when(conversationMemberRepository.findPrivateConversation(USER_ID, TARGET_USER_ID))
                     .thenReturn(Optional.of(existing));
-            when(conversationMemberRepository.findMembersByConversationId(CONVERSATION_ID))
+            when(conversationMemberRepository.findMembersProjectionByConversationId(CONVERSATION_ID))
                     .thenReturn(List.of(m1, m2));
 
             ConversationResponse response = conversationServiceImpl.createPrivateConversation(TARGET_USER_ID);
@@ -131,8 +136,13 @@ class ConversationServiceImplTest {
                 .type(ConversationType.PRIVATE)
                 .build();
 
-        ConversationMemberResponse m1 = ConversationMemberResponse.builder().userId(USER_ID).username("alice").build();
-        ConversationMemberResponse m2 = ConversationMemberResponse.builder().userId(TARGET_USER_ID).username("bob").build();
+        ConversationMemberProjection m1 = mock(ConversationMemberProjection.class);
+        when(m1.getUserId()).thenReturn(USER_ID);
+        when(m1.getUsername()).thenReturn("alice");
+
+        ConversationMemberProjection m2 = mock(ConversationMemberProjection.class);
+        when(m2.getUserId()).thenReturn(TARGET_USER_ID);
+        when(m2.getUsername()).thenReturn("bob");
 
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
             mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
@@ -142,7 +152,7 @@ class ConversationServiceImplTest {
             when(conversationMemberRepository.findPrivateConversation(USER_ID, TARGET_USER_ID))
                     .thenReturn(Optional.empty());
             when(conversationService.create(ConversationType.PRIVATE)).thenReturn(newConv);
-            when(conversationMemberRepository.findMembersByConversationId(CONVERSATION_ID))
+            when(conversationMemberRepository.findMembersProjectionByConversationId(CONVERSATION_ID))
                     .thenReturn(List.of(m1, m2));
 
             ConversationResponse response = conversationServiceImpl.createPrivateConversation(TARGET_USER_ID);
@@ -161,26 +171,28 @@ class ConversationServiceImplTest {
     // ---------------------------------------------------------------------------
 
     @Test
-    void createGroupConversation_emptyMembers_throwsIllegalArgumentException() {
+    void createGroupConversation_noMembers_throwsIllegalArgumentException() {
         CreateGroupRequest request = new CreateGroupRequest();
-        request.setName("Team Group");
+        request.setName("My Group");
         request.setMemberIds(Collections.emptyList());
 
-        User currentUser = User.builder().id(USER_ID).build();
+        User currentUser = User.builder().id(USER_ID).username("alice").build();
 
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
             mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
             when(userServiceDomain.getByUserId(USER_ID)).thenReturn(currentUser);
 
-            assertThrows(IllegalArgumentException.class,
-                    () -> conversationServiceImpl.createGroupConversation(request));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> conversationServiceImpl.createGroupConversation(request)
+            );
 
-            verify(conversationService, never()).create(any());
+            assertThat(ex.getMessage()).isEqualTo("Group must have members");
         }
     }
 
     @Test
-    void createGroupConversation_success_withAvatar() {
+    void createGroupConversation_withAvatar_success() {
         MultipartFile avatarFile = mock(MultipartFile.class);
         when(avatarFile.isEmpty()).thenReturn(false);
 
@@ -212,7 +224,7 @@ class ConversationServiceImplTest {
             when(conversationService.create(ConversationType.GROUP)).thenReturn(newConv);
             when(cloudinaryService.uploadFile(avatarFile, "conversation/avatar", MediaType.IMAGE))
                     .thenReturn(uploadResponse);
-            when(conversationMemberRepository.findMembersByConversationId(CONVERSATION_ID))
+            when(conversationMemberRepository.findMembersProjectionByConversationId(CONVERSATION_ID))
                     .thenReturn(Collections.emptyList());
 
             ConversationResponse response = conversationServiceImpl.createGroupConversation(request);
@@ -251,7 +263,7 @@ class ConversationServiceImplTest {
             when(userServiceDomain.getByUserId(USER_ID)).thenReturn(currentUser);
             when(userServiceDomain.getByUserId(2L)).thenReturn(user2);
             when(conversationService.create(ConversationType.GROUP)).thenReturn(newConv);
-            when(conversationMemberRepository.findMembersByConversationId(CONVERSATION_ID))
+            when(conversationMemberRepository.findMembersProjectionByConversationId(CONVERSATION_ID))
                     .thenReturn(Collections.emptyList());
 
             ConversationResponse response = conversationServiceImpl.createGroupConversation(request);
@@ -289,7 +301,7 @@ class ConversationServiceImplTest {
             when(userServiceDomain.getByUserId(USER_ID)).thenReturn(currentUser);
             when(userServiceDomain.getByUserId(2L)).thenReturn(user2);
             when(conversationService.create(ConversationType.GROUP)).thenReturn(newConv);
-            when(conversationMemberRepository.findMembersByConversationId(CONVERSATION_ID))
+            when(conversationMemberRepository.findMembersProjectionByConversationId(CONVERSATION_ID))
                     .thenReturn(Collections.emptyList());
 
             conversationServiceImpl.createGroupConversation(request);
@@ -581,13 +593,15 @@ class ConversationServiceImplTest {
                 .avatarUrl("https://example.com/group.png")
                 .build();
 
-        ConversationMemberResponse m = ConversationMemberResponse.builder().userId(USER_ID).username("alice").build();
+        ConversationMemberProjection m = mock(ConversationMemberProjection.class);
+        when(m.getUserId()).thenReturn(USER_ID);
+        when(m.getUsername()).thenReturn("alice");
 
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
             mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
             when(conversationMemberRepository.existsByConversationIdAndUserId(CONVERSATION_ID, USER_ID)).thenReturn(true);
             when(conversationRepository.findById(CONVERSATION_ID)).thenReturn(Optional.of(conversation));
-            when(conversationMemberRepository.findMembersByConversationId(CONVERSATION_ID)).thenReturn(List.of(m));
+            when(conversationMemberRepository.findMembersProjectionByConversationId(CONVERSATION_ID)).thenReturn(List.of(m));
 
             ConversationResponse response = conversationServiceImpl.getConversationDetail(CONVERSATION_ID);
 
@@ -605,16 +619,21 @@ class ConversationServiceImplTest {
                 .type(ConversationType.PRIVATE)
                 .build();
 
-        ConversationMemberResponse mCurrent = ConversationMemberResponse.builder()
-                .userId(USER_ID).username("alice").avatarUrl("https://example.com/alice.png").build();
-        ConversationMemberResponse mTarget = ConversationMemberResponse.builder()
-                .userId(TARGET_USER_ID).username("bob").avatarUrl("https://example.com/bob.png").build();
+        ConversationMemberProjection mCurrent = mock(ConversationMemberProjection.class);
+        when(mCurrent.getUserId()).thenReturn(USER_ID);
+        when(mCurrent.getUsername()).thenReturn("alice");
+        when(mCurrent.getAvatarUrl()).thenReturn("https://example.com/alice.png");
+
+        ConversationMemberProjection mTarget = mock(ConversationMemberProjection.class);
+        when(mTarget.getUserId()).thenReturn(TARGET_USER_ID);
+        when(mTarget.getUsername()).thenReturn("bob");
+        when(mTarget.getAvatarUrl()).thenReturn("https://example.com/bob.png");
 
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
             mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
             when(conversationMemberRepository.existsByConversationIdAndUserId(CONVERSATION_ID, USER_ID)).thenReturn(true);
             when(conversationRepository.findById(CONVERSATION_ID)).thenReturn(Optional.of(conversation));
-            when(conversationMemberRepository.findMembersByConversationId(CONVERSATION_ID))
+            when(conversationMemberRepository.findMembersProjectionByConversationId(CONVERSATION_ID))
                     .thenReturn(List.of(mCurrent, mTarget));
 
             ConversationResponse response = conversationServiceImpl.getConversationDetail(CONVERSATION_ID);

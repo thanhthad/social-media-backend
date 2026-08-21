@@ -1,14 +1,14 @@
-package media.social.modules.file.image.service.impl;
+package media.social.modules.file.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import media.social.modules.file.image.dto.response.UploadFileResponse;
-import media.social.modules.file.image.exception.CloudinaryDeleteException;
-import media.social.modules.file.image.exception.CloudinaryUploadException;
-import media.social.modules.file.image.exception.InvalidMediaException;
-import media.social.modules.file.image.service.CloudinaryService;
+import media.social.modules.file.dto.response.UploadFileResponse;
+import media.social.modules.file.exception.CloudinaryDeleteException;
+import media.social.modules.file.exception.CloudinaryUploadException;
+import media.social.modules.file.exception.InvalidMediaException;
+import media.social.modules.file.service.CloudinaryService;
 import media.social.modules.post.enums.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

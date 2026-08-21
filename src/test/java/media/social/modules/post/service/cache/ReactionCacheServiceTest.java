@@ -3,6 +3,7 @@ package media.social.modules.post.service.cache;
 import media.social.modules.post.entity.Reaction;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.post.repository.ReactionRepository;
+import media.social.modules.post.service.cache.impl.ReactionCacheServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,7 +19,7 @@ import static org.mockito.Mockito.*;
 class ReactionCacheServiceTest {
 
     @InjectMocks
-    private ReactionCacheService reactionCacheService;
+    private ReactionCacheServiceImpl reactionCacheService;
 
     @Mock
     private ReactionRepository reactionRepository;
@@ -51,5 +52,10 @@ class ReactionCacheServiceTest {
 
         assertNull(result);
         verify(reactionRepository).findByUserIdAndPostId(userId, postId);
+    }
+
+    @Test
+    void evictMyReaction_doesNotThrow() {
+        assertDoesNotThrow(() -> reactionCacheService.evictMyReaction(1L, 2L));
     }
 }

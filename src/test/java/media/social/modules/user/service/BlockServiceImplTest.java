@@ -1,6 +1,7 @@
 package media.social.modules.user.service;
 
 import media.social.modules.auth.security.context.UserContextHolder;
+import media.social.modules.user.dto.projection.ListUserBlockedProjection;
 import media.social.modules.user.dto.request.block.BlockRequest;
 import media.social.modules.user.dto.response.block.ListUserBlockedResponse;
 import media.social.modules.user.entity.Block;
@@ -208,10 +209,13 @@ class BlockServiceImplTest {
         Long currentUserId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
 
-        ListUserBlockedResponse blockedUser =
-                new ListUserBlockedResponse(2L, "blocked_user", "Blocked Name", "http://avatar.url");
+        ListUserBlockedProjection projection = mock(ListUserBlockedProjection.class);
+        when(projection.getId()).thenReturn(2L);
+        when(projection.getUsername()).thenReturn("blocked_user");
+        when(projection.getFullName()).thenReturn("Blocked Name");
+        when(projection.getAvatarUrl()).thenReturn("http://avatar.url");
 
-        Page<ListUserBlockedResponse> expectedPage = new PageImpl<>(List.of(blockedUser));
+        Page<ListUserBlockedProjection> expectedPage = new PageImpl<>(List.of(projection));
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);
@@ -239,7 +243,7 @@ class BlockServiceImplTest {
         Long currentUserId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<ListUserBlockedResponse> emptyPage = new PageImpl<>(List.of());
+        Page<ListUserBlockedProjection> emptyPage = new PageImpl<>(List.of());
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);

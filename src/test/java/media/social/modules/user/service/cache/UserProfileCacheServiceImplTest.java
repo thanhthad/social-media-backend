@@ -1,5 +1,7 @@
 package media.social.modules.user.service.cache;
 
+import media.social.modules.user.dto.projection.FriendshipCountProjection;
+import media.social.modules.user.dto.projection.PublicUserProfileCacheProjection;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
 import media.social.modules.user.enums.FriendshipStatus;
@@ -17,6 +19,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,15 +42,14 @@ class UserProfileCacheServiceImplTest {
     @DisplayName("getUserProfile - repository returns profile - method returns it")
     void getUserProfile_success() {
         // Arrange
-        PublicUserProfileCacheResponse expected = PublicUserProfileCacheResponse.builder()
-                .id(USER_ID)
-                .username("janedoe")
-                .fullName("Jane Doe")
-                .avatarUrl("https://cdn.example.com/avatar.png")
-                .bio("Hello world!")
-                .build();
+        PublicUserProfileCacheProjection projection = mock(PublicUserProfileCacheProjection.class);
+        when(projection.getId()).thenReturn(USER_ID);
+        when(projection.getUsername()).thenReturn("janedoe");
+        when(projection.getFullName()).thenReturn("Jane Doe");
+        when(projection.getAvatarUrl()).thenReturn("https://cdn.example.com/avatar.png");
+        when(projection.getBio()).thenReturn("Hello world!");
 
-        when(userRepository.findCurrentUserProfileCache(USER_ID)).thenReturn(Optional.of(expected));
+        when(userRepository.findCurrentUserProfileCache(USER_ID)).thenReturn(Optional.of(projection));
 
         // Act
         PublicUserProfileCacheResponse actual = userProfileCacheService.getUserProfile(USER_ID);
@@ -81,11 +83,10 @@ class UserProfileCacheServiceImplTest {
     @DisplayName("getTotalFriend - repository returns count - method returns it")
     void getTotalFriend_success() {
         // Arrange
-        FriendshipCountResponse expected = FriendshipCountResponse.builder()
-                .totalFriends(42L)
-                .build();
+        FriendshipCountProjection projection = mock(FriendshipCountProjection.class);
+        when(projection.getTotalFriends()).thenReturn(42L);
 
-        when(userRepository.findFriendshipCount(USER_ID, FriendshipStatus.ACCEPTED)).thenReturn(Optional.of(expected));
+        when(userRepository.findFriendshipCount(USER_ID, FriendshipStatus.ACCEPTED)).thenReturn(Optional.of(projection));
 
         // Act
         FriendshipCountResponse actual = userProfileCacheService.getTotalFriend(USER_ID);

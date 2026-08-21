@@ -1,13 +1,16 @@
 package media.social.modules.post.service.cache;
 
+import media.social.modules.auth.Enum.Status;
+import media.social.modules.post.dto.projection.PostFlatProjection;
+import media.social.modules.post.dto.projection.PostMediaProjection;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
-import media.social.modules.post.dto.response.post.PostFlatResponse;
-import media.social.modules.post.dto.response.post.PostMediaResponse;
 import media.social.modules.post.enums.MediaType;
+import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.exception.post.PostNotFoundException;
 import media.social.modules.post.repository.PostMediaRepository;
 import media.social.modules.post.repository.PostRepository;
+import media.social.modules.post.service.cache.impl.PostCacheServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,7 +28,7 @@ import static org.mockito.Mockito.*;
 class PostCacheServiceTest {
 
     @InjectMocks
-    private PostCacheService postCacheService;
+    private PostCacheServiceImpl postCacheService;
 
     @Mock
     private PostRepository postRepository;
@@ -39,26 +42,24 @@ class PostCacheServiceTest {
         List<Visibility> visibilities = List.of(Visibility.PUBLIC);
         LocalDateTime now = LocalDateTime.now();
 
-        PostFlatResponse flat = PostFlatResponse.builder()
-                .id(postId)
-                .content("Post content")
-                .visibility(Visibility.PUBLIC)
-                .createdAt(now)
-                .userId(10L)
-                .username("john_doe")
-                .avatarUrl("http://avatar.url")
-                .commentCount(5L)
-                .reactionCount(15L)
-                .build();
+        PostFlatProjection flat = mock(PostFlatProjection.class);
+        when(flat.getId()).thenReturn(postId);
+        when(flat.getContent()).thenReturn("Post content");
+        when(flat.getVisibility()).thenReturn(Visibility.PUBLIC);
+        when(flat.getCreatedAt()).thenReturn(now);
+        when(flat.getUserId()).thenReturn(10L);
+        when(flat.getUsername()).thenReturn("john_doe");
+        when(flat.getAvatarUrl()).thenReturn("http://avatar.url");
+        when(flat.getCommentCount()).thenReturn(5L);
+        when(flat.getReactionCount()).thenReturn(15L);
 
-        PostMediaResponse media = PostMediaResponse.builder()
-                .postMediaId(100L)
-                .url("http://media.url")
-                .type(MediaType.IMAGE)
-                .build();
+        PostMediaProjection media = mock(PostMediaProjection.class);
+        when(media.getPostMediaId()).thenReturn(100L);
+        when(media.getUrl()).thenReturn("http://media.url");
+        when(media.getType()).thenReturn(MediaType.IMAGE);
 
-        when(postRepository.findPostDetailById(postId, visibilities)).thenReturn(Optional.of(flat));
-        when(postMediaRepository.findMediaResponseByPostId(postId)).thenReturn(List.of(media));
+        when(postRepository.findPostDetailById(postId, Status.ACTIVE, visibilities, ReportStatus.APPROVED)).thenReturn(Optional.of(flat));
+        when(postMediaRepository.findMediaByPostId(postId)).thenReturn(List.of(media));
 
         PostCacheDTO result = postCacheService.getPost(postId, visibilities);
 
@@ -75,8 +76,8 @@ class PostCacheServiceTest {
         assertEquals(1, result.getPostMediaResponses().size());
         assertEquals(100L, result.getPostMediaResponses().get(0).getPostMediaId());
 
-        verify(postRepository).findPostDetailById(postId, visibilities);
-        verify(postMediaRepository).findMediaResponseByPostId(postId);
+        verify(postRepository).findPostDetailById(postId, Status.ACTIVE, visibilities, ReportStatus.APPROVED);
+        verify(postMediaRepository).findMediaByPostId(postId);
     }
 
     @Test
@@ -84,9 +85,14 @@ class PostCacheServiceTest {
         Long postId = 1L;
         List<Visibility> visibilities = List.of(Visibility.PUBLIC);
 
-        when(postRepository.findPostDetailById(postId, visibilities)).thenReturn(Optional.empty());
+        when(postRepository.findPostDetailById(postId, Status.ACTIVE, visibilities, ReportStatus.APPROVED)).thenReturn(Optional.empty());
 
         assertThrows(PostNotFoundException.class, () -> postCacheService.getPost(postId, visibilities));
-        verify(postMediaRepository, never()).findMediaResponseByPostId(any());
+        verify(postMediaRepository, never()).findMediaByPostId(any());
+    }
+
+    @Test
+    void evictPost_doesNotThrow() {
+        assertDoesNotThrow(() -> postCacheService.evictPost(1L));
     }
 }

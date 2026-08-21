@@ -4,6 +4,7 @@ import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
 import media.social.modules.notification.service.NotificationService;
+import media.social.modules.post.dto.projection.UserReactionProjection;
 import media.social.modules.post.dto.response.reaction.ReactionCountResponse;
 import media.social.modules.post.dto.response.reaction.ReactionResponse;
 import media.social.modules.post.dto.response.reaction.UserReactionResponse;
@@ -30,6 +31,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -322,8 +324,14 @@ class CommentReactionServiceImplTest {
         ReactionType type = ReactionType.LIKE;
         Pageable pageable = PageRequest.of(0, 10);
         Comment comment = new Comment();
-        UserReactionResponse userReaction = mock(UserReactionResponse.class);
-        Page<UserReactionResponse> expectedPage = new PageImpl<>(List.of(userReaction));
+        UserReactionProjection projection = mock(UserReactionProjection.class);
+        when(projection.getId()).thenReturn(1L);
+        when(projection.getEmail()).thenReturn("test@example.com");
+        when(projection.getAvatarUrl()).thenReturn("http://avatar.url");
+        LocalDateTime now = LocalDateTime.now();
+        when(projection.getCreatedAt()).thenReturn(now);
+
+        Page<UserReactionProjection> expectedPage = new PageImpl<>(List.of(projection));
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
         when(commentReactionRepository.findUsersReacted(commentId, type, pageable)).thenReturn(expectedPage);
@@ -332,6 +340,9 @@ class CommentReactionServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertSame(expectedPage, result);
+        assertEquals(1L, result.getContent().get(0).getId());
+        assertEquals("test@example.com", result.getContent().get(0).getEmail());
+        assertEquals("http://avatar.url", result.getContent().get(0).getAvatarUrl());
+        assertEquals(now, result.getContent().get(0).getCreatedAt());
     }
 }

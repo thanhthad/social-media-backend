@@ -1,6 +1,7 @@
 package media.social.modules.notification.service.impl;
 
 import media.social.modules.auth.security.context.UserContextHolder;
+import media.social.modules.notification.dto.projection.NotificationProjection;
 import media.social.modules.notification.dto.response.NotificationResponse;
 import media.social.modules.notification.entity.Notification;
 import media.social.modules.notification.enums.EntityType;
@@ -205,11 +206,10 @@ class NotificationServiceImplTest {
     void getMyNotifications_ReturnsPage() {
         Long userId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
-        NotificationResponse mockResponse = NotificationResponse.builder()
-                .notificationId(500L)
-                .senderUsername("sender")
-                .build();
-        Page<NotificationResponse> mockPage = new PageImpl<>(List.of(mockResponse));
+        NotificationProjection mockProjection = mock(NotificationProjection.class);
+        when(mockProjection.getNotificationId()).thenReturn(500L);
+        when(mockProjection.getSenderUsername()).thenReturn("sender");
+        Page<NotificationProjection> mockPage = new PageImpl<>(List.of(mockProjection));
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
@@ -220,6 +220,7 @@ class NotificationServiceImplTest {
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
             assertEquals("sender", result.getContent().get(0).getSenderUsername());
+            assertEquals(500L, result.getContent().get(0).getNotificationId());
             verify(notificationRepository).findMyNotifications(userId, pageable);
         }
     }

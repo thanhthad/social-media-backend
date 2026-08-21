@@ -1,6 +1,7 @@
 package media.social.modules.dating.service.impl;
 
 import media.social.modules.auth.security.context.UserContextHolder;
+import media.social.modules.dating.dto.projection.DatingReportDetailProjection;
 import media.social.modules.dating.dto.request.report.CreateDatingReportRequest;
 import media.social.modules.dating.dto.request.report.UpdateDatingReportRequest;
 import media.social.modules.dating.dto.response.report.DatingReportDetailResponse;
@@ -306,14 +307,18 @@ class DatingReportServiceImplTest {
     @Test
     void getAll_success_returnsPage() {
         Pageable pageable = PageRequest.of(0, 10);
-        Page<DatingReportDetailResponse> expectedPage =
-                new PageImpl<>(List.of(mock(DatingReportDetailResponse.class)));
+        DatingReportDetailProjection projection = mock(DatingReportDetailProjection.class);
+        when(projection.getReportId()).thenReturn(1L);
+        Page<DatingReportDetailProjection> expectedPage =
+                new PageImpl<>(List.of(projection));
 
         when(datingReportRepository.getAll(pageable)).thenReturn(expectedPage);
 
         Page<DatingReportDetailResponse> result = datingReportService.getAll(pageable);
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getReportId()).isEqualTo(1L);
         verify(datingReportRepository).getAll(pageable);
     }
 
@@ -325,14 +330,18 @@ class DatingReportServiceImplTest {
     void getByStatus_success_returnsPageFilteredByStatus() {
         Pageable pageable = PageRequest.of(0, 10);
         DatingReportStatus status = DatingReportStatus.PENDING;
-        Page<DatingReportDetailResponse> expectedPage =
-                new PageImpl<>(List.of(mock(DatingReportDetailResponse.class)));
+        DatingReportDetailProjection projection = mock(DatingReportDetailProjection.class);
+        when(projection.getReportId()).thenReturn(1L);
+        Page<DatingReportDetailProjection> expectedPage =
+                new PageImpl<>(List.of(projection));
 
         when(datingReportRepository.getByStatus(status, pageable)).thenReturn(expectedPage);
 
         Page<DatingReportDetailResponse> result = datingReportService.getByStatus(pageable, status);
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getReportId()).isEqualTo(1L);
         verify(datingReportRepository).getByStatus(status, pageable);
     }
 }

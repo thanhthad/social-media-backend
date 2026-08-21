@@ -1,6 +1,7 @@
 package media.social.modules.post.service.impl;
 
 import media.social.modules.auth.security.context.UserContextHolder;
+import media.social.modules.post.dto.projection.ReportDetailProjection;
 import media.social.modules.post.dto.request.report.CreateReportRequest;
 import media.social.modules.post.dto.request.report.UpdateReportRequest;
 import media.social.modules.post.dto.response.report.ReportDetailResponse;
@@ -372,8 +373,9 @@ class ReportServiceImplTest {
     @Test
     void getAll_returnsPage() {
         Pageable pageable = PageRequest.of(0, 10);
-        ReportDetailResponse item = mock(ReportDetailResponse.class);
-        Page<ReportDetailResponse> expectedPage = new PageImpl<>(List.of(item));
+        ReportDetailProjection projection = mock(ReportDetailProjection.class);
+        when(projection.getReportId()).thenReturn(1L);
+        Page<ReportDetailProjection> expectedPage = new PageImpl<>(List.of(projection));
 
         when(reportRepository.getAll(pageable)).thenReturn(expectedPage);
 
@@ -381,7 +383,7 @@ class ReportServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertSame(expectedPage, result);
+        assertEquals(1L, result.getContent().get(0).getReportId());
         verify(reportRepository).getAll(pageable);
     }
 
@@ -389,8 +391,9 @@ class ReportServiceImplTest {
     void getByStatus_returnsPage() {
         Pageable pageable = PageRequest.of(0, 10);
         ReportStatus status = ReportStatus.APPROVED;
-        ReportDetailResponse item = mock(ReportDetailResponse.class);
-        Page<ReportDetailResponse> expectedPage = new PageImpl<>(List.of(item));
+        ReportDetailProjection projection = mock(ReportDetailProjection.class);
+        when(projection.getReportId()).thenReturn(1L);
+        Page<ReportDetailProjection> expectedPage = new PageImpl<>(List.of(projection));
 
         when(reportRepository.getByStatus(status, pageable)).thenReturn(expectedPage);
 
@@ -398,7 +401,7 @@ class ReportServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertSame(expectedPage, result);
+        assertEquals(1L, result.getContent().get(0).getReportId());
         verify(reportRepository).getByStatus(status, pageable);
     }
 
