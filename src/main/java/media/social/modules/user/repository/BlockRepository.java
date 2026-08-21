@@ -1,5 +1,6 @@
 package media.social.modules.user.repository;
 
+import media.social.modules.user.dto.projection.ListUserBlockedProjection;
 import media.social.modules.user.dto.response.block.ListUserBlockedResponse;
 import media.social.modules.user.entity.Block;
 import media.social.modules.user.entity.BlockId;
@@ -24,17 +25,19 @@ public interface BlockRepository extends JpaRepository<Block, BlockId> {
                               @Param("blockedId") Long blockedId);
 
     @Query("""
-    SELECT new media.social.modules.user.dto.response.block.ListUserBlockedResponse(
-        u.id,
-        u.username,
-        p.fullName,
-        p.avatarUrl
-    )
+    SELECT
+        u.id AS id,
+        u.username AS username,
+        p.fullName AS fullName,
+        p.avatarUrl AS avatarUrl
     FROM Block b
     JOIN b.blocked u
     LEFT JOIN u.profile p
     WHERE b.blocker.id = :userId
     ORDER BY b.createdAt DESC
 """)
-    Page<ListUserBlockedResponse> findBlockedUsers(@Param("userId") Long userId, Pageable pageable);
+    Page<ListUserBlockedProjection> findBlockedUsers(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
 }

@@ -81,10 +81,23 @@ public class BlockServiceImpl implements BlockService {
     }
 
     @Override
-    public Page<ListUserBlockedResponse> getBlockedUsers(Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<ListUserBlockedResponse> getBlockedUsers(
+            Pageable pageable
+    ) {
 
         Long currentUserId = UserContextHolder.getUserId();
 
-        return blockRepository.findBlockedUsers(currentUserId,pageable);
+        return blockRepository.findBlockedUsers(
+                currentUserId,
+                pageable
+        ).map(row ->
+                new ListUserBlockedResponse(
+                        row.getId(),
+                        row.getUsername(),
+                        row.getFullName(),
+                        row.getAvatarUrl()
+                )
+        );
     }
 }
