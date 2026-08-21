@@ -167,7 +167,9 @@ public class StoryServiceImpl implements StoryService {
         Long viewerId = UserContextHolder.getUserId();
 
         List<UserStoryResponse> stories =
-                storyCacheService.getUserStories(targetUserId);
+                storyCacheService.getUserStories(
+                        targetUserId
+                );
 
         if (viewerId.equals(targetUserId)) {
             return stories;
@@ -180,22 +182,18 @@ public class StoryServiceImpl implements StoryService {
                 );
 
         if (isFriend) {
-
             return stories.stream()
                     .filter(story ->
-                            Visibility.PUBLIC
-                                    .equals(story.getVisibility())
+                            Visibility.PUBLIC.equals(story.getVisibility())
                                     ||
-                                    Visibility.FRIEND
-                                            .equals(story.getVisibility())
+                                    Visibility.FRIEND.equals(story.getVisibility())
                     )
                     .toList();
         }
 
         return stories.stream()
                 .filter(story ->
-                        Visibility.PUBLIC
-                                .equals(story.getVisibility())
+                        Visibility.PUBLIC.equals(story.getVisibility())
                 )
                 .toList();
     }

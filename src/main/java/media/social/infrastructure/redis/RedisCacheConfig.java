@@ -20,21 +20,15 @@ import java.time.Duration;
 @EnableCaching
 public class RedisCacheConfig {
 
-
     @Bean
     RedisCacheManager cacheManager(
             RedisConnectionFactory factory
-    ){
+    ) {
 
         ObjectMapper redisMapper = new ObjectMapper();
 
-        // Support LocalDate, LocalDateTime
-        redisMapper.registerModule(
-                new JavaTimeModule()
-        );
+        redisMapper.registerModule(new JavaTimeModule());
 
-
-        // Chỉ dùng cho Redis
         redisMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
                         .allowIfSubType("media.social")
@@ -44,28 +38,22 @@ public class RedisCacheConfig {
                 JsonTypeInfo.As.PROPERTY
         );
 
-
         GenericJackson2JsonRedisSerializer serializer =
                 new GenericJackson2JsonRedisSerializer(redisMapper);
 
-
         RedisCacheConfiguration config =
                 RedisCacheConfiguration.defaultCacheConfig()
-
                         .entryTtl(Duration.ofMinutes(30))
-
                         .serializeKeysWith(
-                                RedisSerializationContext.SerializationPair
-                                        .fromSerializer(
-                                                new StringRedisSerializer()
-                                        )
+                                RedisSerializationContext.SerializationPair.fromSerializer(
+                                        new StringRedisSerializer()
+                                )
                         )
-
                         .serializeValuesWith(
-                                RedisSerializationContext.SerializationPair
-                                        .fromSerializer(serializer)
+                                RedisSerializationContext.SerializationPair.fromSerializer(
+                                        serializer
+                                )
                         );
-
 
         return RedisCacheManager.builder(factory)
                 .cacheDefaults(config)

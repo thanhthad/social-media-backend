@@ -206,33 +206,31 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
     );
 
     @Query("""
-        SELECT
-            s.id AS storyId,
-            s.user.id AS userId,
-            u.username AS username,
-            pr.avatarUrl AS avatarUrl,
-            s.content AS content,
-            s.visibility AS visibility,
-            sm.mediaType AS mediaType,
-            sm.url AS url,
-            s.expiresAt AS expiresAt,
-            s.createdAt AS createdAt,
-            s.updatedAt AS updatedAt
-    
-        FROM Story s
-        JOIN s.user u
-        JOIN u.profile pr
-        JOIN s.media sm
-    
-        WHERE s.user.id = :userId
-          AND s.expiresAt > :now
-          AND u.status = :activeStatus
-    
-        ORDER BY s.createdAt ASC
-    """)
-    List<UserStoryProjection> findActiveStoriesByUserId(
+    SELECT
+        s.id AS storyId,
+        s.user.id AS userId,
+        u.username AS username,
+        pr.avatarUrl AS avatarUrl,
+        s.content AS content,
+        s.visibility AS visibility,
+        sm.mediaType AS mediaType,
+        sm.url AS url,
+        s.expiresAt AS expiresAt,
+        s.createdAt AS createdAt,
+        s.updatedAt AS updatedAt
+
+    FROM Story s
+    JOIN s.user u
+    JOIN u.profile pr
+    JOIN s.media sm
+
+    WHERE s.user.id = :userId
+      AND u.status = :activeStatus
+
+    ORDER BY s.createdAt ASC
+""")
+    List<UserStoryProjection> findStoriesByUserId(
             @Param("userId") Long userId,
-            @Param("now") LocalDateTime now,
             @Param("activeStatus") Status activeStatus
     );
 }

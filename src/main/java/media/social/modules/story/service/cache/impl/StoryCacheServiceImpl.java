@@ -31,9 +31,8 @@ public class StoryCacheServiceImpl implements StoryCacheService {
     ) {
 
         List<UserStoryProjection> projections =
-                storyRepository.findActiveStoriesByUserId(
+                storyRepository.findStoriesByUserId(
                         targetUserId,
-                        LocalDateTime.now(),
                         Status.ACTIVE
                 );
 
