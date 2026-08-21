@@ -174,28 +174,4 @@ public class FriendshipController {
         );
     }
 
-    // ==================================================
-    // GET MY FRIENDS
-    // ==================================================
-
-    @GetMapping("/me")
-    @Operation(summary = "Get my friends")
-    @RateLimit(
-            name = "MY_FRIEND_LIST",
-            limit = 120,
-            windowSeconds = 60
-    )
-    public ResponseEntity<?> getMyFriends(
-            Pageable pageable
-    ) {
-
-        Page<FriendshipUserResponse> page =
-                friendshipService.getMyFriends(pageable);
-
-        return ResponseData.successPaginate(
-                page,
-                "Get my friends successfully",
-                HttpStatus.OK
-        );
-    }
 }

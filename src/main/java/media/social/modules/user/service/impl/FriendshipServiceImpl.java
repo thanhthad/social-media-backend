@@ -183,37 +183,40 @@ public class FriendshipServiceImpl implements FriendshipService {
         userServiceDomain.validateUserExists(userId);
 
         if (viewerId.equals(userId)) {
-            return friendshipRepository.getMyFriends(
-                    userId,
-                    FriendshipStatus.ACCEPTED,
-                    pageable
-            );
+            return friendshipRepository
+                    .getMyFriends(
+                            userId,
+                            FriendshipStatus.ACCEPTED,
+                            pageable
+                    )
+                    .map(projection ->
+                            new FriendshipUserResponse(
+                                    projection.getUserId(),
+                                    projection.getUsername(),
+                                    projection.getAvatarUrl()
+                            )
+                    );
         }
 
-        return friendshipRepository.getFriends(
-                userId,
-                viewerId,
-                FriendshipStatus.ACCEPTED,
-                Visibility.PUBLIC,
-                Visibility.FRIEND,
-                FriendshipStatus.ACCEPTED,
-                pageable
-        );
+        return friendshipRepository
+                .getFriends(
+                        userId,
+                        viewerId,
+                        FriendshipStatus.ACCEPTED,
+                        Visibility.PUBLIC,
+                        Visibility.FRIEND,
+                        FriendshipStatus.ACCEPTED,
+                        pageable
+                )
+                .map(projection ->
+                        new FriendshipUserResponse(
+                                projection.getUserId(),
+                                projection.getUsername(),
+                                projection.getAvatarUrl()
+                        )
+                );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<FriendshipUserResponse> getMyFriends(
-            Pageable pageable
-    ) {
-        Long currentUserId = UserContextHolder.getUserId();
-
-        return friendshipRepository.getMyFriends(
-                currentUserId,
-                FriendshipStatus.ACCEPTED,
-                pageable
-        );
-    }
 
     @Override
     @Transactional(readOnly = true)

@@ -21,10 +21,6 @@ public interface FriendshipService {
             Pageable pageable
     );
 
-    Page<FriendshipUserResponse> getMyFriends(
-            Pageable pageable
-    );
-
     List<FriendSuggestionResponse> getSuggestedUsers();
 
     List<MutualFriendResponse> getMutualFriends(Long targetUserId);
