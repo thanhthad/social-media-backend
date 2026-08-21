@@ -74,101 +74,102 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-    
-        u.id,
-        u.username,
-        pr.avatarUrl,
-    
-        p.commentCount,
-        p.reactionCount
-    
-    )
-    
+    SELECT
+        p.id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.createdAt AS createdAt,
+
+        u.id AS userId,
+        u.username AS username,
+        pr.avatarUrl AS avatarUrl,
+
+        p.commentCount AS commentCount,
+        p.reactionCount AS reactionCount
+
     FROM Post p
     JOIN p.user u
     LEFT JOIN u.profile pr
-    
+
     WHERE u.id = :userId
-    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
-    
-    AND NOT EXISTS (
-        SELECT 1
-        FROM Report report
-        WHERE report.post.id = p.id
-          AND report.status =
-          media.social.modules.post.enums.ReportStatus.APPROVED
-    )
-    
+      AND u.status = :userStatus
+
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Report report
+          WHERE report.post.id = p.id
+            AND report.status = :reportStatus
+      )
+
     ORDER BY p.createdAt DESC
-    """)
-    Page<PostFlatResponse> findAllPostMe(
+""")
+    Page<PostFlatProjection> findAllPostMe(
             @Param("userId") Long userId,
+            @Param("userStatus") Status userStatus,
+            @Param("reportStatus") ReportStatus reportStatus,
             Pageable pageable
     );
 
     @Query("""
-    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl,
-        p.commentCount,
-        p.reactionCount
-    )
+    SELECT
+        p.id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.createdAt AS createdAt,
+
+        u.id AS userId,
+        u.username AS username,
+        pr.avatarUrl AS avatarUrl,
+
+        p.commentCount AS commentCount,
+        p.reactionCount AS reactionCount
+
     FROM Post p
     JOIN p.user u
     LEFT JOIN u.profile pr
 
     WHERE u.id = :targetUserId
 
-    AND u.status = :activeStatus
+      AND u.status = :activeStatus
 
-    AND NOT EXISTS (
-        SELECT 1
-        FROM Block b
-        WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
-           OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
-    )
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Block b
+          WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
+             OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
+      )
 
-    AND NOT EXISTS (
-        SELECT 1
-        FROM Report r
-        WHERE r.post.id = p.id
-          AND r.status = :approvedReportStatus
-    )
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Report r
+          WHERE r.post.id = p.id
+            AND r.status = :approvedReportStatus
+      )
 
-    AND (
-        u.id = :viewerId
+      AND (
+          u.id = :viewerId
 
-        OR p.visibility = :publicVisibility
+          OR p.visibility = :publicVisibility
 
-        OR (
-            p.visibility = :friendVisibility
+          OR (
+              p.visibility = :friendVisibility
 
-            AND EXISTS (
-                SELECT 1
-                FROM Friendship f
-                WHERE (
-                    (f.userOne.id = :viewerId AND f.userTwo.id = :targetUserId)
-                    OR
-                    (f.userOne.id = :targetUserId AND f.userTwo.id = :viewerId)
-                )
-                AND f.status = :acceptedStatus
-            )
-        )
-    )
+              AND EXISTS (
+                  SELECT 1
+                  FROM Friendship f
+                  WHERE (
+                      (f.userOne.id = :viewerId AND f.userTwo.id = :targetUserId)
+                      OR
+                      (f.userOne.id = :targetUserId AND f.userTwo.id = :viewerId)
+                  )
+                  AND f.status = :acceptedStatus
+              )
+          )
+      )
 
     ORDER BY p.createdAt DESC
-    """)
-    Page<PostFlatResponse> findAllVisiblePost(
+""")
+    Page<PostFlatProjection> findAllVisiblePost(
             @Param("viewerId") Long viewerId,
             @Param("targetUserId") Long targetUserId,
             @Param("activeStatus") Status activeStatus,
@@ -180,50 +181,56 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl,
-            
-        p.commentCount,
-        p.reactionCount
-          
-    )
+    SELECT
+        p.id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.createdAt AS createdAt,
+
+        u.id AS userId,
+        u.username AS username,
+        pr.avatarUrl AS avatarUrl,
+
+        p.commentCount AS commentCount,
+        p.reactionCount AS reactionCount
+
     FROM Post p
     JOIN p.user u
     LEFT JOIN u.profile pr
+
     WHERE p.id = :postId
-    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
-    AND p.visibility IN :visibilities
-    AND NOT EXISTS (
-        SELECT 1
-        FROM Report r
-        WHERE r.post.id = p.id
-          AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
-    )
-    """)
-    Optional<PostFlatResponse> findPostDetailById(
+      AND u.status = :userStatus
+      AND p.visibility IN :visibilities
+
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Report r
+          WHERE r.post.id = p.id
+            AND r.status = :reportStatus
+      )
+""")
+    Optional<PostFlatProjection> findPostDetailById(
             @Param("postId") Long postId,
-            @Param("visibilities") List<Visibility> visibilities
+            @Param("userStatus") Status userStatus,
+            @Param("visibilities") List<Visibility> visibilities,
+            @Param("reportStatus") ReportStatus reportStatus
     );
 
 
     @Query("""
-    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl,
-        p.commentCount,
-        p.reactionCount
-    )
+    SELECT
+        p.id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.createdAt AS createdAt,
+
+        u.id AS userId,
+        u.username AS username,
+        pr.avatarUrl AS avatarUrl,
+
+        p.commentCount AS commentCount,
+        p.reactionCount AS reactionCount
+
     FROM Post p
     JOIN p.user u
     LEFT JOIN u.profile pr
@@ -231,17 +238,23 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     WHERE NOT EXISTS (
         SELECT 1
         FROM Block b
-        WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
-           OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
+        WHERE (
+            b.blocker.id = :viewerId
+            AND b.blocked.id = u.id
+        )
+        OR (
+            b.blocker.id = u.id
+            AND b.blocked.id = :viewerId
+        )
     )
 
-    AND u.status = media.social.modules.auth.Enum.Status.ACTIVE
+    AND u.status = :userStatus
 
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
         WHERE r.post.id = p.id
-          AND r.status = media.social.modules.post.enums.ReportStatus.APPROVED
+          AND r.status = :reportStatus
     )
 
     AND (
@@ -268,9 +281,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     )
 
     ORDER BY p.createdAt DESC
-    """)
-    Page<PostFlatResponse> findFeed(
+""")
+    Page<PostFlatProjection> findFeed(
             @Param("viewerId") Long viewerId,
+            @Param("userStatus") Status userStatus,
+            @Param("reportStatus") ReportStatus reportStatus,
             @Param("acceptedStatus") FriendshipStatus acceptedStatus,
             @Param("publicVisibility") Visibility publicVisibility,
             @Param("friendVisibility") Visibility friendVisibility,
@@ -278,17 +293,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl,
-        p.commentCount,
-        p.reactionCount
-    )
+    SELECT
+        p.id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.createdAt AS createdAt,
+
+        u.id AS userId,
+        u.username AS username,
+        pr.avatarUrl AS avatarUrl,
+
+        p.commentCount AS commentCount,
+        p.reactionCount AS reactionCount
+
     FROM Post p
     JOIN p.user u
     LEFT JOIN u.profile pr
@@ -296,8 +313,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     WHERE NOT EXISTS (
         SELECT 1
         FROM Block b
-        WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
-           OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
+        WHERE (
+            b.blocker.id = :viewerId
+            AND b.blocked.id = u.id
+        )
+        OR (
+            b.blocker.id = u.id
+            AND b.blocked.id = :viewerId
+        )
     )
 
     AND u.status = :activeStatus
@@ -325,8 +348,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     )
 
     ORDER BY p.createdAt DESC
-    """)
-    Page<PostFlatResponse> findExplore(
+""")
+    Page<PostFlatProjection> findExplore(
             @Param("viewerId") Long viewerId,
             @Param("activeStatus") Status activeStatus,
             @Param("approvedReportStatus") ReportStatus approvedReportStatus,
@@ -334,6 +357,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("acceptedStatus") FriendshipStatus acceptedStatus,
             Pageable pageable
     );
+
     @Query(
             value = """
         SELECT
@@ -452,7 +476,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             )
         )
         """,
-
             nativeQuery = true
     )
     Page<PostFlatProjection> searchByContent(
@@ -467,17 +490,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT DISTINCT new media.social.modules.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl,
-        p.commentCount,
-        p.reactionCount
-    )
+    SELECT DISTINCT
+        p.id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.createdAt AS createdAt,
+
+        u.id AS userId,
+        u.username AS username,
+        pr.avatarUrl AS avatarUrl,
+
+        p.commentCount AS commentCount,
+        p.reactionCount AS reactionCount
+
     FROM PostHashtag ph
     JOIN ph.post p
     JOIN p.user u
@@ -485,46 +510,46 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     WHERE LOWER(ph.hashtag.name) = LOWER(:name)
 
-    AND u.status = :activeStatus
+      AND u.status = :activeStatus
 
-    AND NOT EXISTS (
-        SELECT 1
-        FROM Block b
-        WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
-           OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
-    )
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Block b
+          WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
+             OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
+      )
 
-    AND NOT EXISTS (
-        SELECT 1
-        FROM Report r
-        WHERE r.post.id = p.id
-          AND r.status = :approvedReportStatus
-    )
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Report r
+          WHERE r.post.id = p.id
+            AND r.status = :approvedReportStatus
+      )
 
-    AND (
-        u.id = :viewerId
+      AND (
+          u.id = :viewerId
 
-        OR p.visibility = :publicVisibility
+          OR p.visibility = :publicVisibility
 
-        OR (
-            p.visibility = :friendVisibility
+          OR (
+              p.visibility = :friendVisibility
 
-            AND EXISTS (
-                SELECT 1
-                FROM Friendship f
-                WHERE (
-                    (f.userOne.id = :viewerId AND f.userTwo.id = u.id)
-                    OR
-                    (f.userOne.id = u.id AND f.userTwo.id = :viewerId)
-                )
-                AND f.status = :acceptedStatus
-            )
-        )
-    )
+              AND EXISTS (
+                  SELECT 1
+                  FROM Friendship f
+                  WHERE (
+                      (f.userOne.id = :viewerId AND f.userTwo.id = u.id)
+                      OR
+                      (f.userOne.id = u.id AND f.userTwo.id = :viewerId)
+                  )
+                  AND f.status = :acceptedStatus
+              )
+          )
+      )
 
     ORDER BY p.createdAt DESC
-    """)
-    Page<PostFlatResponse> searchByHashtag(
+""")
+    Page<PostFlatProjection> searchByHashtag(
             @Param("viewerId") Long viewerId,
             @Param("name") String name,
             @Param("activeStatus") Status activeStatus,
@@ -536,17 +561,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modules.post.dto.response.post.PostFlatResponse(
-        p.id,
-        p.content,
-        p.visibility,
-        p.createdAt,
-        u.id,
-        u.username,
-        pr.avatarUrl,
-        p.commentCount,
-        p.reactionCount
-    )
+    SELECT
+        p.id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.createdAt AS createdAt,
+
+        u.id AS userId,
+        u.username AS username,
+        pr.avatarUrl AS avatarUrl,
+
+        p.commentCount AS commentCount,
+        p.reactionCount AS reactionCount
+
     FROM SavedPost sp
     JOIN sp.post p
     JOIN p.user u
@@ -554,46 +581,46 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     WHERE sp.user.id = :userId
 
-    AND u.status = :activeStatus
+      AND u.status = :activeStatus
 
-    AND NOT EXISTS (
-        SELECT 1
-        FROM Block b
-        WHERE (b.blocker.id = :userId AND b.blocked.id = u.id)
-           OR (b.blocker.id = u.id AND b.blocked.id = :userId)
-    )
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Block b
+          WHERE (b.blocker.id = :userId AND b.blocked.id = u.id)
+             OR (b.blocker.id = u.id AND b.blocked.id = :userId)
+      )
 
-    AND NOT EXISTS (
-        SELECT 1
-        FROM Report r
-        WHERE r.post.id = p.id
-          AND r.status = :approvedReportStatus
-    )
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Report r
+          WHERE r.post.id = p.id
+            AND r.status = :approvedReportStatus
+      )
 
-    AND (
-        u.id = :userId
+      AND (
+          u.id = :userId
 
-        OR p.visibility = :publicVisibility
+          OR p.visibility = :publicVisibility
 
-        OR (
-            p.visibility = :friendVisibility
+          OR (
+              p.visibility = :friendVisibility
 
-            AND EXISTS (
-                SELECT 1
-                FROM Friendship f
-                WHERE (
-                    (f.userOne.id = :userId AND f.userTwo.id = u.id)
-                    OR
-                    (f.userOne.id = u.id AND f.userTwo.id = :userId)
-                )
-                AND f.status = :acceptedStatus
-            )
-        )
-    )
+              AND EXISTS (
+                  SELECT 1
+                  FROM Friendship f
+                  WHERE (
+                      (f.userOne.id = :userId AND f.userTwo.id = u.id)
+                      OR
+                      (f.userOne.id = u.id AND f.userTwo.id = :userId)
+                  )
+                  AND f.status = :acceptedStatus
+              )
+          )
+      )
 
     ORDER BY sp.createdAt DESC
-    """)
-    Page<PostFlatResponse> findSavedPosts(
+""")
+    Page<PostFlatProjection> findSavedPosts(
             @Param("userId") Long userId,
             @Param("activeStatus") Status activeStatus,
             @Param("approvedReportStatus") ReportStatus approvedReportStatus,

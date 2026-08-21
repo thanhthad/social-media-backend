@@ -117,7 +117,20 @@ public class ReportServiceImpl implements ReportService {
     @Transactional(readOnly = true)
     public Page<ReportDetailResponse> getAll(Pageable pageable) {
 
-        return reportRepository.getAll(pageable);
+        return reportRepository.getAll(pageable)
+                .map(projection -> ReportDetailResponse.builder()
+                        .reportId(projection.getReportId())
+                        .postId(projection.getPostId())
+                        .reporterId(projection.getReporterId())
+                        .reporterUsername(projection.getReporterUsername())
+                        .reporterAvatar(projection.getReporterAvatar())
+                        .reason(projection.getReason())
+                        .status(projection.getStatus())
+                        .reviewedBy(projection.getReviewedBy())
+                        .reviewedByUsername(projection.getReviewedByUsername())
+                        .updatedAt(projection.getUpdatedAt())
+                        .createdAt(projection.getCreatedAt())
+                        .build());
     }
 
     @Override
@@ -130,7 +143,19 @@ public class ReportServiceImpl implements ReportService {
         return reportRepository.getByStatus(
                 reportStatus,
                 pageable
-        );
+        ).map(projection -> ReportDetailResponse.builder()
+                .reportId(projection.getReportId())
+                .postId(projection.getPostId())
+                .reporterId(projection.getReporterId())
+                .reporterUsername(projection.getReporterUsername())
+                .reporterAvatar(projection.getReporterAvatar())
+                .reason(projection.getReason())
+                .status(projection.getStatus())
+                .reviewedBy(projection.getReviewedBy())
+                .reviewedByUsername(projection.getReviewedByUsername())
+                .updatedAt(projection.getUpdatedAt())
+                .createdAt(projection.getCreatedAt())
+                .build());
     }
 
 }

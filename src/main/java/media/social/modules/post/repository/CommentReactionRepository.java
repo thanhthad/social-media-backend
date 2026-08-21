@@ -1,6 +1,6 @@
 package media.social.modules.post.repository;
 
-import media.social.modules.post.dto.response.reaction.UserReactionResponse;
+import media.social.modules.post.dto.projection.UserReactionProjection;
 import media.social.modules.post.entity.CommentReaction;
 import media.social.modules.post.enums.ReactionType;
 import org.springframework.data.domain.Page;
@@ -41,19 +41,22 @@ public interface CommentReactionRepository
     );
 
     @Query("""
-        SELECT new media.social.modules.post.dto.response.reaction.UserReactionResponse(
-            u.id,
-            u.email,
-            p.avatarUrl,
-            r.createdAt
-        )
-        FROM CommentReaction r
-        JOIN r.user u
-        JOIN u.profile p
-        WHERE r.comment.id = :commentId
-        AND (:type IS NULL OR r.type = :type)
-        """)
-    Page<UserReactionResponse> findUsersReacted(
+    SELECT
+        u.id AS id,
+        u.email AS email,
+        p.avatarUrl AS avatarUrl,
+        r.createdAt AS createdAt
+
+    FROM CommentReaction r
+
+    JOIN r.user u
+    JOIN u.profile p
+
+    WHERE r.comment.id = :commentId
+
+      AND (:type IS NULL OR r.type = :type)
+""")
+    Page<UserReactionProjection> findUsersReacted(
             @Param("commentId") Long commentId,
             @Param("type") ReactionType type,
             Pageable pageable

@@ -3,6 +3,7 @@ package media.social.modules.post.service.impl;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import media.social.modules.auth.Enum.Status;
+import media.social.modules.post.dto.projection.ListPostMediaProjection;
 import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.request.post.UpdatePostVisibility;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
@@ -11,13 +12,11 @@ import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.dto.request.post.CreatePostRequest;
 import media.social.modules.post.dto.request.post.UpdatePostContent;
 import media.social.modules.post.dto.request.post.UpdatePostMedia;
-import media.social.modules.post.dto.response.post.PostFlatResponse;
 import media.social.modules.post.dto.response.post.PostMediaResponse;
 import media.social.modules.post.dto.response.post.PostResponse;
 import media.social.modules.file.image.dto.response.UploadFileResponse;
 import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
-import media.social.modules.post.exception.post_media.InvalidImageException;
 import media.social.modules.post.exception.post_media.MediaNotFoundException;
 import media.social.modules.post.repository.*;
 import media.social.modules.post.service.domain.PostDomainService;
@@ -29,7 +28,6 @@ import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.image.service.CloudinaryService;
 import media.social.modules.post.service.PostService;
-import media.social.modules.user.service.FriendshipService;
 import media.social.modules.user.service.domain.BlockPolicyService;
 import media.social.modules.user.service.domain.FriendShipDomain;
 import media.social.modules.user.service.domain.UserServiceDomain;
@@ -69,9 +67,11 @@ public class PostServiceImpl implements PostService {
 
         Long viewerId = UserContextHolder.getUserId();
 
-        Page<PostFlatResponse> flatPage =
+        Page<PostFlatProjection> flatPage =
                 postRepository.findFeed(
                         viewerId,
+                        Status.ACTIVE,
+                        ReportStatus.APPROVED,
                         FriendshipStatus.ACCEPTED,
                         Visibility.PUBLIC,
                         Visibility.FRIEND,
@@ -87,7 +87,7 @@ public class PostServiceImpl implements PostService {
 
         Long viewerId = UserContextHolder.getUserId();
 
-        Page<PostFlatResponse> flatPage =
+        Page<PostFlatProjection> flatPage =
                 postRepository.findExplore(
                         viewerId,
                         Status.ACTIVE,
@@ -104,7 +104,16 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public Page<PostResponse> getAllPostMe(Pageable pageable) {
         Long userId = UserContextHolder.getUserId();
-        return getAllPost(userId,pageable);
+
+        Page<PostFlatProjection> flatPage =
+                postRepository.findAllPostMe(
+                        userId,
+                        Status.ACTIVE,
+                        ReportStatus.APPROVED,
+                        pageable
+                );
+
+        return buildPostResponse(flatPage, pageable);
     }
 
     @Override
@@ -121,7 +130,7 @@ public class PostServiceImpl implements PostService {
             );
         }
 
-        Page<PostFlatResponse> flatPage =
+        Page<PostFlatProjection> flatPage =
                 postRepository.findAllVisiblePost(
                         viewerId,
                         targetUserId,
@@ -137,16 +146,6 @@ public class PostServiceImpl implements PostService {
                 flatPage,
                 pageable
         );
-    }
-
-
-    @Transactional(readOnly = true)
-    private Page<PostResponse> getAllPost(Long userId, Pageable pageable) {
-
-        Page<PostFlatResponse> flatPage =
-                postRepository.findAllPostMe(userId, pageable);
-
-        return buildPostResponse(flatPage,pageable);
     }
 
     @Override
@@ -200,6 +199,7 @@ public class PostServiceImpl implements PostService {
                         .findByUserIdAndPostId(viewerId, postId)
                         .orElse(null);
 
+
         return PostResponse.builder()
                 .id(flat.getId())
                 .content(flat.getContent())
@@ -208,9 +208,7 @@ public class PostServiceImpl implements PostService {
                 .userId(flat.getUserId())
                 .username(flat.getUsername())
                 .avatarUrl(flat.getAvatarUrl())
-                .postMediaResponses(
-                        postMediaRepository.findMediaResponseByPostId(postId)
-                )
+                .postMediaResponses(flat.getPostMediaResponses())
                 .commentCount(flat.getCommentCount())
                 .reactionCount(flat.getReactionCount())
                 .reacted(reaction != null)
@@ -242,22 +240,7 @@ public class PostServiceImpl implements PostService {
                         pageable
                 );
 
-        Page<PostFlatResponse> posts =
-                projections.map(p ->
-                        PostFlatResponse.builder()
-                                .id(p.getId())
-                                .content(p.getContent())
-                                .visibility(p.getVisibility())
-                                .createdAt(p.getCreatedAt())
-                                .userId(p.getUserId())
-                                .username(p.getUsername())
-                                .avatarUrl(p.getAvatarUrl())
-                                .commentCount(p.getCommentCount())
-                                .reactionCount(p.getReactionCount())
-                                .build()
-                );
-
-        return buildPostResponse(posts, pageable);
+        return buildPostResponse(projections, pageable);
     }
 
     @Override
@@ -268,7 +251,7 @@ public class PostServiceImpl implements PostService {
     ) {
         Long viewerId = UserContextHolder.getUserId();
 
-        Page<PostFlatResponse> page =
+        Page<PostFlatProjection> page =
                 postRepository.searchByHashtag(
                         viewerId,
                         hashtag.trim().toLowerCase(),
@@ -289,7 +272,7 @@ public class PostServiceImpl implements PostService {
 
         Long userId = UserContextHolder.getUserId();
 
-        Page<PostFlatResponse> postFlatResponses =
+        Page<PostFlatProjection> postFlatResponses =
                 postRepository.findSavedPosts(
                         userId,
                         Status.ACTIVE,
@@ -307,7 +290,7 @@ public class PostServiceImpl implements PostService {
     }
 
     private Page<PostResponse> buildPostResponse(
-            Page<PostFlatResponse> flatPage,
+            Page<PostFlatProjection> flatPage,
             Pageable pageable
     ) {
 
@@ -321,25 +304,25 @@ public class PostServiceImpl implements PostService {
 
         List<Long> postIds = flatPage.getContent()
                 .stream()
-                .map(PostFlatResponse::getId)
+                .map(PostFlatProjection::getId)
                 .toList();
 
-        List<PostMedia> mediaList =
-                postMediaRepository.findByPostIdIn(postIds);
+        List<ListPostMediaProjection> mediaList =
+                postMediaRepository.findMediaByPostIds(postIds);
 
         Map<Long, List<PostMediaResponse>> mediaMap = new HashMap<>();
 
-        for (PostMedia m : mediaList) {
+        for (ListPostMediaProjection m : mediaList) {
             mediaMap
                     .computeIfAbsent(
-                            m.getPost().getId(),
+                            m.getPostId(),
                             k -> new ArrayList<>()
                     )
                     .add(
                             PostMediaResponse.builder()
                                     .url(m.getUrl())
-                                    .postMediaId(m.getId())
-                                    .type(m.getMediaType())
+                                    .postMediaId(m.getPostMediaId())
+                                    .type(m.getType())
                                     .build()
                     );
         }
@@ -444,6 +427,7 @@ public class PostServiceImpl implements PostService {
 
         post.setContent(request.getContent());
 
+        postCacheService.evictPost(postId);
         updatePostHashtags(post, request.getContent());
     }
 
@@ -463,6 +447,7 @@ public class PostServiceImpl implements PostService {
 
         postDomainService.checkOwner(post);
 
+        postCacheService.evictPost(postId);
         post.setVisibility(request.getVisibility());
     }
 
@@ -493,12 +478,7 @@ public class PostServiceImpl implements PostService {
         deleteUnusedHashtags(postId);
 
         postRepository.delete(post);
-
-        log.info(
-                "POST_EVENT | action=DELETE_POST | userId={} | postId={}",
-                userId,
-                postId
-        );
+        postCacheService.evictPost(postId);
     }
 
     @Override
@@ -518,6 +498,7 @@ public class PostServiceImpl implements PostService {
 
         postDomainService.checkOwner(post);
 
+        postCacheService.evictPost(postId);
         savePostMedia(post, request.getFiles());
     }
 
@@ -548,6 +529,7 @@ public class PostServiceImpl implements PostService {
 
         cloudinaryService.deleteFile(media.getPublicId(),media.getMediaType());
 
+        postCacheService.evictPost(post.getId());
         postMediaRepository.delete(media);
     }
 

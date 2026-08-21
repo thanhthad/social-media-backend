@@ -155,10 +155,10 @@ public class CommentServiceImpl implements CommentService {
             );
         }
 
-        return commentRepository.findCommentResponse(
-                commentId,
-                userId
-        ).orElseThrow();
+        return CommentResponse.builder()
+                .commentId(commentId)
+                .content(request.getContent())
+                .build();
     }
 
 
@@ -171,11 +171,26 @@ public class CommentServiceImpl implements CommentService {
 
         Long userId = UserContextHolder.getUserId();
 
-        return commentRepository.findRootComments(
-                postId,
-                userId,
-                pageable
-        );
+        return commentRepository
+                .findRootComments(
+                        postId,
+                        userId,
+                        pageable
+                )
+                .map(projection ->
+                        CommentResponse.builder()
+                                .commentId(projection.getCommentId())
+                                .userId(projection.getUserId())
+                                .username(projection.getUsername())
+                                .avatarUrl(projection.getAvatarUrl())
+                                .parentId(projection.getParentId())
+                                .content(projection.getContent())
+                                .createdAt(projection.getCreatedAt())
+                                .totalReplies(projection.getTotalReplies())
+                                .totalReactions(projection.getTotalReactions())
+                                .myReaction(projection.getMyReaction())
+                                .build()
+                );
     }
 
     @Override
@@ -187,11 +202,26 @@ public class CommentServiceImpl implements CommentService {
 
         Long userId = UserContextHolder.getUserId();
 
-        return commentRepository.findReplies(
-                parentId,
-                userId,
-                pageable
-        );
+        return commentRepository
+                .findReplies(
+                        parentId,
+                        userId,
+                        pageable
+                )
+                .map(projection ->
+                        CommentResponse.builder()
+                                .commentId(projection.getCommentId())
+                                .userId(projection.getUserId())
+                                .username(projection.getUsername())
+                                .avatarUrl(projection.getAvatarUrl())
+                                .parentId(projection.getParentId())
+                                .content(projection.getContent())
+                                .createdAt(projection.getCreatedAt())
+                                .totalReplies(projection.getTotalReplies())
+                                .totalReactions(projection.getTotalReactions())
+                                .myReaction(projection.getMyReaction())
+                                .build()
+                );
     }
 
 }

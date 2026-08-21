@@ -188,10 +188,19 @@ public class CommentReactionServiceImpl
 
         getComment(commentId);
 
-        return commentReactionRepository.findUsersReacted(
-                commentId,
-                type,
-                pageable
-        );
+        return commentReactionRepository
+                .findUsersReacted(
+                        commentId,
+                        type,
+                        pageable
+                )
+                .map(projection ->
+                        UserReactionResponse.builder()
+                                .id(projection.getId())
+                                .email(projection.getEmail())
+                                .avatarUrl(projection.getAvatarUrl())
+                                .createdAt(projection.getCreatedAt())
+                                .build()
+                );
     }
 }

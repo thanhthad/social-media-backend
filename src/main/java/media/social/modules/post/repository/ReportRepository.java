@@ -1,5 +1,6 @@
 package media.social.modules.post.repository;
 
+import media.social.modules.post.dto.projection.ReportDetailProjection;
 import media.social.modules.post.dto.response.report.ReportDetailResponse;
 import media.social.modules.post.entity.Report;
 import media.social.modules.post.enums.ReportStatus;
@@ -27,19 +28,18 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     );
 
     @Query("""
-        SELECT new media.social.modules.post.dto.response.report.ReportDetailResponse(
-            r.id,
-            p.id,
-            reporter.id,
-            reporter.username,
-            profile.avatarUrl,
-            r.reason,
-            r.status,
-            reviewer.id,
-            reviewer.username,
-            r.updatedAt,
-            r.createdAt
-        )
+        SELECT
+            r.id AS reportId,
+            p.id AS postId,
+            reporter.id AS reporterId,
+            reporter.username AS reporterUsername,
+            profile.avatarUrl AS reporterAvatar,
+            r.reason AS reason,
+            r.status AS status,
+            reviewer.id AS reviewedBy,
+            reviewer.username AS reviewedByUsername,
+            r.updatedAt AS updatedAt,
+            r.createdAt AS createdAt
         FROM Report r
         JOIN r.post p
         JOIN r.reporter reporter
@@ -47,22 +47,21 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
         LEFT JOIN r.reviewedBy reviewer
         ORDER BY r.createdAt DESC
     """)
-    Page<ReportDetailResponse> getAll(Pageable pageable);
+    Page<ReportDetailProjection> getAll(Pageable pageable);
 
     @Query("""
-        SELECT new media.social.modules.post.dto.response.report.ReportDetailResponse(
-            r.id,
-            p.id,
-            reporter.id,
-            reporter.username,
-            profile.avatarUrl,
-            r.reason,
-            r.status,
-            reviewer.id,
-            reviewer.username,
-            r.updatedAt,
-            r.createdAt
-        )
+        SELECT
+            r.id AS reportId,
+            p.id AS postId,
+            reporter.id AS reporterId,
+            reporter.username AS reporterUsername,
+            profile.avatarUrl AS reporterAvatar,
+            r.reason AS reason,
+            r.status AS status,
+            reviewer.id AS reviewedBy,
+            reviewer.username AS reviewedByUsername,
+            r.updatedAt AS updatedAt,
+            r.createdAt AS createdAt
         FROM Report r
         JOIN r.post p
         JOIN r.reporter reporter
@@ -71,7 +70,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
         WHERE r.status = :status
         ORDER BY r.createdAt DESC
     """)
-    Page<ReportDetailResponse> getByStatus(
+    Page<ReportDetailProjection> getByStatus(
             @Param("status") ReportStatus status,
             Pageable pageable
     );

@@ -144,6 +144,11 @@ public class ReactionServiceImpl implements ReactionService {
                 postId,
                 type,
                 pageable
-        );
+        ).map(projection -> UserReactionResponse.builder()
+                .id(projection.getId())
+                .email(projection.getEmail())
+                .avatarUrl(projection.getAvatarUrl())
+                .createdAt(projection.getCreatedAt())
+                .build());
     }
 }

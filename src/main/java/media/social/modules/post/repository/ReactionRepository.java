@@ -1,5 +1,6 @@
 package media.social.modules.post.repository;
 
+import media.social.modules.post.dto.projection.UserReactionProjection;
 import media.social.modules.post.dto.response.reaction.UserReactionResponse;
 import media.social.modules.post.entity.Reaction;
 import media.social.modules.post.enums.ReactionType;
@@ -42,19 +43,18 @@ AND r.post.id IN :postIds
     );
 
     @Query("""
-        SELECT new media.social.modules.post.dto.response.reaction.UserReactionResponse(
-            u.id,
-            u.email,
-            p.avatarUrl,
-            r.createdAt
-        )
+        SELECT
+            u.id AS id,
+            u.email AS email,
+            p.avatarUrl AS avatarUrl,
+            r.createdAt AS createdAt
         FROM Reaction r
         JOIN r.user u
         JOIN u.profile p
         WHERE r.post.id = :postId
-        AND (:type IS NULL OR r.type = :type)
-        """)
-    Page<UserReactionResponse> findUsersReacted(
+          AND (:type IS NULL OR r.type = :type)
+    """)
+    Page<UserReactionProjection> findUsersReacted(
             @Param("postId") Long postId,
             @Param("type") ReactionType type,
             Pageable pageable

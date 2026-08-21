@@ -6,6 +6,7 @@ import media.social.modules.post.dto.response.hashtag.TrendingHashtagResponse;
 import media.social.modules.post.repository.HashtagRepository;
 import media.social.modules.post.repository.PostHashtagRepository;
 import media.social.modules.post.service.HashtagService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,15 @@ public class HashtagServiceImpl implements HashtagService {
     @Transactional(readOnly = true)
     public List<TrendingHashtagResponse> getTrending() {
 
-        return postHashtagRepository.getTrendingHashtags();
+        return postHashtagRepository
+                .getTrendingHashtags(PageRequest.of(0, 5))
+                .stream()
+                .map(projection -> TrendingHashtagResponse.builder()
+                        .id(projection.getId())
+                        .name(projection.getName())
+                        .totalPosts(projection.getTotalPosts())
+                        .build())
+                .toList();
     }
 
 }
