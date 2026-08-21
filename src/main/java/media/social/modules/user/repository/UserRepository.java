@@ -2,11 +2,14 @@ package media.social.modules.user.repository;
 
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.projection.AdminUserProjection;
+import media.social.modules.user.dto.projection.FriendshipCountProjection;
+import media.social.modules.user.dto.projection.PublicUserProfileCacheProjection;
 import media.social.modules.user.dto.projection.UserSearchProjection;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.user.AdminUserResponse;
 import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
 import media.social.modules.user.entity.User;
+import media.social.modules.user.enums.FriendshipStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,51 +23,51 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("""
-    SELECT new media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse(
-        u.id,
-        u.email,
-        u.username,
-        p.avatarUrl,
-        p.coverUrl,
-        p.bio,
-        p.fullName,
-        p.website,
-        p.phone,
-        p.dateOfBirth,
-        p.gender,
-        p.country,
-        p.city,
-        p.district,
-        p.occupation,
-        p.company,
-        p.education,
-        p.visibility,
-        p.socialLinks,
-        p.createdAt,
-        p.updatedAt
-    )
+    SELECT
+        u.id AS id,
+        u.email AS email,
+        u.username AS username,
+
+        p.avatarUrl AS avatarUrl,
+        p.coverUrl AS coverUrl,
+        p.bio AS bio,
+        p.fullName AS fullName,
+        p.website AS website,
+        p.phone AS phone,
+        p.dateOfBirth AS dateOfBirth,
+        p.gender AS gender,
+        p.country AS country,
+        p.city AS city,
+        p.district AS district,
+        p.occupation AS occupation,
+        p.company AS company,
+        p.education AS education,
+        p.visibility AS visibility,
+        p.socialLinks AS socialLinks,
+        p.createdAt AS createdAt,
+        p.updatedAt AS updatedAt
+
     FROM User u
     LEFT JOIN Profile p
         ON p.user.id = u.id
+
     WHERE u.id = :userId
-    """)
-    Optional<PublicUserProfileCacheResponse> findCurrentUserProfileCache(
+""")
+    Optional<PublicUserProfileCacheProjection> findCurrentUserProfileCache(
             @Param("userId") Long userId
     );
-
     @Query("""
-    SELECT new media.social.modules.user.dto.response.user.FriendshipCountResponse(
-        COUNT(f.id)
-    )
+    SELECT COUNT(f.id) AS totalFriends
     FROM Friendship f
     WHERE (
         f.userOne.id = :userId
         OR f.userTwo.id = :userId
     )
-    AND f.status = media.social.modules.user.enums.FriendshipStatus.ACCEPTED
+    AND f.status = :status
 """)
-    Optional<FriendshipCountResponse> findFriendshipCount(
-            @Param("userId") Long userId
+    Optional<FriendshipCountProjection> findFriendshipCount(
+            @Param("userId") Long userId,
+            @Param("status") FriendshipStatus status
     );
 
     @Query("""
@@ -154,21 +157,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query("""
-    SELECT new media.social.modules.user.dto.response.user.AdminUserResponse(
-        u.id,
-        u.username,
-        u.status,
-        p.avatarUrl,
-        u.createdAt,
-        u.lastLoginAt,
-        u.lastActiveAt
-    )
+    SELECT
+        u.id AS id,
+        u.username AS username,
+        u.status AS status,
+        p.avatarUrl AS avatarUrl,
+        u.createdAt AS createdAt,
+        u.lastLoginAt AS lastLoginAt,
+        u.lastActiveAt AS lastActiveAt
     FROM User u
     LEFT JOIN u.profile p
     WHERE (:status IS NULL OR u.status = :status)
     ORDER BY u.createdAt DESC
-    """)
-    Page<AdminUserResponse> findAllAdminUsers(
+""")
+    Page<AdminUserProjection> findAllAdminUsers(
             @Param("status") Status status,
             Pageable pageable
     );

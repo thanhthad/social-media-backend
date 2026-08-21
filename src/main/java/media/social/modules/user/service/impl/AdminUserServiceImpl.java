@@ -28,10 +28,19 @@ public class AdminUserServiceImpl implements AdminUserService {
             Status status,
             Pageable pageable
     ) {
-        return userRepository.findAllAdminUsers(
-                status,
-                pageable
-        );
+        return userRepository
+                .findAllAdminUsers(status, pageable)
+                .map(projection ->
+                        AdminUserResponse.builder()
+                                .id(projection.getId())
+                                .username(projection.getUsername())
+                                .status(projection.getStatus())
+                                .avatarUrl(projection.getAvatarUrl())
+                                .createdAt(projection.getCreatedAt())
+                                .lastLoginAt(projection.getLastLoginAt())
+                                .lastActiveAt(projection.getLastActiveAt())
+                                .build()
+                );
     }
 
     @Override

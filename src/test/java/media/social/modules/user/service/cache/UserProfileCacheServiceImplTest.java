@@ -2,6 +2,7 @@ package media.social.modules.user.service.cache;
 
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
+import media.social.modules.user.enums.FriendshipStatus;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.UserRepository;
 import media.social.modules.user.service.cache.impl.UserProfileCacheServiceImpl;
@@ -84,7 +85,7 @@ class UserProfileCacheServiceImplTest {
                 .totalFriends(42L)
                 .build();
 
-        when(userRepository.findFriendshipCount(USER_ID)).thenReturn(Optional.of(expected));
+        when(userRepository.findFriendshipCount(USER_ID, FriendshipStatus.ACCEPTED)).thenReturn(Optional.of(expected));
 
         // Act
         FriendshipCountResponse actual = userProfileCacheService.getTotalFriend(USER_ID);
@@ -98,7 +99,7 @@ class UserProfileCacheServiceImplTest {
     @DisplayName("getTotalFriend - repository returns empty - throws UserNotFoundException")
     void getTotalFriend_notFound_throwsUserNotFoundException() {
         // Arrange
-        when(userRepository.findFriendshipCount(USER_ID)).thenReturn(Optional.empty());
+        when(userRepository.findFriendshipCount(USER_ID,FriendshipStatus.ACCEPTED)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> userProfileCacheService.getTotalFriend(USER_ID))
