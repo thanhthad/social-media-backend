@@ -43,16 +43,20 @@ public class PostMockService {
         List<User> users = userRepository.findAll();
         if (users.isEmpty()) return;
 
-        log.info("Generating 1000 posts...");
+        log.info("Generating 1000 posts with Cloudinary images, hashtags, comments, and reactions...");
         List<Post> postsBatch = new ArrayList<>();
         List<PostMedia> mediaBatch = new ArrayList<>();
         List<Hashtag> hashtags = new ArrayList<>();
         List<PostHashtag> postHashtagsBatch = new ArrayList<>();
 
-        for (int i = 0; i < 50; i++) {
-            String tag = faker.hacker().noun().replaceAll("\\s+", "");
-            if (hashtagRepository.findByName(tag).isEmpty()) {
-                Hashtag hashtag = Hashtag.builder().name(tag).build();
+        String[] popularTags = {
+                "lifestyle", "technology", "vietnam", "travel", "foodie", "photography", "developer", "coding",
+                "hanoi", "saigon", "dalat", "gym", "fitness", "music", "chill", "coffee", "weekend", "startup", "ai", "study"
+        };
+
+        for (String tagName : popularTags) {
+            if (hashtagRepository.findByName(tagName).isEmpty()) {
+                Hashtag hashtag = Hashtag.builder().name(tagName).build();
                 hashtags.add(hashtagRepository.save(hashtag));
             }
         }
@@ -63,11 +67,15 @@ public class PostMockService {
         int batchSize = 100;
         for (int i = 0; i < 1000; i++) {
             User user = users.get(faker.number().numberBetween(0, users.size()));
+            String content = MockDataConstants.VIETNAMESE_POST_CONTENTS.get(
+                    faker.number().numberBetween(0, MockDataConstants.VIETNAMESE_POST_CONTENTS.size())
+            );
+
             Post post = Post.builder()
                     .user(user)
-                    .content(faker.lorem().paragraph(faker.number().numberBetween(1, 5)))
+                    .content(content)
                     .visibility(Visibility.values()[faker.number().numberBetween(0, Visibility.values().length)])
-                    .createdAt(LocalDateTime.now().minusDays(faker.number().numberBetween(0, 365)))
+                    .createdAt(LocalDateTime.now().minusDays(faker.number().numberBetween(0, 180)))
                     .updatedAt(LocalDateTime.now())
                     .build();
             postsBatch.add(post);
@@ -75,18 +83,22 @@ public class PostMockService {
             if (postsBatch.size() == batchSize) {
                 postRepository.saveAllAndFlush(postsBatch);
                 for (Post savedPost : postsBatch) {
-                    if (faker.bool().bool()) {
-                        PostMedia media = PostMedia.builder()
-                                .post(savedPost)
-                                .url(faker.internet().image())
-                                .publicId(UUID.randomUUID().toString())
-                                .mediaType(MediaType.IMAGE)
-                                .createdAt(LocalDateTime.now())
-                                .build();
-                        mediaBatch.add(media);
+                    // 70% of posts have 1-3 images
+                    if (faker.number().numberBetween(1, 10) <= 7) {
+                        int mediaCount = faker.number().numberBetween(1, 4);
+                        for (int m = 0; m < mediaCount; m++) {
+                            PostMedia media = PostMedia.builder()
+                                    .post(savedPost)
+                                    .url(MockDataConstants.getRandomImageUrl())
+                                    .publicId("")
+                                    .mediaType(MediaType.IMAGE)
+                                    .createdAt(savedPost.getCreatedAt())
+                                    .build();
+                            mediaBatch.add(media);
+                        }
                     }
 
-                    int tagsCount = faker.number().numberBetween(0, 4);
+                    int tagsCount = faker.number().numberBetween(1, 3);
                     Set<Long> usedTags = new HashSet<>();
                     for (int j = 0; j < tagsCount; j++) {
                         Hashtag hashtag = hashtags.get(faker.number().numberBetween(0, hashtags.size()));
@@ -117,9 +129,9 @@ public class PostMockService {
         List<Report> reportsBatch = new ArrayList<>();
 
         ReactionType[] rTypes = ReactionType.values();
-        
+
         for (Post post : allPosts) {
-            int reactionsCount = faker.number().numberBetween(0, 20);
+            int reactionsCount = faker.number().numberBetween(2, 25);
             Set<Long> reactedUsers = new HashSet<>();
             for (int i = 0; i < reactionsCount; i++) {
                 User rUser = users.get(faker.number().numberBetween(0, users.size()));
@@ -132,17 +144,20 @@ public class PostMockService {
                 }
             }
 
-            int commentsCount = faker.number().numberBetween(0, 5);
+            int commentsCount = faker.number().numberBetween(1, 8);
             for (int i = 0; i < commentsCount; i++) {
                 User cUser = users.get(faker.number().numberBetween(0, users.size()));
+                String commentText = MockDataConstants.VIETNAMESE_COMMENTS.get(
+                        faker.number().numberBetween(0, MockDataConstants.VIETNAMESE_COMMENTS.size())
+                );
                 commentsBatch.add(Comment.builder()
                         .user(cUser)
                         .post(post)
-                        .content(faker.lorem().sentence())
+                        .content(commentText)
                         .build());
             }
 
-            if (faker.number().numberBetween(1, 100) > 90) {
+            if (faker.number().numberBetween(1, 100) > 80) {
                 User sUser = users.get(faker.number().numberBetween(0, users.size()));
                 SavedPostId savedId = new SavedPostId(sUser.getId(), post.getId());
                 savedPostsBatch.add(SavedPost.builder()
@@ -152,12 +167,15 @@ public class PostMockService {
                         .build());
             }
 
-            if (faker.number().numberBetween(1, 100) > 98) {
+            if (faker.number().numberBetween(1, 100) > 95) {
                 User repUser = users.get(faker.number().numberBetween(0, users.size()));
+                String reason = MockDataConstants.REPORT_REASONS.get(
+                        faker.number().numberBetween(0, MockDataConstants.REPORT_REASONS.size())
+                );
                 reportsBatch.add(Report.builder()
                         .reporter(repUser)
                         .post(post)
-                        .reason(faker.lorem().sentence())
+                        .reason(reason)
                         .status(ReportStatus.PENDING)
                         .build());
             }
@@ -165,7 +183,7 @@ public class PostMockService {
             if (commentsBatch.size() >= 500) {
                 reactionRepository.saveAll(reactionsBatch);
                 commentRepository.saveAllAndFlush(commentsBatch);
-                
+
                 // Add Comment Reactions
                 List<CommentReaction> commentReactions = new ArrayList<>();
                 for (Comment c : commentsBatch) {
@@ -179,12 +197,12 @@ public class PostMockService {
                     }
                 }
                 commentReactionRepository.saveAll(commentReactions);
-                
+
                 reactionsBatch.clear();
                 commentsBatch.clear();
             }
         }
-        
+
         if (!commentsBatch.isEmpty()) {
             reactionRepository.saveAll(reactionsBatch);
             commentRepository.saveAll(commentsBatch);

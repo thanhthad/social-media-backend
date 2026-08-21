@@ -2,22 +2,12 @@ package media.social.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import media.social.modules.dating.entity.DatingInterest;
-import media.social.modules.dating.entity.DatingMatch;
-import media.social.modules.dating.entity.DatingPreference;
-import media.social.modules.dating.entity.DatingProfile;
-import media.social.modules.dating.entity.DatingProfileInterest;
-import media.social.modules.dating.entity.DatingProfileInterestId;
-import media.social.modules.dating.entity.DatingSwipe;
+import media.social.modules.dating.entity.*;
 import media.social.modules.dating.enums.DatingMatchStatus;
+import media.social.modules.dating.enums.DatingReportStatus;
 import media.social.modules.dating.enums.DatingSwipeAction;
 import media.social.modules.dating.enums.GenderPreference;
-import media.social.modules.dating.repository.DatingInterestRepository;
-import media.social.modules.dating.repository.DatingMatchRepository;
-import media.social.modules.dating.repository.DatingPreferenceRepository;
-import media.social.modules.dating.repository.DatingProfileInterestRepository;
-import media.social.modules.dating.repository.DatingProfileRepository;
-import media.social.modules.dating.repository.DatingSwipeRepository;
+import media.social.modules.dating.repository.*;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.enums.Gender;
@@ -28,12 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -43,11 +30,13 @@ public class DatingMockService {
 
     private final UserRepository userRepository;
     private final DatingProfileRepository datingProfileRepository;
+    private final DatingProfilePhotoRepository datingProfilePhotoRepository;
     private final DatingPreferenceRepository datingPreferenceRepository;
     private final DatingSwipeRepository datingSwipeRepository;
     private final DatingMatchRepository datingMatchRepository;
     private final DatingInterestRepository datingInterestRepository;
     private final DatingProfileInterestRepository datingProfileInterestRepository;
+    private final DatingReportRepository datingReportRepository;
 
     private final Faker faker = new Faker(new Locale("vi"));
 
@@ -69,10 +58,6 @@ public class DatingMockService {
     @Transactional
     public void init() {
 
-        // ============================================================
-        // 1. Check existing dating profiles
-        // ============================================================
-
         if (datingProfileRepository.count() >= 500) {
             log.info("Dating profiles already initialized");
             return;
@@ -85,103 +70,61 @@ public class DatingMockService {
             return;
         }
 
-        log.info("Generating Dating Data...");
-
-        // ============================================================
-        // 2. Dating interests
-        // ============================================================
+        log.info("Generating Dating Profiles with Cloudinary Photos, Preferences, and Interests...");
 
         String[] interestNames = {
-                "Lập trình",
-                "Gaming",
-                "Du lịch",
-                "Gym",
-                "Âm nhạc",
-                "Phim ảnh",
-                "Đọc sách",
-                "Nấu ăn",
-                "Photography",
-                "Cafe",
-                "Anime",
-                "Bóng đá",
-                "Cầu lông",
-                "Chạy bộ",
-                "Công nghệ"
+                "Lập trình", "Gaming", "Du lịch", "Gym", "Âm nhạc", "Phim ảnh", "Đọc sách", "Nấu ăn",
+                "Photography", "Cafe", "Anime", "Bóng đá", "Cầu lông", "Chạy bộ", "Công nghệ", "Thú cưng", "Yoga"
         };
 
         List<DatingInterest> interests = new ArrayList<>();
-
         for (String name : interestNames) {
-
             DatingInterest interest = datingInterestRepository
                     .findByName(name)
-                    .orElseGet(() ->
-                            datingInterestRepository.save(
-                                    DatingInterest.builder()
-                                            .name(name)
-                                            .build()
-                            )
-                    );
-
+                    .orElseGet(() -> datingInterestRepository.save(DatingInterest.builder().name(name).build()));
             interests.add(interest);
         }
-
-        // ============================================================
-        // 3. Generate Dating Profiles
-        // ============================================================
 
         List<DatingProfile> profilesBatch = new ArrayList<>();
         List<DatingPreference> preferencesBatch = new ArrayList<>();
         List<DatingProfileInterest> dpInterestsBatch = new ArrayList<>();
+        List<DatingProfilePhoto> dpPhotosBatch = new ArrayList<>();
 
         int batchSize = 100;
         int limit = Math.min(500, users.size());
 
         for (int i = 0; i < limit; i++) {
-
             User user = users.get(i);
 
-            // User already has dating profile
             if (datingProfileRepository.existsByUserId(user.getId())) {
                 continue;
             }
 
-            Gender gender = faker.bool().bool()
-                    ? Gender.MALE
-                    : Gender.FEMALE;
-
-            // Pick a random city
+            Gender gender = faker.bool().bool() ? Gender.MALE : Gender.FEMALE;
             CityLocation city = VIETNAM_CITIES.get(faker.number().numberBetween(0, VIETNAM_CITIES.size()));
-            
-            // Randomize coordinates within ~10km radius of the city center
-            // 1 degree is approx 111 km. So 0.1 degree is ~11km.
+
             double latOffset = ThreadLocalRandom.current().nextDouble(-0.1, 0.1);
             double lngOffset = ThreadLocalRandom.current().nextDouble(-0.1, 0.1);
-            
+
             double finalLatitude = city.latitude() + latOffset;
             double finalLongitude = city.longitude() + lngOffset;
+
+            String bio = MockDataConstants.DATING_BIOS.get(
+                    faker.number().numberBetween(0, MockDataConstants.DATING_BIOS.size())
+            );
 
             DatingProfile profile = DatingProfile.builder()
                     .user(user)
                     .displayName(faker.name().firstName())
-                    .bio(faker.lorem().sentence())
+                    .bio(bio)
                     .gender(gender)
-                    .birthday(
-                            LocalDate.now()
-                                    .minusYears(
-                                            faker.number()
-                                                    .numberBetween(18, 40)
-                                    )
-                    )
-                    .height(
-                            faker.number()
-                                    .numberBetween(150, 190)
-                    )
+                    .birthday(LocalDate.now().minusYears(faker.number().numberBetween(18, 38)))
+                    .height(faker.number().numberBetween(155, 188))
                     .occupation(faker.job().title())
-                    .education("University")
+                    .education("Đại học")
                     .latitude(BigDecimal.valueOf(finalLatitude))
                     .longitude(BigDecimal.valueOf(finalLongitude))
-                    .country("Vietnam")
+                    .country("Việt Nam")
                     .city(city.name())
                     .active(true)
                     .visibility(Visibility.PUBLIC)
@@ -189,15 +132,9 @@ public class DatingMockService {
 
             profilesBatch.add(profile);
 
-            // ========================================================
-            // Dating Preference
-            // Random MALE / FEMALE
-            // ========================================================
-
-            GenderPreference genderPreference =
-                    ThreadLocalRandom.current().nextBoolean()
-                            ? GenderPreference.MALE
-                            : GenderPreference.FEMALE;
+            GenderPreference genderPreference = ThreadLocalRandom.current().nextBoolean()
+                    ? GenderPreference.MALE
+                    : GenderPreference.FEMALE;
 
             preferencesBatch.add(
                     DatingPreference.builder()
@@ -209,290 +146,190 @@ public class DatingMockService {
                             .build()
             );
 
-            // ========================================================
-            // Save batch
-            // ========================================================
-
             if (profilesBatch.size() == batchSize) {
-
                 saveProfileBatch(
                         profilesBatch,
                         preferencesBatch,
                         dpInterestsBatch,
+                        dpPhotosBatch,
                         interests
                 );
 
                 profilesBatch.clear();
                 preferencesBatch.clear();
                 dpInterestsBatch.clear();
+                dpPhotosBatch.clear();
             }
         }
 
-        // ============================================================
-        // 4. Save remaining profiles
-        // ============================================================
-
         if (!profilesBatch.isEmpty()) {
-
             saveProfileBatch(
                     profilesBatch,
                     preferencesBatch,
                     dpInterestsBatch,
+                    dpPhotosBatch,
                     interests
             );
 
             profilesBatch.clear();
             preferencesBatch.clear();
             dpInterestsBatch.clear();
+            dpPhotosBatch.clear();
         }
 
-        // ============================================================
-        // 5. Generate Swipes & Matches
-        // ============================================================
+        log.info("Generating Dating Swipes, Matches, and Reports...");
 
-        log.info("Generating Swipes and Matches...");
-
-        List<DatingProfile> allProfiles =
-                datingProfileRepository.findAll();
-
-        if (allProfiles.size() < 2) {
-            log.warn("Not enough dating profiles to generate swipes");
-            return;
-        }
+        List<DatingProfile> allProfiles = datingProfileRepository.findAll();
+        if (allProfiles.size() < 2) return;
 
         List<DatingSwipe> swipesBatch = new ArrayList<>();
         List<DatingMatch> matchesBatch = new ArrayList<>();
-
-        /*
-         * Swipe:
-         *
-         * swiper_id -> target_id
-         *
-         * (8, 82) != (82, 8)
-         *
-         * Match:
-         *
-         * user_one_id = MIN
-         * user_two_id = MAX
-         *
-         * (8, 82) == (82, 8)
-         */
+        List<DatingReport> reportsBatch = new ArrayList<>();
 
         Set<String> uniqueSwipes = new HashSet<>();
         Set<String> uniqueMatches = new HashSet<>();
 
         for (DatingProfile p1 : allProfiles) {
-
             Long swiperId = p1.getUser().getId();
-
-            int swipeCount =
-                    faker.number().numberBetween(5, 20);
+            int swipeCount = faker.number().numberBetween(5, 20);
 
             for (int j = 0; j < swipeCount; j++) {
-
-                DatingProfile p2 =
-                        allProfiles.get(
-                                faker.number()
-                                        .numberBetween(
-                                                0,
-                                                allProfiles.size()
-                                        )
-                        );
-
+                DatingProfile p2 = allProfiles.get(faker.number().numberBetween(0, allProfiles.size()));
                 Long targetId = p2.getUser().getId();
 
-                // ====================================================
-                // Cannot swipe yourself
-                // ====================================================
+                if (swiperId.equals(targetId)) continue;
 
-                if (swiperId.equals(targetId)) {
-                    continue;
-                }
+                String swipeKey = swiperId + "-" + targetId;
+                if (!uniqueSwipes.add(swipeKey)) continue;
 
-                // ====================================================
-                // Prevent duplicate swipe
-                //
-                // (8,82) can only appear once
-                // ====================================================
-
-                String swipeKey =
-                        swiperId + "-" + targetId;
-
-                if (!uniqueSwipes.add(swipeKey)) {
-                    continue;
-                }
-
-                DatingSwipeAction action =
-                        faker.bool().bool()
-                                ? DatingSwipeAction.LIKE
-                                : DatingSwipeAction.DISLIKE;
+                DatingSwipeAction action = faker.bool().bool() ? DatingSwipeAction.LIKE : DatingSwipeAction.DISLIKE;
 
                 swipesBatch.add(
                         DatingSwipe.builder()
                                 .swiper(p1.getUser())
                                 .target(p2.getUser())
                                 .action(action)
-                                .createdAt(OffsetDateTime.now())
+                                .createdAt(OffsetDateTime.now().minusDays(faker.number().numberBetween(0, 30)))
                                 .build()
                 );
 
-                // ====================================================
-                // Generate match
-                // ====================================================
-
-                if (action == DatingSwipeAction.LIKE
-                        && faker.bool().bool()) {
-
+                if (action == DatingSwipeAction.LIKE && faker.bool().bool()) {
                     Long userId1 = p1.getUser().getId();
                     Long userId2 = p2.getUser().getId();
 
-                    Long minUserId =
-                            Math.min(userId1, userId2);
+                    Long minUserId = Math.min(userId1, userId2);
+                    Long maxUserId = Math.max(userId1, userId2);
 
-                    Long maxUserId =
-                            Math.max(userId1, userId2);
-
-                    String matchKey =
-                            minUserId + "-" + maxUserId;
-
-                    /*
-                     * Prevent:
-                     *
-                     * (8,82)
-                     * (82,8)
-                     *
-                     * from creating two matches.
-                     */
+                    String matchKey = minUserId + "-" + maxUserId;
 
                     if (uniqueMatches.add(matchKey)) {
-
-                        User userOne =
-                                userId1.equals(minUserId)
-                                        ? p1.getUser()
-                                        : p2.getUser();
-
-                        User userTwo =
-                                userId1.equals(minUserId)
-                                        ? p2.getUser()
-                                        : p1.getUser();
+                        User userOne = userId1.equals(minUserId) ? p1.getUser() : p2.getUser();
+                        User userTwo = userId1.equals(minUserId) ? p2.getUser() : p1.getUser();
 
                         matchesBatch.add(
                                 DatingMatch.builder()
                                         .userOne(userOne)
                                         .userTwo(userTwo)
-                                        .status(
-                                                DatingMatchStatus.ACTIVE
-                                        )
-                                        .matchedAt(
-                                                OffsetDateTime.now()
-                                        )
+                                        .status(DatingMatchStatus.ACTIVE)
+                                        .matchedAt(OffsetDateTime.now().minusDays(faker.number().numberBetween(0, 20)))
                                         .build()
                         );
                     }
                 }
             }
-        }
 
-        // ============================================================
-        // 6. Save Swipes
-        // ============================================================
+            // A few dating reports
+            if (faker.number().numberBetween(1, 100) > 96) {
+                DatingProfile reported = allProfiles.get(faker.number().numberBetween(0, allProfiles.size()));
+                if (!p1.getUser().getId().equals(reported.getUser().getId())) {
+                    String reason = MockDataConstants.REPORT_REASONS.get(
+                            faker.number().numberBetween(0, MockDataConstants.REPORT_REASONS.size())
+                    );
+                    reportsBatch.add(DatingReport.builder()
+                            .reporter(p1.getUser())
+                            .reportedUser(reported.getUser())
+                            .reason(reason)
+                            .status(DatingReportStatus.PENDING)
+                            .build());
+                }
+            }
+        }
 
         if (!swipesBatch.isEmpty()) {
             datingSwipeRepository.saveAll(swipesBatch);
         }
-
-        // ============================================================
-        // 7. Save Matches
-        // ============================================================
-
         if (!matchesBatch.isEmpty()) {
             datingMatchRepository.saveAll(matchesBatch);
         }
+        if (!reportsBatch.isEmpty()) {
+            datingReportRepository.saveAll(reportsBatch);
+        }
 
         log.info(
-                "Dating generation complete. Profiles={}, Swipes={}, Matches={}",
+                "Dating generation complete. Profiles={}, Swipes={}, Matches={}, Reports={}",
                 allProfiles.size(),
                 swipesBatch.size(),
-                matchesBatch.size()
+                matchesBatch.size(),
+                reportsBatch.size()
         );
     }
-
-    // =================================================================
-    // Save profile batch
-    // =================================================================
 
     private void saveProfileBatch(
             List<DatingProfile> profilesBatch,
             List<DatingPreference> preferencesBatch,
             List<DatingProfileInterest> dpInterestsBatch,
+            List<DatingProfilePhoto> dpPhotosBatch,
             List<DatingInterest> interests
     ) {
-
-        // ============================================================
-        // Save profiles first because interests need profile ID
-        // ============================================================
-
         datingProfileRepository.saveAllAndFlush(profilesBatch);
-
-        // ============================================================
-        // Save preferences
-        // ============================================================
-
         datingPreferenceRepository.saveAll(preferencesBatch);
 
-        // ============================================================
-        // Generate profile interests
-        // ============================================================
-
         for (DatingProfile profile : profilesBatch) {
+            // Photos (2 to 5 photos per profile from Cloudinary)
+            int photoCount = faker.number().numberBetween(2, 5);
+            for (int pi = 0; pi < photoCount; pi++) {
+                DatingProfilePhoto photo = DatingProfilePhoto.builder()
+                        .datingProfile(profile)
+                        .imageUrl(MockDataConstants.getRandomImageUrl())
+                        .publicId("")
+                        .displayOrder(pi)
+                        .primary(pi == 0)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                dpPhotosBatch.add(photo);
+            }
 
-            int interestCount =
-                    faker.number().numberBetween(3, 6);
-
+            // Interests
+            int interestCount = faker.number().numberBetween(3, 6);
             Set<Long> usedInterests = new HashSet<>();
 
             while (usedInterests.size() < interestCount) {
-
-                DatingInterest interest =
-                        interests.get(
-                                faker.number()
-                                        .numberBetween(
-                                                0,
-                                                interests.size()
-                                        )
-                        );
+                DatingInterest interest = interests.get(
+                        faker.number().numberBetween(0, interests.size())
+                );
 
                 if (!usedInterests.add(interest.getId())) {
                     continue;
                 }
 
-                DatingProfileInterestId dpiId =
-                        new DatingProfileInterestId(
-                                profile.getId(),
-                                interest.getId()
-                        );
+                DatingProfileInterestId dpiId = new DatingProfileInterestId(profile.getId(), interest.getId());
 
                 dpInterestsBatch.add(
                         DatingProfileInterest.builder()
                                 .id(dpiId)
                                 .datingProfile(profile)
                                 .interest(interest)
-                                .createdAt(
-                                        OffsetDateTime.now()
-                                )
+                                .createdAt(OffsetDateTime.now())
                                 .build()
                 );
             }
         }
 
-        // ============================================================
-        // Save profile interests
-        // ============================================================
-
+        if (!dpPhotosBatch.isEmpty()) {
+            datingProfilePhotoRepository.saveAll(dpPhotosBatch);
+        }
         if (!dpInterestsBatch.isEmpty()) {
-            datingProfileInterestRepository.saveAll(
-                    dpInterestsBatch
-            );
+            datingProfileInterestRepository.saveAll(dpInterestsBatch);
         }
     }
 }

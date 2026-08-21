@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -38,13 +39,14 @@ public class DataInitializer implements CommandLineRunner {
     
     private final UserMockService userMockService;
     private final PostMockService postMockService;
+    private final StoryMockService storyMockService;
     private final ConversationMockService conversationMockService;
     private final DatingMockService datingMockService;
     private final NotificationMockService notificationMockService;
 
     @Override
     public void run(String... args) {
-        log.info("Starting DataInitializer...");
+        log.info("Starting DataInitializer with rich mock data and Cloudinary images...");
 
         Role adminRole = roleRepository.findByName(RoleName.ADMIN)
                 .orElseGet(() -> roleRepository.save(Role.builder().name(RoleName.ADMIN).description("System Administrator").build()));
@@ -56,11 +58,12 @@ public class DataInitializer implements CommandLineRunner {
 
         userMockService.init(userRole);
         postMockService.init();
+        storyMockService.init();
         conversationMockService.init();
         datingMockService.init();
         notificationMockService.init();
 
-        log.info("DataInitializer finished generating all mock data.");
+        log.info("DataInitializer finished generating all mock data successfully!");
     }
 
     private void initMissingAdmins(Role adminRole) {
@@ -86,15 +89,29 @@ public class DataInitializer implements CommandLineRunner {
                         .build();
                 User savedAdmin = userRepository.save(admin);
 
+                String avatarUrl = MockDataConstants.getRandomImageUrl();
+                String coverUrl = MockDataConstants.getRandomImageUrl();
+
                 Profile adminProfile = Profile.builder()
                         .user(savedAdmin)
                         .fullName(fullName)
                         .phone("09" + (88880000 + i))
                         .gender(Gender.MALE)
                         .city("Hà Nội")
+                        .country("Việt Nam")
+                        .occupation("System Administrator")
+                        .company("Social Platform Core Team")
+                        .education("Đại học Bách Khoa Hà Nội")
+                        .avatarUrl(avatarUrl)
+                        .avatarPublicId("")
+                        .coverUrl(coverUrl)
+                        .coverPublicId("")
                         .dateOfBirth(LocalDate.of(1990, 1, 1 + i))
-                        .bio("Hệ thống quản trị viên cấp cao của nền tảng.")
-                        .socialLinks(Map.of())
+                        .bio("Hệ thống quản trị viên cấp cao của nền tảng mạng xã hội và hẹn hò.")
+                        .socialLinks(Map.of(
+                                "facebook", "https://facebook.com/" + username,
+                                "github", "https://github.com/" + username
+                        ))
                         .visibility(Visibility.PUBLIC)
                         .createdAt(OffsetDateTime.now())
                         .updatedAt(OffsetDateTime.now())
