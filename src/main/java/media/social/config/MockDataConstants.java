@@ -7,17 +7,88 @@ public final class MockDataConstants {
 
     private MockDataConstants() {}
 
-    public static final List<String> MOCK_IMAGE_URLS = List.of(
+    public static final List<String> MOCK_AVATAR_URLS = List.of(
+            "https://res.cloudinary.com/dousreizx/image/upload/v1786764146/avartar_hrbqwo.webp",
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309794/5df70f5f72391e5b725c5318b5ec8b8b_hunixe.jpg",
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309796/12383ab3439574f4448baf4ca8129efb_gdbhfk.jpg",
+            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=500&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=500&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=80"
+    );
+
+    public static final List<String> MOCK_COVER_URLS = List.of(
+            "https://res.cloudinary.com/dousreizx/image/upload/v1786763990/background_wdp99j.jpg",
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309800/63e53b00d85f5705f69f2b913b8df62c_cqimb8.jpg",
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309808/d80c57e2fb945552398f50aa4b3e0306_hgkuk9.jpg",
+            "https://images.unsplash.com/photo-1707343843437-caacff5cfa74?w=1200&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=1200&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=1200&auto=format&fit=crop&q=80"
+    );
+
+    public static final List<String> MOCK_POST_IMAGE_URLS = List.of(
             "https://res.cloudinary.com/dousreizx/image/upload/v1786763990/background_wdp99j.jpg",
             "https://res.cloudinary.com/dousreizx/image/upload/v1787309794/5df70f5f72391e5b725c5318b5ec8b8b_hunixe.jpg",
             "https://res.cloudinary.com/dousreizx/image/upload/v1787309796/12383ab3439574f4448baf4ca8129efb_gdbhfk.jpg",
             "https://res.cloudinary.com/dousreizx/image/upload/v1787309800/63e53b00d85f5705f69f2b913b8df62c_cqimb8.jpg",
             "https://res.cloudinary.com/dousreizx/image/upload/v1787309808/d80c57e2fb945552398f50aa4b3e0306_hgkuk9.jpg",
-            "https://res.cloudinary.com/dousreizx/image/upload/v1786764146/avartar_hrbqwo.webp"
+            "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=80"
     );
 
+    public static final List<String> MOCK_STORY_IMAGE_URLS = List.of(
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309808/d80c57e2fb945552398f50aa4b3e0306_hgkuk9.jpg",
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309794/5df70f5f72391e5b725c5318b5ec8b8b_hunixe.jpg",
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309796/12383ab3439574f4448baf4ca8129efb_gdbhfk.jpg",
+            "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=600&auto=format&fit=crop&q=80"
+    );
+
+    public static final List<String> MOCK_DATING_PHOTO_URLS = List.of(
+            "https://res.cloudinary.com/dousreizx/image/upload/v1786764146/avartar_hrbqwo.webp",
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309794/5df70f5f72391e5b725c5318b5ec8b8b_hunixe.jpg",
+            "https://res.cloudinary.com/dousreizx/image/upload/v1787309796/12383ab3439574f4448baf4ca8129efb_gdbhfk.jpg",
+            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80"
+    );
+
+    public static String getRandomAvatarUrl() {
+        return MOCK_AVATAR_URLS.get(ThreadLocalRandom.current().nextInt(MOCK_AVATAR_URLS.size()));
+    }
+
+    public static String getRandomCoverUrl() {
+        return MOCK_COVER_URLS.get(ThreadLocalRandom.current().nextInt(MOCK_COVER_URLS.size()));
+    }
+
+    public static String getRandomPostImageUrl() {
+        return MOCK_POST_IMAGE_URLS.get(ThreadLocalRandom.current().nextInt(MOCK_POST_IMAGE_URLS.size()));
+    }
+
+    public static String getRandomStoryImageUrl() {
+        return MOCK_STORY_IMAGE_URLS.get(ThreadLocalRandom.current().nextInt(MOCK_STORY_IMAGE_URLS.size()));
+    }
+
+    public static String getRandomDatingPhotoUrl() {
+        return MOCK_DATING_PHOTO_URLS.get(ThreadLocalRandom.current().nextInt(MOCK_DATING_PHOTO_URLS.size()));
+    }
+
     public static String getRandomImageUrl() {
-        return MOCK_IMAGE_URLS.get(ThreadLocalRandom.current().nextInt(MOCK_IMAGE_URLS.size()));
+        return getRandomAvatarUrl();
     }
 
     public static final List<String> VIETNAMESE_STORY_CAPTIONS = List.of(

@@ -5,7 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.auth.Enum.Status;
+import media.social.modules.dating.entity.DatingProfilePhoto;
+import media.social.modules.dating.repository.DatingProfilePhotoRepository;
+import media.social.modules.post.entity.PostMedia;
 import media.social.modules.post.enums.Visibility;
+import media.social.modules.post.repository.PostMediaRepository;
 import media.social.modules.user.entity.Profile;
 import media.social.modules.user.entity.Role;
 import media.social.modules.user.entity.User;
@@ -23,8 +27,9 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -36,6 +41,8 @@ public class DataInitializer implements CommandLineRunner {
     private final ProfileRepository profileRepository;
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PostMediaRepository postMediaRepository;
+    private final DatingProfilePhotoRepository datingProfilePhotoRepository;
     
     private final UserMockService userMockService;
     private final PostMockService postMockService;
@@ -63,7 +70,63 @@ public class DataInitializer implements CommandLineRunner {
         datingMockService.init();
         notificationMockService.init();
 
+        fillMissingImages();
+
         log.info("DataInitializer finished generating all mock data successfully!");
+    }
+
+    private void fillMissingImages() {
+        // 1. Ensure all user profiles have vibrant avatars and covers
+        List<Profile> profiles = profileRepository.findAll();
+        List<Profile> updatedProfiles = new ArrayList<>();
+
+        for (Profile p : profiles) {
+            boolean changed = false;
+            if (p.getAvatarUrl() == null || p.getAvatarUrl().isBlank()) {
+                p.setAvatarUrl(MockDataConstants.getRandomAvatarUrl());
+                changed = true;
+            }
+            if (p.getCoverUrl() == null || p.getCoverUrl().isBlank()) {
+                p.setCoverUrl(MockDataConstants.getRandomCoverUrl());
+                changed = true;
+            }
+            if (changed) {
+                updatedProfiles.add(p);
+            }
+        }
+
+        if (!updatedProfiles.isEmpty()) {
+            profileRepository.saveAll(updatedProfiles);
+            log.info("Filled missing avatar and cover URLs for {} profiles", updatedProfiles.size());
+        }
+
+        // 2. Ensure all post media have URLs
+        List<PostMedia> postMediaList = postMediaRepository.findAll();
+        List<PostMedia> updatedMedia = new ArrayList<>();
+        for (PostMedia pm : postMediaList) {
+            if (pm.getUrl() == null || pm.getUrl().isBlank()) {
+                pm.setUrl(MockDataConstants.getRandomPostImageUrl());
+                updatedMedia.add(pm);
+            }
+        }
+        if (!updatedMedia.isEmpty()) {
+            postMediaRepository.saveAll(updatedMedia);
+            log.info("Filled missing URLs for {} post media", updatedMedia.size());
+        }
+
+        // 3. Ensure all dating profile photos have URLs
+        List<DatingProfilePhoto> datingPhotos = datingProfilePhotoRepository.findAll();
+        List<DatingProfilePhoto> updatedDatingPhotos = new ArrayList<>();
+        for (DatingProfilePhoto photo : datingPhotos) {
+            if (photo.getImageUrl() == null || photo.getImageUrl().isBlank()) {
+                photo.setImageUrl(MockDataConstants.getRandomDatingPhotoUrl());
+                updatedDatingPhotos.add(photo);
+            }
+        }
+        if (!updatedDatingPhotos.isEmpty()) {
+            datingProfilePhotoRepository.saveAll(updatedDatingPhotos);
+            log.info("Filled missing URLs for {} dating photos", updatedDatingPhotos.size());
+        }
     }
 
     private void initMissingAdmins(Role adminRole) {
@@ -89,8 +152,8 @@ public class DataInitializer implements CommandLineRunner {
                         .build();
                 User savedAdmin = userRepository.save(admin);
 
-                String avatarUrl = MockDataConstants.getRandomImageUrl();
-                String coverUrl = MockDataConstants.getRandomImageUrl();
+                String avatarUrl = MockDataConstants.getRandomAvatarUrl();
+                String coverUrl = MockDataConstants.getRandomCoverUrl();
 
                 Profile adminProfile = Profile.builder()
                         .user(savedAdmin)

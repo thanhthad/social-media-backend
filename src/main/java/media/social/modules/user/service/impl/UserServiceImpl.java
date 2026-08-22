@@ -2,11 +2,13 @@ package media.social.modules.user.service.impl;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
+import media.social.modules.user.dto.projection.MutualFriendCountProjection;
 import media.social.modules.user.dto.projection.UserSearchProjection;
 import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
+import media.social.modules.user.dto.response.friend.MutualFriendCountResponse;
 import media.social.modules.user.dto.response.user.*;
 import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
@@ -36,6 +38,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -49,7 +52,6 @@ public class UserServiceImpl implements UserService {
     private final UserRoleServiceDomain userRoleServiceDomain;
     private final FriendShipDomain friendShipDomain;
     private final UserProfileCacheService userProfileCacheService;
-    private final UserCacheService userCacheService;
     private final BlockPolicyService blockPolicyService;
 
     @Override
@@ -110,7 +112,7 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        userCacheService.evictProfile(userId);
+        userProfileCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
                 .fullName(profile.getFullName())
@@ -141,7 +143,7 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        userCacheService.evictProfile(userId);
+        userProfileCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
                 .phone(profile.getPhone())
@@ -171,7 +173,7 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        userCacheService.evictProfile(userId);
+        userProfileCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
                 .occupation(profile.getOccupation())
@@ -197,7 +199,7 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        userCacheService.evictProfile(userId);
+        userProfileCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
                 .socialLinks(profile.getSocialLinks())
@@ -225,7 +227,7 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        userCacheService.evictProfile(userId);
+        userProfileCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
                 .profileVisibility(profile.getVisibility())
@@ -297,7 +299,7 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        userCacheService.evictProfile(userId);
+        userProfileCacheService.evictProfile(userId);
 
         return ProfileResponse.builder()
                 .coverUrl(profile.getCoverUrl())
@@ -340,7 +342,7 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
 
-        userCacheService.evictProfile(user.getId());
+        userProfileCacheService.evictProfile(user.getId());
 
         return ProfileResponse.builder()
                 .avatarUrl(profile.getAvatarUrl())
@@ -413,6 +415,18 @@ public class UserServiceImpl implements UserService {
         FriendshipCountResponse totalFriend =
                 userProfileCacheService.getTotalFriend(userId);
 
+        MutualFriendCountResponse mutualFriendCount =
+                userProfileCacheService.getTotalMutualFriend(
+                        currentUserId,
+                        userId
+                );
+
+        List<String> listAvatar =
+                userProfileCacheService.getMutualFriendAvatars(
+                        currentUserId,
+                        userId
+                );
+
         boolean friends =
                 friendShipDomain.areFriends(
                         currentUserId,
@@ -438,8 +452,9 @@ public class UserServiceImpl implements UserService {
                         .username(cache.getUsername())
                         .avatarUrl(cache.getAvatarUrl())
                         .coverUrl(cache.getCoverUrl())
-
+                        .totalMutualFriendAvatars(listAvatar)
                         .totalFriend(totalFriend.getTotalFriends())
+                        .totalMutualCount(mutualFriendCount.getTotalMutualCount())
                         .isFriend(friends);
 
         if (canViewFullProfile) {

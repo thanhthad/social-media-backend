@@ -15,7 +15,7 @@ import media.social.modules.user.entity.User;
 import media.social.modules.user.enums.FriendshipStatus;
 import media.social.modules.user.repository.FriendshipRepository;
 import media.social.modules.user.repository.UserRepository;
-import media.social.modules.user.service.cache.UserCacheService;
+import media.social.modules.user.service.cache.UserProfileCacheService;
 import media.social.modules.user.service.domain.UserRoleServiceDomain;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import media.social.modules.user.service.impl.FriendshipServiceImpl;
@@ -52,7 +52,7 @@ class FriendshipServiceImplTest {
     @Mock private UserServiceDomain userServiceDomain;
     @Mock private UserRoleServiceDomain userRoleServiceDomain;
     @Mock private NotificationService notificationService;
-    @Mock private UserCacheService userCacheService;
+    @Mock private UserProfileCacheService userCacheService;
 
     // =========================================================
     // Helpers
@@ -221,8 +221,10 @@ class FriendshipServiceImplTest {
 
             assertEquals(FriendshipStatus.ACCEPTED, friendship.getStatus());
             verify(friendshipRepository).save(friendship);
-            verify(userCacheService).evict(currentUserId);
-            verify(userCacheService).evict(requesterId);
+            verify(userCacheService).evictProfile(currentUserId);
+            verify(userCacheService).evictProfile(requesterId);
+            verify(userCacheService).evictFriendShipCount(requesterId);
+            verify(userCacheService).evictFriendShipCount(currentUserId);
         }
     }
 
@@ -349,8 +351,10 @@ class FriendshipServiceImplTest {
                     EntityType.USER, requesterId,
                     NotificationType.FRIEND_REQUEST
             );
-            verify(userCacheService).evict(currentUserId);
-            verify(userCacheService).evict(requesterId);
+            verify(userCacheService).evictProfile(currentUserId);
+            verify(userCacheService).evictProfile(requesterId);
+            verify(userCacheService).evictFriendShipCount(requesterId);
+            verify(userCacheService).evictFriendShipCount(currentUserId);
         }
     }
 
@@ -658,6 +662,199 @@ class FriendshipServiceImplTest {
 
             assertThrows(AccessDeniedException.class,
                     () -> friendshipService.acceptFriendRequest(requesterId));
+            verify(friendshipRepository, never()).save(any());
+        }
+    }
+
+    // =========================================================
+    // getPendingFriendRequests()
+    // =========================================================
+
+    @Test
+    void getPendingFriendRequests_success() {
+        Long currentUserId = 1L;
+        Pageable pageable = PageRequest.of(0, 10);
+
+        FriendshipUserProjection projection = mock(FriendshipUserProjection.class);
+        when(projection.getUserId()).thenReturn(2L);
+        when(projection.getUsername()).thenReturn("requester_user");
+        when(projection.getAvatarUrl()).thenReturn("http://avatar.url");
+        Page<FriendshipUserProjection> expectedPage = new PageImpl<>(List.of(projection));
+
+        try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
+            ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            when(friendshipRepository.getPendingFriendRequests(currentUserId, FriendshipStatus.PENDING, pageable))
+                    .thenReturn(expectedPage);
+
+            Page<FriendshipUserResponse> result = friendshipService.getPendingFriendRequests(pageable);
+
+            assertNotNull(result);
+            assertEquals(1, result.getTotalElements());
+            assertEquals(2L, result.getContent().get(0).getUserId());
+            assertEquals("requester_user", result.getContent().get(0).getUsername());
+            assertEquals("http://avatar.url", result.getContent().get(0).getAvatarUrl());
+            verify(friendshipRepository).getPendingFriendRequests(currentUserId, FriendshipStatus.PENDING, pageable);
+        }
+    }
+
+    // =========================================================
+    // cancelFriendRequest()
+    // =========================================================
+
+    @Test
+    void cancelFriendRequest_success() {
+        Long currentUserId = 1L; // người gửi
+        Long targetUserId = 2L;  // người nhận
+
+        User currentUser = buildUser(currentUserId);
+        User targetUser = buildUser(targetUserId);
+
+        Friendship friendship = Friendship.builder()
+                .userOne(currentUser)
+                .userTwo(targetUser)
+                .requester(currentUser)
+                .status(FriendshipStatus.PENDING)
+                .build();
+
+        try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
+            ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            doNothing().when(userServiceDomain).validateUserExists(targetUserId);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.ADMIN)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
+
+            when(friendshipRepository.findByUserOne_IdAndUserTwo_Id(1L, 2L))
+                    .thenReturn(Optional.of(friendship));
+
+            friendshipService.cancelFriendRequest(targetUserId);
+
+            assertEquals(FriendshipStatus.CANCELLED, friendship.getStatus());
+            verify(friendshipRepository).save(friendship);
+            verify(notificationService).delete(
+                    targetUserId,
+                    currentUserId,
+                    EntityType.USER,
+                    currentUserId,
+                    NotificationType.FRIEND_REQUEST
+            );
+        }
+    }
+
+    @Test
+    void cancelFriendRequest_toSelf_throwsIllegalArgumentException() {
+        Long currentUserId = 1L;
+
+        try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
+            ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> friendshipService.cancelFriendRequest(currentUserId));
+
+            verify(friendshipRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void cancelFriendRequest_targetIsAdmin_throwsAccessDeniedException() {
+        Long currentUserId = 1L;
+        Long targetUserId = 2L;
+
+        try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
+            ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            doNothing().when(userServiceDomain).validateUserExists(targetUserId);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.ADMIN)).thenReturn(true);
+
+            assertThrows(AccessDeniedException.class,
+                    () -> friendshipService.cancelFriendRequest(targetUserId));
+
+            verify(friendshipRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void cancelFriendRequest_friendshipNotFound_throwsIllegalArgumentException() {
+        Long currentUserId = 1L;
+        Long targetUserId = 2L;
+
+        try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
+            ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            doNothing().when(userServiceDomain).validateUserExists(targetUserId);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.ADMIN)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
+
+            when(friendshipRepository.findByUserOne_IdAndUserTwo_Id(1L, 2L))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> friendshipService.cancelFriendRequest(targetUserId));
+
+            verify(friendshipRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void cancelFriendRequest_notRequester_throwsAccessDeniedException() {
+        Long currentUserId = 2L;
+        Long targetUserId = 1L;
+
+        User targetUser = buildUser(targetUserId);
+        User currentUser = buildUser(currentUserId);
+
+        Friendship friendship = Friendship.builder()
+                .userOne(targetUser)
+                .userTwo(currentUser)
+                .requester(targetUser) // requester is user 1, not currentUser 2
+                .status(FriendshipStatus.PENDING)
+                .build();
+
+        try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
+            ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            doNothing().when(userServiceDomain).validateUserExists(targetUserId);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.ADMIN)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
+
+            when(friendshipRepository.findByUserOne_IdAndUserTwo_Id(1L, 2L))
+                    .thenReturn(Optional.of(friendship));
+
+            assertThrows(AccessDeniedException.class,
+                    () -> friendshipService.cancelFriendRequest(targetUserId));
+
+            verify(friendshipRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void cancelFriendRequest_notPendingStatus_throwsIllegalArgumentException() {
+        Long currentUserId = 1L;
+        Long targetUserId = 2L;
+
+        User currentUser = buildUser(currentUserId);
+        User targetUser = buildUser(targetUserId);
+
+        Friendship friendship = Friendship.builder()
+                .userOne(currentUser)
+                .userTwo(targetUser)
+                .requester(currentUser)
+                .status(FriendshipStatus.ACCEPTED) // not pending
+                .build();
+
+        try (MockedStatic<UserContextHolder> ctx = mockStatic(UserContextHolder.class)) {
+            ctx.when(UserContextHolder::getUserId).thenReturn(currentUserId);
+
+            doNothing().when(userServiceDomain).validateUserExists(targetUserId);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.ADMIN)).thenReturn(false);
+            when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
+
+            when(friendshipRepository.findByUserOne_IdAndUserTwo_Id(1L, 2L))
+                    .thenReturn(Optional.of(friendship));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> friendshipService.cancelFriendRequest(targetUserId));
+
             verify(friendshipRepository, never()).save(any());
         }
     }

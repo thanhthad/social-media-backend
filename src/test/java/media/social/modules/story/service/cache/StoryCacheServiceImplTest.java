@@ -11,8 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,7 +34,7 @@ class StoryCacheServiceImplTest {
         when(projection.getUsername()).thenReturn("username");
         when(projection.getContent()).thenReturn("content");
 
-        when(storyRepository.findActiveStoriesByUserId(eq(targetUserId), any(LocalDateTime.class), eq(Status.ACTIVE)))
+        when(storyRepository.findStoriesByUserId(targetUserId, Status.ACTIVE))
                 .thenReturn(List.of(projection));
 
         List<UserStoryResponse> result = storyCacheService.getUserStories(targetUserId);
@@ -47,7 +45,7 @@ class StoryCacheServiceImplTest {
         assertEquals(targetUserId, result.get(0).getUserId());
         assertEquals("username", result.get(0).getUsername());
         assertEquals("content", result.get(0).getContent());
-        verify(storyRepository).findActiveStoriesByUserId(eq(targetUserId), any(LocalDateTime.class), eq(Status.ACTIVE));
+        verify(storyRepository).findStoriesByUserId(targetUserId, Status.ACTIVE);
     }
 
     @Test

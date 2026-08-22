@@ -15,6 +15,7 @@ import media.social.modules.user.dto.request.user.UpdateAvatarRequest;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
 import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
 import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
+import media.social.modules.user.dto.response.friend.MutualFriendCountResponse;
 import media.social.modules.user.dto.response.user.*;
 import media.social.modules.user.entity.Profile;
 import media.social.modules.user.entity.User;
@@ -24,7 +25,6 @@ import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.ProfileRepository;
 import media.social.modules.user.repository.UserRepository;
-import media.social.modules.user.service.cache.UserCacheService;
 import media.social.modules.user.service.cache.UserProfileCacheService;
 import media.social.modules.user.service.domain.BlockPolicyService;
 import media.social.modules.user.service.domain.FriendShipDomain;
@@ -81,9 +81,6 @@ class UserServiceImplTest {
 
     @Mock
     private UserProfileCacheService userProfileCacheService;
-
-    @Mock
-    private UserCacheService userCacheService;
 
     @Mock
     private BlockPolicyService blockPolicyService;
@@ -181,7 +178,7 @@ class UserServiceImplTest {
             assertEquals(Gender.MALE, response.getGender());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -198,7 +195,7 @@ class UserServiceImplTest {
                     () -> userService.updateBasicProfile(request));
 
             verify(profileRepository, never()).save(any());
-            verify(userCacheService, never()).evictProfile(anyLong());
+            verify(userProfileCacheService, never()).evictProfile(anyLong());
         }
     }
 
@@ -240,7 +237,7 @@ class UserServiceImplTest {
             assertEquals("Quan 1", response.getDistrict());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -257,7 +254,7 @@ class UserServiceImplTest {
                     () -> userService.updateContact(request));
 
             verify(profileRepository, never()).save(any());
-            verify(userCacheService, never()).evictProfile(anyLong());
+            verify(userProfileCacheService, never()).evictProfile(anyLong());
         }
     }
 
@@ -293,7 +290,7 @@ class UserServiceImplTest {
             assertEquals("Bach Khoa University", response.getEducation());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -310,7 +307,7 @@ class UserServiceImplTest {
                     () -> userService.updateCareer(request));
 
             verify(profileRepository, never()).save(any());
-            verify(userCacheService, never()).evictProfile(anyLong());
+            verify(userProfileCacheService, never()).evictProfile(anyLong());
         }
     }
 
@@ -344,7 +341,7 @@ class UserServiceImplTest {
             assertEquals(links, response.getSocialLinks());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -361,7 +358,7 @@ class UserServiceImplTest {
                     () -> userService.updateSocialLinks(request));
 
             verify(profileRepository, never()).save(any());
-            verify(userCacheService, never()).evictProfile(anyLong());
+            verify(userProfileCacheService, never()).evictProfile(anyLong());
         }
     }
 
@@ -390,7 +387,7 @@ class UserServiceImplTest {
             assertEquals(Visibility.FRIEND, response.getProfileVisibility());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -408,7 +405,7 @@ class UserServiceImplTest {
                     () -> userService.updateProfileVisibility(request));
 
             verify(profileRepository, never()).save(any());
-            verify(userCacheService, never()).evictProfile(anyLong());
+            verify(userProfileCacheService, never()).evictProfile(anyLong());
         }
     }
 
@@ -535,7 +532,7 @@ class UserServiceImplTest {
             assertEquals("http://new-cover.url", response.getCoverUrl());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -567,7 +564,7 @@ class UserServiceImplTest {
             assertEquals("http://new-cover.url", response.getCoverUrl());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -629,7 +626,7 @@ class UserServiceImplTest {
             assertEquals("http://new-avatar.url", response.getAvatarUrl());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -662,7 +659,7 @@ class UserServiceImplTest {
             assertEquals("http://new-avatar.url", response.getAvatarUrl());
 
             verify(profileRepository).save(profile);
-            verify(userCacheService).evictProfile(userId);
+            verify(userProfileCacheService).evictProfile(userId);
         }
     }
 
@@ -811,6 +808,12 @@ class UserServiceImplTest {
                 .totalFriends(5L)
                 .build();
 
+        MutualFriendCountResponse mutualFriendCount = MutualFriendCountResponse.builder()
+                .totalMutualCount(2L)
+                .build();
+
+        List<String> mutualAvatars = List.of("http://avatar1.url", "http://avatar2.url");
+
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);
 
@@ -818,6 +821,8 @@ class UserServiceImplTest {
             when(userRoleServiceDomain.hasRole(currentUserId, RoleName.ADMIN)).thenReturn(true);
             when(userProfileCacheService.getUserProfile(targetUserId)).thenReturn(cache);
             when(userProfileCacheService.getTotalFriend(targetUserId)).thenReturn(friendCount);
+            when(userProfileCacheService.getTotalMutualFriend(currentUserId, targetUserId)).thenReturn(mutualFriendCount);
+            when(userProfileCacheService.getMutualFriendAvatars(currentUserId, targetUserId)).thenReturn(mutualAvatars);
             when(friendShipDomain.areFriends(currentUserId, targetUserId)).thenReturn(false);
 
             PublicProfileResponse response = userService.getUserById(targetUserId);
@@ -828,6 +833,8 @@ class UserServiceImplTest {
             assertEquals("Target User", response.getFullName());
             assertEquals("Bio", response.getBio());
             assertEquals(5L, response.getTotalFriend());
+            assertEquals(2L, response.getTotalMutualCount());
+            assertEquals(mutualAvatars, response.getTotalMutualFriendAvatars());
             assertFalse(response.isFriend());
         }
     }
@@ -929,6 +936,12 @@ class UserServiceImplTest {
                 .totalFriends(3L)
                 .build();
 
+        MutualFriendCountResponse mutualFriendCount = MutualFriendCountResponse.builder()
+                .totalMutualCount(1L)
+                .build();
+
+        List<String> mutualAvatars = List.of("http://avatar1.url");
+
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);
             when(blockPolicyService.isBlocked(currentUserId, targetUserId)).thenReturn(false);
@@ -938,6 +951,8 @@ class UserServiceImplTest {
             when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
             when(userProfileCacheService.getUserProfile(targetUserId)).thenReturn(cache);
             when(userProfileCacheService.getTotalFriend(targetUserId)).thenReturn(friendCount);
+            when(userProfileCacheService.getTotalMutualFriend(currentUserId, targetUserId)).thenReturn(mutualFriendCount);
+            when(userProfileCacheService.getMutualFriendAvatars(currentUserId, targetUserId)).thenReturn(mutualAvatars);
             when(friendShipDomain.areFriends(currentUserId, targetUserId)).thenReturn(true);
 
             PublicProfileResponse response = userService.getUserById(targetUserId);
@@ -945,6 +960,8 @@ class UserServiceImplTest {
             assertNotNull(response);
             assertEquals("Friend User", response.getFullName());
             assertEquals("Friend Bio", response.getBio());
+            assertEquals(1L, response.getTotalMutualCount());
+            assertEquals(mutualAvatars, response.getTotalMutualFriendAvatars());
             assertTrue(response.isFriend());
         }
     }
@@ -966,6 +983,10 @@ class UserServiceImplTest {
                 .totalFriends(0L)
                 .build();
 
+        MutualFriendCountResponse mutualFriendCount = MutualFriendCountResponse.builder()
+                .totalMutualCount(0L)
+                .build();
+
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);
             when(blockPolicyService.isBlocked(currentUserId, targetUserId)).thenReturn(false);
@@ -975,6 +996,8 @@ class UserServiceImplTest {
             when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
             when(userProfileCacheService.getUserProfile(targetUserId)).thenReturn(cache);
             when(userProfileCacheService.getTotalFriend(targetUserId)).thenReturn(friendCount);
+            when(userProfileCacheService.getTotalMutualFriend(currentUserId, targetUserId)).thenReturn(mutualFriendCount);
+            when(userProfileCacheService.getMutualFriendAvatars(currentUserId, targetUserId)).thenReturn(List.of());
             when(friendShipDomain.areFriends(currentUserId, targetUserId)).thenReturn(false);
 
             PublicProfileResponse response = userService.getUserById(targetUserId);
@@ -983,6 +1006,8 @@ class UserServiceImplTest {
             // Profile PRIVATE -> không trả fullName, bio
             assertNull(response.getFullName());
             assertNull(response.getBio());
+            assertEquals(0L, response.getTotalMutualCount());
+            assertEquals(List.of(), response.getTotalMutualFriendAvatars());
         }
     }
 
@@ -1003,6 +1028,10 @@ class UserServiceImplTest {
                 .totalFriends(5L)
                 .build();
 
+        MutualFriendCountResponse mutualFriendCount = MutualFriendCountResponse.builder()
+                .totalMutualCount(0L)
+                .build();
+
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(currentUserId);
             when(blockPolicyService.isBlocked(currentUserId, targetUserId)).thenReturn(false);
@@ -1012,6 +1041,8 @@ class UserServiceImplTest {
             when(userRoleServiceDomain.hasRole(targetUserId, RoleName.MODERATOR)).thenReturn(false);
             when(userProfileCacheService.getUserProfile(targetUserId)).thenReturn(cache);
             when(userProfileCacheService.getTotalFriend(targetUserId)).thenReturn(friendCount);
+            when(userProfileCacheService.getTotalMutualFriend(currentUserId, targetUserId)).thenReturn(mutualFriendCount);
+            when(userProfileCacheService.getMutualFriendAvatars(currentUserId, targetUserId)).thenReturn(List.of());
             when(friendShipDomain.areFriends(currentUserId, targetUserId)).thenReturn(false);
 
             PublicProfileResponse response = userService.getUserById(targetUserId);
@@ -1022,6 +1053,8 @@ class UserServiceImplTest {
             assertNull(response.getBio());
             assertEquals("friend_only_user", response.getUsername());
             assertEquals(5L, response.getTotalFriend());
+            assertEquals(0L, response.getTotalMutualCount());
+            assertEquals(List.of(), response.getTotalMutualFriendAvatars());
             assertFalse(response.isFriend());
         }
     }

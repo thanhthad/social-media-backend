@@ -89,7 +89,7 @@ public class PostMockService {
                         for (int m = 0; m < mediaCount; m++) {
                             PostMedia media = PostMedia.builder()
                                     .post(savedPost)
-                                    .url(MockDataConstants.getRandomImageUrl())
+                                    .url(MockDataConstants.getRandomPostImageUrl())
                                     .publicId("")
                                     .mediaType(MediaType.IMAGE)
                                     .createdAt(savedPost.getCreatedAt())

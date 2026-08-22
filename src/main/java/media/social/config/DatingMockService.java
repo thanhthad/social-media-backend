@@ -290,7 +290,7 @@ public class DatingMockService {
             for (int pi = 0; pi < photoCount; pi++) {
                 DatingProfilePhoto photo = DatingProfilePhoto.builder()
                         .datingProfile(profile)
-                        .imageUrl(MockDataConstants.getRandomImageUrl())
+                        .imageUrl(MockDataConstants.getRandomDatingPhotoUrl())
                         .publicId("")
                         .displayOrder(pi)
                         .primary(pi == 0)

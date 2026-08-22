@@ -67,7 +67,7 @@ public class StoryMockService {
 
             StoryMedia media = StoryMedia.builder()
                     .story(story)
-                    .url(MockDataConstants.getRandomImageUrl())
+                    .url(MockDataConstants.getRandomStoryImageUrl())
                     .publicId("")
                     .mediaType(MediaType.IMAGE)
                     .createdAt(createdAt)

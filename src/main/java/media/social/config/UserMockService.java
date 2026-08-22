@@ -90,8 +90,8 @@ public class UserMockService {
                     String occupation = occupations[faker.number().numberBetween(0, occupations.length)];
                     String company = companies[faker.number().numberBetween(0, companies.length)];
 
-                    String avatarUrl = MockDataConstants.getRandomImageUrl();
-                    String coverUrl = MockDataConstants.getRandomImageUrl();
+                    String avatarUrl = MockDataConstants.getRandomAvatarUrl();
+                    String coverUrl = MockDataConstants.getRandomCoverUrl();
 
                     Map<String, String> socialLinks = Map.of(
                             "facebook", "https://facebook.com/" + savedUser.getUsername(),
