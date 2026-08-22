@@ -8,6 +8,7 @@ import media.social.modules.user.enums.Gender;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 
 
@@ -56,6 +57,10 @@ public class PublicProfileResponse {
     private OffsetDateTime updatedAt;
 
     private Long totalFriend;
+
+    private Long totalMutualCount;
+
+    List<String> totalMutualFriendAvatars;
 
     private boolean isFriend;
 }

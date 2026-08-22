@@ -10,5 +10,6 @@ public class FriendSuggestionResponse {
     private Long userId;
     private String username;
     private String avatarUrl;
+
     private Long mutualCount;
 }

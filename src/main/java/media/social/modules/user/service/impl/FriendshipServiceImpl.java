@@ -16,7 +16,7 @@ import media.social.modules.user.enums.FriendshipStatus;
 import media.social.modules.user.repository.FriendshipRepository;
 import media.social.modules.user.repository.UserRepository;
 import media.social.modules.user.service.FriendshipService;
-import media.social.modules.user.service.cache.UserCacheService;
+import media.social.modules.user.service.cache.UserProfileCacheService;
 import media.social.modules.user.service.domain.UserRoleServiceDomain;
 import media.social.modules.user.service.domain.UserServiceDomain;
 import org.springframework.data.domain.Page;
@@ -36,7 +36,7 @@ public class FriendshipServiceImpl implements FriendshipService {
     private final UserServiceDomain userServiceDomain;
     private final UserRoleServiceDomain userRoleServiceDomain;
     private final NotificationService notificationService;
-    private final UserCacheService userCacheService;
+    private final UserProfileCacheService userCacheService;
 
     @Override
     @Transactional
@@ -128,7 +128,33 @@ public class FriendshipServiceImpl implements FriendshipService {
         friendship.setStatus(FriendshipStatus.ACCEPTED);
         friendshipRepository.save(friendship);
 
-        evictFriendshipCache(currentUserId, requesterId);
+        userCacheService.evictProfile(currentUserId);
+        userCacheService.evictProfile(requesterId);
+        userCacheService.evictFriendShipCount(requesterId);
+        userCacheService.evictFriendShipCount(currentUserId);
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FriendshipUserResponse> getPendingFriendRequests(
+            Pageable pageable
+    ) {
+        Long currentUserId = UserContextHolder.getUserId();
+
+        return friendshipRepository
+                .getPendingFriendRequests(
+                        currentUserId,
+                        FriendshipStatus.PENDING,
+                        pageable
+                )
+                .map(projection ->
+                        new FriendshipUserResponse(
+                                projection.getUserId(),
+                                projection.getUsername(),
+                                projection.getAvatarUrl()
+                        )
+                );
     }
 
     @Override
@@ -169,7 +195,75 @@ public class FriendshipServiceImpl implements FriendshipService {
                 NotificationType.FRIEND_REQUEST
         );
 
-        evictFriendshipCache(currentUserId, requesterId);
+        userCacheService.evictProfile(currentUserId);
+        userCacheService.evictProfile(requesterId);
+        userCacheService.evictFriendShipCount(requesterId);
+        userCacheService.evictFriendShipCount(currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public void cancelFriendRequest(Long targetUserId) {
+
+        Long currentUserId = UserContextHolder.getUserId();
+
+        validateFriendshipTarget(
+                currentUserId,
+                targetUserId
+        );
+
+        Long userOneId = Math.min(
+                currentUserId,
+                targetUserId
+        );
+
+        Long userTwoId = Math.max(
+                currentUserId,
+                targetUserId
+        );
+
+        Friendship friendship = friendshipRepository
+                .findByUserOne_IdAndUserTwo_Id(
+                        userOneId,
+                        userTwoId
+                )
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Friend request not found"
+                        )
+                );
+
+        if (!friendship.getRequester()
+                .getId()
+                .equals(currentUserId)) {
+
+            throw new AccessDeniedException(
+                    "You can only cancel a friend request sent by yourself"
+            );
+        }
+
+        if (friendship.getStatus()
+                != FriendshipStatus.PENDING) {
+
+            throw new IllegalArgumentException(
+                    "Only pending friend requests can be cancelled"
+            );
+        }
+
+        friendship.setStatus(
+                FriendshipStatus.CANCELLED
+        );
+
+        friendshipRepository.save(friendship);
+
+        notificationService.delete(
+                targetUserId,
+                currentUserId,
+                EntityType.USER,
+                currentUserId,
+                NotificationType.FRIEND_REQUEST
+        );
+
     }
 
     @Override
@@ -285,11 +379,4 @@ public class FriendshipServiceImpl implements FriendshipService {
         }
     }
 
-    private void evictFriendshipCache(
-            Long currentUserId,
-            Long targetUserId
-    ) {
-        userCacheService.evict(currentUserId);
-        userCacheService.evict(targetUserId);
-    }
 }

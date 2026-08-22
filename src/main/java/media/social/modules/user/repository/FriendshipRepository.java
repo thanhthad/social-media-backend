@@ -1,7 +1,9 @@
 package media.social.modules.user.repository;
 
 import media.social.modules.post.enums.Visibility;
+import media.social.modules.user.dto.projection.FriendshipCountProjection;
 import media.social.modules.user.dto.projection.FriendshipUserProjection;
+import media.social.modules.user.dto.projection.MutualFriendCountProjection;
 import media.social.modules.user.dto.response.user.FriendshipUserResponse;
 import media.social.modules.user.entity.Friendship;
 import media.social.modules.user.enums.FriendshipStatus;
@@ -42,26 +44,44 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
         u.id AS userId,
         u.username AS username,
         u.profile.avatarUrl AS avatarUrl
-
     FROM Friendship f
-
     JOIN User u
         ON (
             u.id = f.userOne.id
             OR u.id = f.userTwo.id
         )
         AND u.id != :userId
-
     WHERE (
         f.userOne.id = :userId
         OR f.userTwo.id = :userId
     )
-
     AND f.status = :status
-
     ORDER BY f.createdAt DESC
 """)
     Page<FriendshipUserProjection> getMyFriends(
+            @Param("userId") Long userId,
+            @Param("status") FriendshipStatus status,
+            Pageable pageable
+    );
+
+    @Query("""
+        SELECT
+            f.requester.id AS userId,
+            f.requester.username AS username,
+            f.requester.profile.avatarUrl AS avatarUrl
+    
+        FROM Friendship f
+    
+        WHERE (
+            f.userOne.id = :userId
+            OR f.userTwo.id = :userId
+        )
+        AND f.status = :status
+        AND f.requester.id <> :userId
+    
+        ORDER BY f.createdAt DESC
+    """)
+    Page<FriendshipUserProjection> getPendingFriendRequests(
             @Param("userId") Long userId,
             @Param("status") FriendshipStatus status,
             Pageable pageable
@@ -216,6 +236,84 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     ORDER BY u.username
     """, nativeQuery = true)
     List<Object[]> findMutualFriends(
+            @Param("currentUserId") Long currentUserId,
+            @Param("targetUserId") Long targetUserId
+    );
+
+    @Query(value = """
+        WITH friend_pairs AS (
+            SELECT
+                user_one_id AS user_id,
+                user_two_id AS friend_id
+            FROM friendships
+            WHERE status = 'ACCEPTED'
+    
+            UNION ALL
+    
+            SELECT
+                user_two_id AS user_id,
+                user_one_id AS friend_id
+            FROM friendships
+            WHERE status = 'ACCEPTED'
+        )
+    
+        SELECT COUNT(*) AS totalMutualFriends
+        FROM friend_pairs f1
+        JOIN friend_pairs f2
+            ON f1.friend_id = f2.friend_id
+        WHERE f1.user_id = :currentUserId
+          AND f2.user_id = :targetUserId
+    """, nativeQuery = true)
+    Optional<MutualFriendCountProjection> findMutualFriendCount(
+            @Param("currentUserId") Long currentUserId,
+            @Param("targetUserId") Long targetUserId
+    );
+
+    @Query("""
+    SELECT COUNT(f.id) AS totalFriends
+    FROM Friendship f
+    WHERE (
+        f.userOne.id = :userId
+        OR f.userTwo.id = :userId
+    )
+    AND f.status = :status
+""")
+    Optional<FriendshipCountProjection> findFriendshipCount(
+            @Param("userId") Long userId,
+            @Param("status") FriendshipStatus status
+    );
+
+    @Query(value = """
+        WITH friend_pairs AS (
+            SELECT
+                user_one_id AS user_id,
+                user_two_id AS friend_id
+            FROM friendships
+            WHERE status = 'ACCEPTED'
+    
+            UNION ALL
+    
+            SELECT
+                user_two_id AS user_id,
+                user_one_id AS friend_id
+            FROM friendships
+            WHERE status = 'ACCEPTED'
+        )
+    
+        SELECT
+            p.avatar_url
+        FROM friend_pairs f1
+        JOIN friend_pairs f2
+            ON f1.friend_id = f2.friend_id
+    
+        JOIN profiles p
+            ON p.user_id = f1.friend_id
+    
+        WHERE f1.user_id = :currentUserId
+          AND f2.user_id = :targetUserId
+          AND p.avatar_url IS NOT NULL
+    """, nativeQuery = true)
+    List<String> findMutualFriendAvatars(
             @Param("currentUserId") Long currentUserId,
             @Param("targetUserId") Long targetUserId
     );

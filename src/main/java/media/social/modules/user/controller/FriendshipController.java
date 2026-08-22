@@ -101,6 +101,55 @@ public class FriendshipController {
     }
 
     // ==================================================
+    // CANCEL FRIEND REQUEST
+    // ==================================================
+
+    @DeleteMapping("/{userId}")
+    @Operation(summary = "Cancel a sent friend request")
+    @RateLimit(
+            name = "FRIEND_REQUEST_CANCEL",
+            limit = 50,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> cancelFriendRequest(
+            @PathVariable Long userId
+    ) {
+
+        friendshipService.cancelFriendRequest(userId);
+
+        return ResponseData.success(
+                null,
+                "Friend request cancelled successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ==================================================
+    // GET PENDING FRIEND REQUESTS
+    // ==================================================
+
+    @GetMapping("/requests")
+    @Operation(summary = "Get pending friend requests")
+    @RateLimit(
+            name = "FRIEND_REQUEST_LIST",
+            limit = 120,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> getPendingFriendRequests(
+            Pageable pageable
+    ) {
+
+        Page<FriendshipUserResponse> page =
+                friendshipService.getPendingFriendRequests(pageable);
+
+        return ResponseData.successPaginate(
+                page,
+                "Get pending friend requests successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ==================================================
     // GET FRIEND SUGGESTIONS
     // ==================================================
 

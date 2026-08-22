@@ -56,19 +56,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<PublicUserProfileCacheProjection> findCurrentUserProfileCache(
             @Param("userId") Long userId
     );
-    @Query("""
-    SELECT COUNT(f.id) AS totalFriends
-    FROM Friendship f
-    WHERE (
-        f.userOne.id = :userId
-        OR f.userTwo.id = :userId
-    )
-    AND f.status = :status
-""")
-    Optional<FriendshipCountProjection> findFriendshipCount(
-            @Param("userId") Long userId,
-            @Param("status") FriendshipStatus status
-    );
+
 
     @Query("""
     SELECT DISTINCT u
