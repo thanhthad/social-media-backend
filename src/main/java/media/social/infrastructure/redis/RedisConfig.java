@@ -1,54 +1,86 @@
 package media.social.infrastructure.redis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import media.social.infrastructure.redis.serializer.RedisSerializerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfig {
 
+    /**
+     * Primary RedisTemplate with JSON serialization (Polymorphic Jackson).
+     * Ideal for DTOs, complex domain objects, and collections.
+     */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(
-            RedisConnectionFactory factory
-    ) {
-
+    @Primary
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-
         template.setConnectionFactory(factory);
 
-        ObjectMapper mapper = new ObjectMapper();
+        RedisSerializer<String> stringSerializer = RedisSerializerFactory.createStringSerializer();
+        RedisSerializer<Object> jsonSerializer = RedisSerializerFactory.createGenericJsonSerializer();
 
-        mapper.registerModule(new JavaTimeModule());
-
-        mapper.disable(
-                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
-        );
-
-        GenericJackson2JsonRedisSerializer serializer =
-                new GenericJackson2JsonRedisSerializer(mapper);
-
-
-        template.setKeySerializer(
-                new StringRedisSerializer()
-        );
-
-        template.setValueSerializer(serializer);
-
-        template.setHashKeySerializer(
-                new StringRedisSerializer()
-        );
-
-        template.setHashValueSerializer(serializer);
-
+        template.setKeySerializer(stringSerializer);
+        template.setValueSerializer(jsonSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setHashValueSerializer(jsonSerializer);
 
         template.afterPropertiesSet();
-
         return template;
+    }
+
+    /**
+     * RedisTemplate with JDK Binary serialization.
+     * Ideal for Java Serializable objects and binary structures.
+     */
+    @Bean(name = "jdkRedisTemplate")
+    public RedisTemplate<String, Object> jdkRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+
+        RedisSerializer<String> stringSerializer = RedisSerializerFactory.createStringSerializer();
+        RedisSerializer<Object> jdkSerializer = RedisSerializerFactory.createJdkSerializer();
+
+        template.setKeySerializer(stringSerializer);
+        template.setValueSerializer(jdkSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setHashValueSerializer(jdkSerializer);
+
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    /**
+     * RedisTemplate for raw byte array operations.
+     */
+    @Bean(name = "byteRedisTemplate")
+    public RedisTemplate<String, byte[]> byteRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, byte[]> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+
+        RedisSerializer<String> stringSerializer = RedisSerializerFactory.createStringSerializer();
+        RedisSerializer<byte[]> byteSerializer = RedisSerializer.byteArray();
+
+        template.setKeySerializer(stringSerializer);
+        template.setValueSerializer(byteSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setHashValueSerializer(byteSerializer);
+
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    /**
+     * StringRedisTemplate for string/text/token operations.
+     */
+    @Bean
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory factory) {
+        return new StringRedisTemplate(factory);
     }
 }
