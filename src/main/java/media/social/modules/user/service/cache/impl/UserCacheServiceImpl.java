@@ -1,6 +1,7 @@
 package media.social.modules.user.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
+import media.social.infrastructure.redis.RedisCacheNames;
 import media.social.modules.user.dto.response.cache.UserCacheResponse;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.exception.user.UserNotFoundException;
@@ -17,30 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserCacheServiceImpl implements UserCacheService {
 
-    private final CacheManager cacheManager;
     private final UserRepository userRepository;
 
     @Override
-    @CacheEvict(
-            value = "userProfile",
-            key = "#userId"
-    )
-    public void evictProfile(Long userId) {
-
-    }
-
-    @Override
-    @CacheEvict(
-            value = "friendShipCount",
-            key = "#userId"
-    )
-    public void evict(Long userId) {
-
-    }
-
-    @Override
     @Cacheable(
-            value = "users",
+            value = RedisCacheNames.USERS,
             key = "#userId"
     )
     @Transactional(readOnly = true)

@@ -1,6 +1,7 @@
 package media.social.modules.post.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
+import media.social.infrastructure.redis.RedisCacheNames;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
@@ -27,7 +28,7 @@ public class PostCacheServiceImpl implements PostCacheService {
 
     @Override
     @Cacheable(
-            value = "posts",
+            value = RedisCacheNames.POSTS,
             key = "#postId + ':' + #visibilities"
     )
     @Transactional(readOnly = true)
@@ -83,7 +84,7 @@ public class PostCacheServiceImpl implements PostCacheService {
 
     @Override
     @CacheEvict(
-            value = "posts",
+            value = RedisCacheNames.POSTS,
             allEntries = true
     )
     public void evictPost(Long postId) {

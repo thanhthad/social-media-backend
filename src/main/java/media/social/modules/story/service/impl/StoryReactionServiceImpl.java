@@ -3,7 +3,6 @@ package media.social.modules.story.service.impl;
 import lombok.AllArgsConstructor;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.post.dto.response.reaction.ReactionCountResponse;
-import media.social.modules.post.dto.response.reaction.UserReactionResponse;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.story.entity.Story;
 import media.social.modules.story.entity.StoryReaction;
@@ -13,8 +12,6 @@ import media.social.modules.story.service.StoryReactionService;
 import media.social.modules.story.service.domain.StoryDomainService;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.service.domain.UserServiceDomain;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

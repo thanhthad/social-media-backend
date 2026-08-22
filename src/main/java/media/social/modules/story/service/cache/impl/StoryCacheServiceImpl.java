@@ -1,6 +1,7 @@
 package media.social.modules.story.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
+import media.social.infrastructure.redis.RedisCacheNames;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.story.dto.projection.UserStoryProjection;
 import media.social.modules.story.dto.response.UserStoryResponse;
@@ -22,7 +23,7 @@ public class StoryCacheServiceImpl implements StoryCacheService {
 
     @Override
     @Cacheable(
-            value = "userStories",
+            value = RedisCacheNames.USER_STORIES,
             key = "#targetUserId"
     )
     @Transactional(readOnly = true)
@@ -55,7 +56,7 @@ public class StoryCacheServiceImpl implements StoryCacheService {
 
     @Override
     @CacheEvict(
-            value = "userStories",
+            value = RedisCacheNames.USER_STORIES,
             key = "#userId"
     )
     public void evictUserStories(Long userId) {

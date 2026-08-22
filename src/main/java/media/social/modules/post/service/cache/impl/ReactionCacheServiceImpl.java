@@ -1,6 +1,7 @@
 package media.social.modules.post.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
+import media.social.infrastructure.redis.RedisCacheNames;
 import media.social.modules.post.entity.Reaction;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.post.repository.ReactionRepository;
@@ -18,7 +19,7 @@ public class ReactionCacheServiceImpl
 
     @Override
     @Cacheable(
-            value = "user_reactions",
+            value = RedisCacheNames.USER_REACTIONS,
             key = "#userId + ':' + #postId"
     )
     public ReactionType getMyReaction(
@@ -37,7 +38,7 @@ public class ReactionCacheServiceImpl
 
     @Override
     @CacheEvict(
-            value = "user_reactions",
+            value = RedisCacheNames.USER_REACTIONS,
             key = "#userId + ':' + #postId"
     )
     public void evictMyReaction(

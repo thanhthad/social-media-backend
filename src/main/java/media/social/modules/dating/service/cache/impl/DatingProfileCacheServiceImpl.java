@@ -1,6 +1,7 @@
 package media.social.modules.dating.service.cache.impl;
 
 import lombok.RequiredArgsConstructor;
+import media.social.infrastructure.redis.RedisCacheNames;
 import media.social.modules.dating.dto.projection.DatingProfileCacheProjection;
 import media.social.modules.dating.dto.response.cache.DatingProfileCacheResponse;
 import media.social.modules.dating.exception.profile.DatingProfileNotFoundException;
@@ -20,7 +21,7 @@ public class DatingProfileCacheServiceImpl
 
     @Override
     @Cacheable(
-            value = "datingProfile",
+            value = RedisCacheNames.DATING_PROFILE,
             key = "#userId"
     )
     @Transactional(readOnly = true)
@@ -54,7 +55,7 @@ public class DatingProfileCacheServiceImpl
 
     @Override
     @CacheEvict(
-            value = "datingProfile",
+            value = RedisCacheNames.DATING_PROFILE,
             key = "#userId"
     )
     public void evictProfile(Long userId) {
