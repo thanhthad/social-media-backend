@@ -72,6 +72,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.apache.catalina.connector.ClientAbortException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import media.social.modules.user.exception.user.ForbiddenException;
 
 import java.util.HashMap;
@@ -81,7 +83,13 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private Long getUserId(){
-        return UserContextHolder.getUserId();
+        try {
+            if (UserContextHolder.isAuthenticated()) {
+                return UserContextHolder.getUserId();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     // ======================= DATING PROFILE PHOTO =======================
@@ -746,9 +754,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    // ================= CLIENT DISCONNECT / ABORT =================
+    @ExceptionHandler({
+            ClientAbortException.class,
+            AsyncRequestNotUsableException.class
+    })
+    public void handleClientAbortException(Exception ex) {
+        log.warn("Client aborted connection | userId={} | msg={}",
+                getUserId(),
+                ex.getMessage()
+        );
+    }
+
     // ================= FALLBACK (ONLY IMPORTANT LOG) =================
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {
+        if (isClientAbortException(ex)) {
+            log.warn("Client aborted connection (wrapped) | userId={} | msg={}",
+                    getUserId(),
+                    ex.getMessage()
+            );
+            return null;
+        }
 
         log.error("INTERNAL_SERVER_ERROR | userId={} | msg={}",
                 getUserId(),
@@ -760,5 +787,26 @@ public class GlobalExceptionHandler {
                 "Internal server error",
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
+    }
+
+    private boolean isClientAbortException(Throwable ex) {
+        Throwable cause = ex;
+        while (cause != null) {
+            if (cause instanceof ClientAbortException || cause instanceof AsyncRequestNotUsableException) {
+                return true;
+            }
+            String message = cause.getMessage();
+            if (message != null) {
+                String lower = message.toLowerCase();
+                if (lower.contains("broken pipe") ||
+                        lower.contains("connection reset") ||
+                        lower.contains("connection was aborted") ||
+                        lower.contains("forcibly closed by the remote host")) {
+                    return true;
+                }
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 }

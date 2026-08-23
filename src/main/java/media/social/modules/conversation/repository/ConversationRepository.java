@@ -85,6 +85,7 @@ public interface ConversationRepository
 
     GROUP BY
         c.id,
+        target.id,
         c.type,
         c.name,
         c.avatarUrl,
