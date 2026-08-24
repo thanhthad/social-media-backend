@@ -10,14 +10,15 @@ import media.social.modules.conversation.entity.Message;
 import media.social.modules.conversation.entity.MessageMedia;
 import media.social.modules.conversation.entity.MessageReaction;
 import media.social.modules.conversation.exception.ConversationNotFoundException;
-import media.social.modules.conversation.exception.InvalidMediaException;
 import media.social.modules.conversation.exception.MessageNotFoundException;
 import media.social.modules.conversation.repository.*;
 import media.social.modules.conversation.service.MessageService;
 import media.social.modules.conversation.service.domain.ConversationDomainService;
 import media.social.modules.conversation.websocket.MessagePublisher;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.storage.CloudinaryStorageService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.user.entity.User;
@@ -45,7 +46,8 @@ public class MessageServiceImpl implements MessageService {
     private final ConversationMemberRepository conversationMemberRepository;
     private final ConversationDomainService conversationDomainService;
     private final UserServiceDomain userServiceDomain;
-    private final CloudinaryService cloudinaryService;
+    private final MediaUploadService mediaUploadService;
+    private final CloudinaryStorageService cloudinaryStorageService;
     private final MessageMediaRepository messageMediaRepository;
     private final MessagePublisher messagePublisher;
     private final MessageReactionRepository messageReactionRepository;
@@ -90,21 +92,15 @@ public class MessageServiceImpl implements MessageService {
 
             for(MultipartFile file : request.getFiles()) {
 
-                MediaType type = detectMediaType(file);
-
                 UploadFileResponse upload =
-                        cloudinaryService.uploadFile(
-                                file,
-                                "conversation/message",
-                                type
-                        );
+                        mediaUploadService.upload(file, MediaUploadContext.MESSAGE);
 
                 MessageMedia media =
                         MessageMedia.builder()
                                 .message(message)
                                 .url(upload.getFileUrl())
                                 .publicId(upload.getPublicId())
-                                .mediaType(type)
+                                .mediaType(MediaType.valueOf(upload.getResourceType()))
                                 .build();
 
                 medias.add(media);
@@ -284,7 +280,7 @@ public class MessageServiceImpl implements MessageService {
                 .forEach(media -> {
 
                     if(media.getPublicId() != null) {
-                        cloudinaryService.deleteFile(
+                        cloudinaryStorageService.delete(
                                 media.getPublicId(),
                                 media.getMediaType()
                         );
@@ -369,54 +365,6 @@ public class MessageServiceImpl implements MessageService {
                 .build();
     }
 
-
-    private MediaType detectMediaType(MultipartFile file){
-
-        if(file == null || file.isEmpty()){
-            throw new InvalidMediaException(
-                    "File empty"
-            );
-        }
-
-        String filename = file.getOriginalFilename();
-
-        if(filename == null || !filename.contains(".")){
-            throw new InvalidMediaException(
-                    "Invalid filename"
-            );
-        }
-
-        String extension =
-                filename.substring(
-                        filename.lastIndexOf(".")+1
-                ).toLowerCase();
-
-
-        if(List.of(
-                "jpg",
-                "jpeg",
-                "png",
-                "webp"
-        ).contains(extension)){
-            return MediaType.IMAGE;
-        }
-
-
-        if(List.of(
-                "mp4",
-                "mov",
-                "avi",
-                "mkv",
-                "webm"
-        ).contains(extension)){
-            return MediaType.VIDEO;
-        }
-
-
-        throw new InvalidMediaException(
-                "Unsupported file extension"
-        );
-    }
 
     private void validateMessage(CreateMessageRequest request){
 

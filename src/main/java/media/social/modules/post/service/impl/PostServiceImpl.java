@@ -15,6 +15,9 @@ import media.social.modules.post.dto.request.post.UpdatePostMedia;
 import media.social.modules.post.dto.response.post.PostMediaResponse;
 import media.social.modules.post.dto.response.post.PostResponse;
 import media.social.modules.file.dto.response.UploadFileResponse;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
+import media.social.modules.file.media.storage.CloudinaryStorageService;
 import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.exception.post_media.MediaNotFoundException;
@@ -26,7 +29,6 @@ import media.social.modules.post.exception.post.PostNotFoundException;
 import media.social.modules.user.enums.FriendshipStatus;
 import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.auth.security.context.UserContextHolder;
-import media.social.modules.file.service.CloudinaryService;
 import media.social.modules.post.service.PostService;
 import media.social.modules.user.service.domain.BlockPolicyService;
 import media.social.modules.user.service.domain.FriendShipDomain;
@@ -52,7 +54,8 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostMediaRepository postMediaRepository;
     private final UserServiceDomain userServiceDomain;
-    private final CloudinaryService cloudinaryService;
+    private final MediaUploadService mediaUploadService;
+    private final CloudinaryStorageService cloudinaryStorageService;
     private final HashtagRepository hashtagRepository;
     private final PostHashtagRepository postHashtagRepository;
     private final BlockPolicyService blockPolicyService;
@@ -468,7 +471,7 @@ public class PostServiceImpl implements PostService {
 
         postMediaRepository.findByPostId(postId)
                 .forEach(media ->
-                        cloudinaryService.deleteFile(
+                        cloudinaryStorageService.delete(
                                 media.getPublicId(),
                                 media.getMediaType()
                         ));
@@ -527,7 +530,7 @@ public class PostServiceImpl implements PostService {
             );
         }
 
-        cloudinaryService.deleteFile(media.getPublicId(),media.getMediaType());
+        cloudinaryStorageService.delete(media.getPublicId(), media.getMediaType());
 
         postCacheService.evictPost(post.getId());
         postMediaRepository.delete(media);
@@ -620,18 +623,12 @@ public class PostServiceImpl implements PostService {
 
         for (MultipartFile file : files) {
 
-            MediaType mediaType = cloudinaryService.detectMediaType(file);
-
             UploadFileResponse upload =
-                    cloudinaryService.uploadFile(
-                            file,
-                            "posts",
-                            mediaType
-                    );
+                    mediaUploadService.upload(file, MediaUploadContext.POST);
 
             mediaList.add(PostMedia.builder()
                     .post(post)
-                    .mediaType(mediaType)
+                    .mediaType(MediaType.valueOf(upload.getResourceType()))
                     .url(upload.getFileUrl())
                     .publicId(upload.getPublicId())
                     .build());

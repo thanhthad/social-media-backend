@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.storage.CloudinaryStorageService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.story.dto.projection.StoryFeedProjection;
@@ -43,7 +45,8 @@ import java.util.stream.Collectors;
 public class StoryServiceImpl implements StoryService {
 
     private final StoryRepository storyRepository;
-    private final CloudinaryService cloudinaryService;
+    private final MediaUploadService mediaUploadService;
+    private final CloudinaryStorageService cloudinaryStorageService;
     private final UserServiceDomain userServiceDomain;
     private final FriendShipDomain friendShipDomain;
     private final StoryCacheService storyCacheService;
@@ -67,26 +70,14 @@ public class StoryServiceImpl implements StoryService {
 
         if (file != null && !file.isEmpty()) {
 
-            MediaType mediaType =
-                    cloudinaryService.detectMediaType(file);
-
-            cloudinaryService.validateFile(
-                    file,
-                    mediaType
-            );
-
             UploadFileResponse uploadResponse =
-                    cloudinaryService.uploadFile(
-                            file,
-                            "stories/" + userId,
-                            mediaType
-                    );
+                    mediaUploadService.upload(file, MediaUploadContext.STORY);
 
             StoryMedia media = StoryMedia.builder()
                     .story(story)
                     .url(uploadResponse.getFileUrl())
                     .publicId(uploadResponse.getPublicId())
-                    .mediaType(mediaType)
+                    .mediaType(MediaType.valueOf(uploadResponse.getResourceType()))
                     .build();
 
             story.setMedia(media);
@@ -314,7 +305,7 @@ public class StoryServiceImpl implements StoryService {
         StoryMedia media = story.getMedia();
 
         if (media != null) {
-            cloudinaryService.deleteFile(
+            cloudinaryStorageService.delete(
                     media.getPublicId(),
                     media.getMediaType()
             );
