@@ -4,6 +4,7 @@ import media.social.modules.auth.Enum.Status;
 import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.response.post.PostFlatResponse;
 import media.social.modules.post.entity.Post;
+import media.social.modules.post.enums.PostType;
 import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.enums.FriendshipStatus;
@@ -68,9 +69,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     FROM Post p
     JOIN FETCH p.user
     WHERE p.id = :postId
+      AND p.postType = :postType
     """)
     Optional<Post> findByIdWithUser(
-            @Param("postId") Long postId
+            @Param("postId") Long postId,
+            @Param("postType") PostType postType
     );
 
     @Query("""
@@ -94,6 +97,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     WHERE u.id = :userId
       AND u.status = :userStatus
 
+      AND p.postType = :postType
+
       AND NOT EXISTS (
           SELECT 1
           FROM Report report
@@ -107,6 +112,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("userId") Long userId,
             @Param("userStatus") Status userStatus,
             @Param("reportStatus") ReportStatus reportStatus,
+            @Param("postType") PostType postType,
             Pageable pageable
     );
 
@@ -131,6 +137,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     WHERE u.id = :targetUserId
 
       AND u.status = :activeStatus
+
+      AND p.postType = :postType
 
       AND NOT EXISTS (
           SELECT 1
@@ -177,6 +185,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("publicVisibility") Visibility publicVisibility,
             @Param("friendVisibility") Visibility friendVisibility,
             @Param("acceptedStatus") FriendshipStatus acceptedStatus,
+            @Param("postType") PostType postType,
             Pageable pageable
     );
 
@@ -199,6 +208,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     LEFT JOIN u.profile pr
 
     WHERE p.id = :postId
+      AND p.postType = :postType
       AND u.status = :userStatus
       AND p.visibility IN :visibilities
 
@@ -211,6 +221,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 """)
     Optional<PostFlatProjection> findPostDetailById(
             @Param("postId") Long postId,
+            @Param("postType") PostType postType,
             @Param("userStatus") Status userStatus,
             @Param("visibilities") List<Visibility> visibilities,
             @Param("reportStatus") ReportStatus reportStatus
@@ -250,6 +261,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     AND u.status = :userStatus
 
+    AND p.postType = :postType
+
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
@@ -285,6 +298,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<PostFlatProjection> findFeed(
             @Param("viewerId") Long viewerId,
             @Param("userStatus") Status userStatus,
+            @Param("postType") PostType postType,
             @Param("reportStatus") ReportStatus reportStatus,
             @Param("acceptedStatus") FriendshipStatus acceptedStatus,
             @Param("publicVisibility") Visibility publicVisibility,
@@ -325,6 +339,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     AND u.status = :activeStatus
 
+    AND p.postType = :postType
+
     AND NOT EXISTS (
         SELECT 1
         FROM Report r
@@ -352,6 +368,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<PostFlatProjection> findExplore(
             @Param("viewerId") Long viewerId,
             @Param("activeStatus") Status activeStatus,
+            @Param("postType") PostType postType,
             @Param("approvedReportStatus") ReportStatus approvedReportStatus,
             @Param("publicVisibility") Visibility publicVisibility,
             @Param("acceptedStatus") FriendshipStatus acceptedStatus,
@@ -360,128 +377,137 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query(
             value = """
-        SELECT
-            p.post_id AS id,
-            p.content AS content,
-            p.visibility AS visibility,
-            p.created_at AS createdAt,
+    SELECT
+        p.post_id AS id,
+        p.content AS content,
+        p.visibility AS visibility,
+        p.created_at AS createdAt,
 
-            u.user_id AS userId,
-            u.username AS username,
-            pr.avatar_url AS avatarUrl,
+        u.user_id AS userId,
+        u.username AS username,
+        pr.avatar_url AS avatarUrl,
 
-            p.comment_count AS commentCount,
-            p.reaction_count AS reactionCount
+        p.comment_count AS commentCount,
+        p.reaction_count AS reactionCount
 
-        FROM posts p
+    FROM posts p
 
-        JOIN users u
-            ON u.user_id = p.user_id
+    JOIN users u
+        ON u.user_id = p.user_id
 
-        LEFT JOIN profiles pr
-            ON pr.user_id = u.user_id
+    LEFT JOIN profiles pr
+        ON pr.user_id = u.user_id
 
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM blocks b
-            WHERE
-                (b.blocker_id = :viewerId AND b.blocked_id = u.user_id)
-                OR
-                (b.blocker_id = u.user_id AND b.blocked_id = :viewerId)
-        )
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM blocks b
+        WHERE
+            (b.blocker_id = :viewerId AND b.blocked_id = u.user_id)
+            OR
+            (b.blocker_id = u.user_id AND b.blocked_id = :viewerId)
+    )
 
-        AND u.status = :activeStatus
+    AND u.status = :activeStatus
 
-        AND NOT EXISTS (
-            SELECT 1
-            FROM reports r
-            WHERE r.post_id = p.post_id
-              AND r.status = :approvedReportStatus
-        )
+    AND p.post_type = :postType
 
-        AND similarity(p.content, :keyword) > 0.2
+    AND NOT EXISTS (
+        SELECT 1
+        FROM reports r
+        WHERE r.post_id = p.post_id
+          AND r.status = :approvedReportStatus
+    )
 
-        AND (
-            u.user_id = :viewerId
-            OR p.visibility = :publicVisibility
-            OR (
-                p.visibility = :friendVisibility
-                AND EXISTS (
-                    SELECT 1
-                    FROM friendships f
-                    WHERE (
-                        (f.user_one_id = :viewerId
-                         AND f.user_two_id = u.user_id)
-                        OR
-                        (f.user_one_id = u.user_id
-                         AND f.user_two_id = :viewerId)
-                    )
-                    AND f.status = :acceptedStatus
+    AND similarity(p.content, :keyword) > 0.2
+
+    AND (
+        u.user_id = :viewerId
+        OR p.visibility = :publicVisibility
+        OR (
+            p.visibility = :friendVisibility
+            AND EXISTS (
+                SELECT 1
+                FROM friendships f
+                WHERE (
+                    (f.user_one_id = :viewerId
+                     AND f.user_two_id = u.user_id)
+                    OR
+                    (f.user_one_id = u.user_id
+                     AND f.user_two_id = :viewerId)
                 )
+                AND f.status = :acceptedStatus
             )
         )
+    )
 
-        ORDER BY
-            similarity(p.content, :keyword) DESC,
-            p.created_at DESC
-        """,
+    ORDER BY
+        similarity(p.content, :keyword) DESC,
+        p.created_at DESC
+    """,
+
             countQuery = """
-        SELECT COUNT(*)
+    SELECT COUNT(*)
 
-        FROM posts p
+    FROM posts p
 
-        JOIN users u
-            ON u.user_id = p.user_id
+    JOIN users u
+        ON u.user_id = p.user_id
 
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM blocks b
-            WHERE
-                (b.blocker_id = :viewerId AND b.blocked_id = u.user_id)
-                OR
-                (b.blocker_id = u.user_id AND b.blocked_id = :viewerId)
-        )
-        AND u.status = :activeStatus
-        AND NOT EXISTS (
-            SELECT 1
-            FROM reports r
-            WHERE r.post_id = p.post_id
-              AND r.status = :approvedReportStatus
-        )
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM blocks b
+        WHERE
+            (b.blocker_id = :viewerId AND b.blocked_id = u.user_id)
+            OR
+            (b.blocker_id = u.user_id AND b.blocked_id = :viewerId)
+    )
 
-        AND similarity(p.content, :keyword) > 0.2
+    AND u.status = :activeStatus
 
-        AND (
-            u.user_id = :viewerId
+    AND p.post_type = :postType
 
-            OR p.visibility = :publicVisibility
+    AND NOT EXISTS (
+        SELECT 1
+        FROM reports r
+        WHERE r.post_id = p.post_id
+          AND r.status = :approvedReportStatus
+    )
 
-            OR (
-                p.visibility = :friendVisibility
+    AND similarity(p.content, :keyword) > 0.2
 
-                AND EXISTS (
-                    SELECT 1
-                    FROM friendships f
-                    WHERE (
-                        (f.user_one_id = :viewerId
-                         AND f.user_two_id = u.user_id)
+    AND (
+        u.user_id = :viewerId
 
-                        OR
+        OR p.visibility = :publicVisibility
 
-                        (f.user_one_id = u.user_id
-                         AND f.user_two_id = :viewerId)
-                    )
-                    AND f.status = :acceptedStatus
+        OR (
+            p.visibility = :friendVisibility
+
+            AND EXISTS (
+                SELECT 1
+                FROM friendships f
+                WHERE (
+                    (f.user_one_id = :viewerId
+                     AND f.user_two_id = u.user_id)
+
+                    OR
+
+                    (f.user_one_id = u.user_id
+                     AND f.user_two_id = :viewerId)
                 )
+                AND f.status = :acceptedStatus
             )
         )
-        """,
+    )
+    """,
+
             nativeQuery = true
     )
     Page<PostFlatProjection> searchByContent(
             @Param("viewerId") Long viewerId,
             @Param("keyword") String keyword,
             @Param("activeStatus") String activeStatus,
+            @Param("postType") String postType,
             @Param("approvedReportStatus") String approvedReportStatus,
             @Param("publicVisibility") String publicVisibility,
             @Param("friendVisibility") String friendVisibility,
@@ -511,6 +537,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     WHERE LOWER(ph.hashtag.name) = LOWER(:name)
 
       AND u.status = :activeStatus
+
+      AND p.postType = :postType
 
       AND NOT EXISTS (
           SELECT 1
@@ -553,6 +581,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("viewerId") Long viewerId,
             @Param("name") String name,
             @Param("activeStatus") Status activeStatus,
+            @Param("postType") PostType postType,
             @Param("approvedReportStatus") ReportStatus approvedReportStatus,
             @Param("publicVisibility") Visibility publicVisibility,
             @Param("friendVisibility") Visibility friendVisibility,
@@ -561,68 +590,71 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     );
 
     @Query("""
-    SELECT
-        p.id AS id,
-        p.content AS content,
-        p.visibility AS visibility,
-        p.createdAt AS createdAt,
-
-        u.id AS userId,
-        u.username AS username,
-        pr.avatarUrl AS avatarUrl,
-
-        p.commentCount AS commentCount,
-        p.reactionCount AS reactionCount
-
-    FROM SavedPost sp
-    JOIN sp.post p
-    JOIN p.user u
-    LEFT JOIN u.profile pr
-
-    WHERE sp.user.id = :userId
-
-      AND u.status = :activeStatus
-
-      AND NOT EXISTS (
-          SELECT 1
-          FROM Block b
-          WHERE (b.blocker.id = :userId AND b.blocked.id = u.id)
-             OR (b.blocker.id = u.id AND b.blocked.id = :userId)
-      )
-
-      AND NOT EXISTS (
-          SELECT 1
-          FROM Report r
-          WHERE r.post.id = p.id
-            AND r.status = :approvedReportStatus
-      )
-
-      AND (
-          u.id = :userId
-
-          OR p.visibility = :publicVisibility
-
-          OR (
-              p.visibility = :friendVisibility
-
-              AND EXISTS (
-                  SELECT 1
-                  FROM Friendship f
-                  WHERE (
-                      (f.userOne.id = :userId AND f.userTwo.id = u.id)
-                      OR
-                      (f.userOne.id = u.id AND f.userTwo.id = :userId)
+        SELECT
+            p.id AS id,
+            p.content AS content,
+            p.visibility AS visibility,
+            p.createdAt AS createdAt,
+    
+            u.id AS userId,
+            u.username AS username,
+            pr.avatarUrl AS avatarUrl,
+    
+            p.commentCount AS commentCount,
+            p.reactionCount AS reactionCount
+    
+        FROM SavedPost sp
+        JOIN sp.post p
+        JOIN p.user u
+        LEFT JOIN u.profile pr
+    
+        WHERE sp.user.id = :userId
+    
+          AND u.status = :activeStatus
+    
+          AND p.postType = :postType
+    
+          AND NOT EXISTS (
+              SELECT 1
+              FROM Block b
+              WHERE (b.blocker.id = :userId AND b.blocked.id = u.id)
+                 OR (b.blocker.id = u.id AND b.blocked.id = :userId)
+          )
+    
+          AND NOT EXISTS (
+              SELECT 1
+              FROM Report r
+              WHERE r.post.id = p.id
+                AND r.status = :approvedReportStatus
+          )
+    
+          AND (
+              u.id = :userId
+    
+              OR p.visibility = :publicVisibility
+    
+              OR (
+                  p.visibility = :friendVisibility
+    
+                  AND EXISTS (
+                      SELECT 1
+                      FROM Friendship f
+                      WHERE (
+                          (f.userOne.id = :userId AND f.userTwo.id = u.id)
+                          OR
+                          (f.userOne.id = u.id AND f.userTwo.id = :userId)
+                      )
+                      AND f.status = :acceptedStatus
                   )
-                  AND f.status = :acceptedStatus
               )
           )
-      )
-
-    ORDER BY sp.createdAt DESC
-""")
+    
+        ORDER BY sp.createdAt DESC
+    """)
     Page<PostFlatProjection> findSavedPosts(
             @Param("userId") Long userId,
             @Param("activeStatus") Status activeStatus,
+            @Param("postType") PostType postType,
             @Param("approvedReportStatus") ReportStatus approvedReportStatus,
             @Param("publicVisibility") Visibility publicVisibility,
             @Param("friendVisibility") Visibility friendVisibility,
