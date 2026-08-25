@@ -6,6 +6,7 @@ import media.social.modules.auth.Enum.Status;
 import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
 import media.social.modules.post.dto.response.post.PostMediaResponse;
+import media.social.modules.post.enums.PostType;
 import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.exception.post.PostNotFoundException;
@@ -40,6 +41,7 @@ public class PostCacheServiceImpl implements PostCacheService {
         PostFlatProjection flat =
                 postRepository.findPostDetailById(
                                 postId,
+                                PostType.POST,
                                 Status.ACTIVE,
                                 visibilities,
                                 ReportStatus.APPROVED

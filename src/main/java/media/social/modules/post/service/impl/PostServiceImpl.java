@@ -18,6 +18,7 @@ import media.social.modules.file.dto.response.UploadFileResponse;
 import media.social.modules.file.media.upload.MediaUploadContext;
 import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.file.media.storage.CloudinaryStorageService;
+import media.social.modules.post.enums.PostType;
 import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.exception.post_media.MediaNotFoundException;
@@ -74,6 +75,7 @@ public class PostServiceImpl implements PostService {
                 postRepository.findFeed(
                         viewerId,
                         Status.ACTIVE,
+                        PostType.POST,
                         ReportStatus.APPROVED,
                         FriendshipStatus.ACCEPTED,
                         Visibility.PUBLIC,
@@ -94,6 +96,7 @@ public class PostServiceImpl implements PostService {
                 postRepository.findExplore(
                         viewerId,
                         Status.ACTIVE,
+                        PostType.POST,
                         ReportStatus.APPROVED,
                         Visibility.PUBLIC,
                         FriendshipStatus.ACCEPTED,
@@ -113,6 +116,7 @@ public class PostServiceImpl implements PostService {
                         userId,
                         Status.ACTIVE,
                         ReportStatus.APPROVED,
+                        PostType.POST,
                         pageable
                 );
 
@@ -142,6 +146,7 @@ public class PostServiceImpl implements PostService {
                         Visibility.PUBLIC,
                         Visibility.FRIEND,
                         FriendshipStatus.ACCEPTED,
+                        PostType.POST,
                         pageable
                 );
 
@@ -157,7 +162,7 @@ public class PostServiceImpl implements PostService {
 
         Long viewerId = UserContextHolder.getUserId();
 
-        Post post = postRepository.findByIdWithUser(postId)
+        Post post = postRepository.findByIdWithUser(postId, PostType.POST)
                 .orElseThrow(() ->
                         new PostNotFoundException("Post not found")
                 );
@@ -236,6 +241,7 @@ public class PostServiceImpl implements PostService {
                         viewerId,
                         keyword.trim(),
                         Status.ACTIVE.name(),
+                        PostType.POST.name(),
                         ReportStatus.APPROVED.name(),
                         Visibility.PUBLIC.name(),
                         Visibility.FRIEND.name(),
@@ -259,6 +265,7 @@ public class PostServiceImpl implements PostService {
                         viewerId,
                         hashtag.trim().toLowerCase(),
                         Status.ACTIVE,
+                        PostType.POST,
                         ReportStatus.APPROVED,
                         Visibility.PUBLIC,
                         Visibility.FRIEND,
@@ -279,6 +286,7 @@ public class PostServiceImpl implements PostService {
                 postRepository.findSavedPosts(
                         userId,
                         Status.ACTIVE,
+                        PostType.POST,
                         ReportStatus.APPROVED,
                         Visibility.PUBLIC,
                         Visibility.FRIEND,
