@@ -7,6 +7,7 @@ package media.social.modules.file.media.upload;
  */
 public enum MediaUploadContext {
     POST,
+    REEL,
     STORY,
     MESSAGE,
     PROFILE
