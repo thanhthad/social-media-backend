@@ -127,15 +127,23 @@ CREATE TABLE posts (
 
                        content TEXT,
 
+                       post_type VARCHAR(30) NOT NULL DEFAULT 'POST',
+
                        visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
 
                        comment_count BIGINT NOT NULL DEFAULT 0,
 
                        reaction_count BIGINT NOT NULL DEFAULT 0,
 
-                       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                       created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-                       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                       updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                       CONSTRAINT chk_posts_post_type
+                           CHECK (post_type IN ('POST', 'REEL')),
+
+                       CONSTRAINT chk_posts_visibility
+                           CHECK (visibility IN ('PUBLIC', 'FOLLOWERS', 'PRIVATE'))
 );
 
 CREATE TABLE post_media (
