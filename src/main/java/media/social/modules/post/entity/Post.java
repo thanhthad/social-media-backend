@@ -2,6 +2,7 @@ package media.social.modules.post.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import media.social.modules.post.enums.PostType;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.entity.User;
 
@@ -29,6 +30,15 @@ public class Post {
 
     @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "post_type",
+            length = 30,
+            nullable = false
+    )
+    @Builder.Default
+    private PostType postType = PostType.POST;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
