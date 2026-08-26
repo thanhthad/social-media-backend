@@ -3,7 +3,8 @@ package media.social.modules.post.service.impl;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.dto.projection.ListPostMediaProjection;
 import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.request.post.CreatePostRequest;
@@ -14,6 +15,7 @@ import media.social.modules.post.dto.response.post.PostCacheDTO;
 import media.social.modules.post.dto.response.post.PostResponse;
 import media.social.modules.post.entity.*;
 import media.social.modules.post.enums.MediaType;
+import media.social.modules.post.enums.PostType;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
@@ -57,7 +59,7 @@ class PostServiceImplTest {
     @Mock private PostRepository postRepository;
     @Mock private PostMediaRepository postMediaRepository;
     @Mock private UserServiceDomain userServiceDomain;
-    @Mock private CloudinaryService cloudinaryService;
+    @Mock private MediaUploadService mediaUploadService;
     @Mock private HashtagRepository hashtagRepository;
     @Mock private PostHashtagRepository postHashtagRepository;
     @Mock private BlockPolicyService blockPolicyService;
@@ -97,7 +99,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findFeed(viewerId, Status.ACTIVE, ReportStatus.APPROVED, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
+            when(postRepository.findFeed(viewerId, Status.ACTIVE, PostType.POST, ReportStatus.APPROVED, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
                     .thenReturn(flatPage);
             when(postMediaRepository.findMediaByPostIds(List.of(10L))).thenReturn(List.of(media));
             when(reactionRepository.findMyReactions(viewerId, List.of(10L))).thenReturn(List.of(reaction));
@@ -124,7 +126,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findFeed(viewerId, Status.ACTIVE, ReportStatus.APPROVED, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
+            when(postRepository.findFeed(viewerId, Status.ACTIVE, PostType.POST, ReportStatus.APPROVED, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
                     .thenReturn(emptyFlatPage);
 
             Page<PostResponse> result = postService.getFeed(pageable);
@@ -143,7 +145,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findExplore(viewerId, Status.ACTIVE, ReportStatus.APPROVED, Visibility.PUBLIC, FriendshipStatus.ACCEPTED, pageable))
+            when(postRepository.findExplore(viewerId, Status.ACTIVE, PostType.POST, ReportStatus.APPROVED, Visibility.PUBLIC, FriendshipStatus.ACCEPTED, pageable))
                     .thenReturn(flatPage);
 
             Page<PostResponse> result = postService.getExplore(pageable);
@@ -162,7 +164,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
 
-            when(postRepository.findAllPostMe(userId, Status.ACTIVE, ReportStatus.APPROVED, pageable)).thenReturn(flatPage);
+            when(postRepository.findAllPostMe(userId, Status.ACTIVE, ReportStatus.APPROVED, PostType.POST, pageable)).thenReturn(flatPage);
 
             Page<PostResponse> result = postService.getAllPostMe(pageable);
 
@@ -197,7 +199,7 @@ class PostServiceImplTest {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
             when(blockPolicyService.isBlocked(viewerId, targetUserId)).thenReturn(false);
-            when(postRepository.findAllVisiblePost(viewerId, targetUserId, Status.ACTIVE, ReportStatus.APPROVED, Visibility.PUBLIC, Visibility.FRIEND, FriendshipStatus.ACCEPTED, pageable))
+            when(postRepository.findAllVisiblePost(viewerId, targetUserId, Status.ACTIVE, ReportStatus.APPROVED, Visibility.PUBLIC, Visibility.FRIEND, FriendshipStatus.ACCEPTED, PostType.POST, pageable))
                     .thenReturn(flatPage);
 
             Page<PostResponse> result = postService.getAllPostByUserId(targetUserId, pageable);
@@ -222,7 +224,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findByIdWithUser(postId)).thenReturn(Optional.of(post));
+            when(postRepository.findByIdWithUser(postId, PostType.POST)).thenReturn(Optional.of(post));
             when(blockPolicyService.isBlocked(viewerId, ownerId)).thenReturn(true);
 
             assertThrows(UserBlockedException.class, () -> postService.getPostById(postId));
@@ -237,7 +239,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findByIdWithUser(postId)).thenReturn(Optional.empty());
+            when(postRepository.findByIdWithUser(postId, PostType.POST)).thenReturn(Optional.empty());
 
             assertThrows(PostNotFoundException.class, () -> postService.getPostById(postId));
         }
@@ -254,7 +256,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
 
-            when(postRepository.findByIdWithUser(postId)).thenReturn(Optional.of(post));
+            when(postRepository.findByIdWithUser(postId, PostType.POST)).thenReturn(Optional.of(post));
             when(blockPolicyService.isBlocked(userId, userId)).thenReturn(false);
             when(postCacheService.getPost(eq(postId), eq(List.of(Visibility.PUBLIC, Visibility.FRIEND, Visibility.PRIVATE))))
                     .thenReturn(cacheDTO);
@@ -281,7 +283,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findByIdWithUser(postId)).thenReturn(Optional.of(post));
+            when(postRepository.findByIdWithUser(postId, PostType.POST)).thenReturn(Optional.of(post));
             when(blockPolicyService.isBlocked(viewerId, ownerId)).thenReturn(false);
             when(friendShipDomain.areFriends(viewerId, ownerId)).thenReturn(true);
             when(postCacheService.getPost(eq(postId), eq(List.of(Visibility.PUBLIC, Visibility.FRIEND))))
@@ -307,7 +309,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findByIdWithUser(postId)).thenReturn(Optional.of(post));
+            when(postRepository.findByIdWithUser(postId, PostType.POST)).thenReturn(Optional.of(post));
             when(blockPolicyService.isBlocked(viewerId, ownerId)).thenReturn(false);
             when(friendShipDomain.areFriends(viewerId, ownerId)).thenReturn(false);
             when(postCacheService.getPost(eq(postId), eq(List.of(Visibility.PUBLIC))))
@@ -340,7 +342,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.searchByContent(viewerId, "search", Status.ACTIVE.name(), ReportStatus.APPROVED.name(),
+            when(postRepository.searchByContent(viewerId, "search", Status.ACTIVE.name(), PostType.POST.name(), ReportStatus.APPROVED.name(),
                     Visibility.PUBLIC.name(), Visibility.FRIEND.name(), FriendshipStatus.ACCEPTED.name(), pageable))
                     .thenReturn(projectionPage);
             when(postMediaRepository.findMediaByPostIds(List.of(10L))).thenReturn(Collections.emptyList());
@@ -363,7 +365,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.searchByHashtag(viewerId, "java", Status.ACTIVE, ReportStatus.APPROVED,
+            when(postRepository.searchByHashtag(viewerId, "java", Status.ACTIVE, PostType.POST, ReportStatus.APPROVED,
                     Visibility.PUBLIC, Visibility.FRIEND, FriendshipStatus.ACCEPTED, pageable))
                     .thenReturn(flatPage);
 
@@ -383,7 +385,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
 
-            when(postRepository.findSavedPosts(userId, Status.ACTIVE, ReportStatus.APPROVED,
+            when(postRepository.findSavedPosts(userId, Status.ACTIVE, PostType.POST, ReportStatus.APPROVED,
                     Visibility.PUBLIC, Visibility.FRIEND, FriendshipStatus.ACCEPTED, pageable))
                     .thenReturn(flatPage);
 
@@ -414,6 +416,7 @@ class PostServiceImplTest {
         UploadFileResponse uploadResponse = UploadFileResponse.builder()
                 .fileUrl("http://file.url")
                 .publicId("pid")
+                .resourceType("IMAGE")
                 .build();
 
         Hashtag javaHashtag = Hashtag.builder().hashtagId(1L).name("java").build();
@@ -422,8 +425,7 @@ class PostServiceImplTest {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
 
             when(userServiceDomain.getByUserId(userId)).thenReturn(user);
-            when(cloudinaryService.detectMediaType(file)).thenReturn(MediaType.IMAGE);
-            when(cloudinaryService.uploadFile(file, "posts", MediaType.IMAGE)).thenReturn(uploadResponse);
+            when(mediaUploadService.upload(file, MediaUploadContext.POST)).thenReturn(uploadResponse);
 
             when(hashtagRepository.findByName("java")).thenReturn(Optional.of(javaHashtag));
             when(hashtagRepository.findByName("springboot")).thenReturn(Optional.empty());
@@ -525,7 +527,7 @@ class PostServiceImplTest {
             postService.deleteByPostId(postId);
 
             verify(postDomainService).checkOwner(post);
-            verify(cloudinaryService).deleteFile("pid", MediaType.IMAGE);
+            verify(mediaUploadService).delete("pid", MediaType.IMAGE);
             verify(postMediaRepository).deleteByPostId(postId);
             verify(postHashtagRepository).delete(postHashtag);
             verify(hashtagRepository).deleteIfUnused(100L);
@@ -555,11 +557,10 @@ class PostServiceImplTest {
         request.setFiles(List.of(file));
 
         Post post = Post.builder().id(postId).build();
-        UploadFileResponse uploadResponse = UploadFileResponse.builder().fileUrl("url").publicId("pid").build();
+        UploadFileResponse uploadResponse = UploadFileResponse.builder().fileUrl("url").publicId("pid").resourceType("IMAGE").build();
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-        when(cloudinaryService.detectMediaType(file)).thenReturn(MediaType.IMAGE);
-        when(cloudinaryService.uploadFile(file, "posts", MediaType.IMAGE)).thenReturn(uploadResponse);
+        when(mediaUploadService.upload(file, MediaUploadContext.POST)).thenReturn(uploadResponse);
 
         postService.updatePostMedia(postId, request);
 
@@ -593,7 +594,7 @@ class PostServiceImplTest {
         postService.deletePostMedia(mediaId);
 
         verify(postDomainService).checkOwner(post);
-        verify(cloudinaryService).deleteFile("pid", MediaType.IMAGE);
+        verify(mediaUploadService).delete("pid", MediaType.IMAGE);
         verify(postMediaRepository).delete(media);
     }
 

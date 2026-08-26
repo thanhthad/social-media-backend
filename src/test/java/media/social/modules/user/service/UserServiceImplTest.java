@@ -5,7 +5,8 @@ import media.social.modules.auth.Enum.RoleName;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.dto.projection.UserSearchProjection;
@@ -68,7 +69,7 @@ class UserServiceImplTest {
     private ProfileRepository profileRepository;
 
     @Mock
-    private CloudinaryService cloudinaryService;
+    private MediaUploadService mediaUploadService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -518,14 +519,13 @@ class UserServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
             when(userRepository.findByIdWithProfile(userId)).thenReturn(Optional.of(user));
-            when(cloudinaryService.uploadFile(mockFile, "covers", MediaType.IMAGE))
+            when(mediaUploadService.upload(mockFile, MediaUploadContext.PROFILE))
                     .thenReturn(uploadResponse);
 
             ProfileResponse response = userService.updateCover(request);
 
-            verify(cloudinaryService).validateFile(mockFile, MediaType.IMAGE);
-            verify(cloudinaryService).deleteFile("old-cover-public-id", MediaType.IMAGE);
-            verify(cloudinaryService).uploadFile(mockFile, "covers", MediaType.IMAGE);
+            verify(mediaUploadService).upload(mockFile, MediaUploadContext.PROFILE);
+            verify(mediaUploadService).delete("old-cover-public-id", MediaType.IMAGE);
 
             assertEquals("http://new-cover.url", profile.getCoverUrl());
             assertEquals("new-cover-public-id", profile.getCoverPublicId());
@@ -555,12 +555,12 @@ class UserServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
             when(userRepository.findByIdWithProfile(userId)).thenReturn(Optional.of(user));
-            when(cloudinaryService.uploadFile(mockFile, "covers", MediaType.IMAGE))
+            when(mediaUploadService.upload(mockFile, MediaUploadContext.PROFILE))
                     .thenReturn(uploadResponse);
 
             ProfileResponse response = userService.updateCover(request);
 
-            verify(cloudinaryService, never()).deleteFile(any(), any());
+            verify(mediaUploadService, never()).delete(any(), any());
             assertEquals("http://new-cover.url", response.getCoverUrl());
 
             verify(profileRepository).save(profile);
@@ -581,7 +581,7 @@ class UserServiceImplTest {
             assertThrows(UserNotFoundException.class,
                     () -> userService.updateCover(request));
 
-            verify(cloudinaryService, never()).uploadFile(any(), any(), any());
+            verify(mediaUploadService, never()).upload(any(), any());
             verify(profileRepository, never()).save(any());
         }
     }
@@ -612,14 +612,13 @@ class UserServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
             when(userRepository.findByIdWithProfile(userId)).thenReturn(Optional.of(user));
-            when(cloudinaryService.uploadFile(mockFile, "avatars", MediaType.IMAGE))
+            when(mediaUploadService.upload(mockFile, MediaUploadContext.PROFILE))
                     .thenReturn(uploadResponse);
 
             ProfileResponse response = userService.updateAvatar(request);
 
-            verify(cloudinaryService).validateFile(mockFile, MediaType.IMAGE);
-            verify(cloudinaryService).deleteFile("old-avatar-public-id", MediaType.IMAGE);
-            verify(cloudinaryService).uploadFile(mockFile, "avatars", MediaType.IMAGE);
+            verify(mediaUploadService).upload(mockFile, MediaUploadContext.PROFILE);
+            verify(mediaUploadService).delete("old-avatar-public-id", MediaType.IMAGE);
 
             assertEquals("http://new-avatar.url", profile.getAvatarUrl());
             assertEquals("new-avatar-public-id", profile.getAvatarPublicId());
@@ -650,12 +649,12 @@ class UserServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
             when(userRepository.findByIdWithProfile(userId)).thenReturn(Optional.of(user));
-            when(cloudinaryService.uploadFile(mockFile, "avatars", MediaType.IMAGE))
+            when(mediaUploadService.upload(mockFile, MediaUploadContext.PROFILE))
                     .thenReturn(uploadResponse);
 
             ProfileResponse response = userService.updateAvatar(request);
 
-            verify(cloudinaryService, never()).deleteFile(any(), any());
+            verify(mediaUploadService, never()).delete(any(), any());
             assertEquals("http://new-avatar.url", response.getAvatarUrl());
 
             verify(profileRepository).save(profile);
@@ -676,7 +675,7 @@ class UserServiceImplTest {
             assertThrows(UserNotFoundException.class,
                     () -> userService.updateAvatar(request));
 
-            verify(cloudinaryService, never()).uploadFile(any(), any(), any());
+            verify(mediaUploadService, never()).upload(any(), any());
             verify(profileRepository, never()).save(any());
         }
     }

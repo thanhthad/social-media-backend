@@ -3,7 +3,8 @@ package media.social.modules.story.service.impl;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.enums.ReactionType;
@@ -53,7 +54,7 @@ class StoryServiceImplTest {
     private StoryRepository storyRepository;
 
     @Mock
-    private CloudinaryService cloudinaryService;
+    private MediaUploadService mediaUploadService;
 
     @Mock
     private UserServiceDomain userServiceDomain;
@@ -91,7 +92,7 @@ class StoryServiceImplTest {
             assertEquals(Visibility.PUBLIC, saved.getVisibility());
             assertNull(saved.getMedia());
             verify(storyCacheService).evictUserStories(userId);
-            verifyNoInteractions(cloudinaryService);
+            verifyNoInteractions(mediaUploadService);
         }
     }
 
@@ -112,14 +113,13 @@ class StoryServiceImplTest {
         UploadFileResponse uploadResponse = UploadFileResponse.builder()
                 .fileUrl("http://story-url.com")
                 .publicId("public-id")
+                .resourceType("IMAGE")
                 .build();
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
             when(userServiceDomain.getByUserId(userId)).thenReturn(user);
-            when(cloudinaryService.detectMediaType(file)).thenReturn(MediaType.IMAGE);
-            when(cloudinaryService.uploadFile(eq(file), eq("stories/" + userId), eq(MediaType.IMAGE)))
-                    .thenReturn(uploadResponse);
+            when(mediaUploadService.upload(file, MediaUploadContext.STORY)).thenReturn(uploadResponse);
 
             storyService.create(request);
 
@@ -131,7 +131,6 @@ class StoryServiceImplTest {
             assertEquals("http://story-url.com", saved.getMedia().getUrl());
             assertEquals("public-id", saved.getMedia().getPublicId());
             assertEquals(MediaType.IMAGE, saved.getMedia().getMediaType());
-            verify(cloudinaryService).validateFile(file, MediaType.IMAGE);
             verify(storyCacheService).evictUserStories(userId);
         }
     }
@@ -394,7 +393,7 @@ class StoryServiceImplTest {
 
             storyService.delete(storyId);
 
-            verify(cloudinaryService).deleteFile("public-id", MediaType.IMAGE);
+            verify(mediaUploadService).delete("public-id", MediaType.IMAGE);
             verify(storyRepository).delete(story);
             verify(storyCacheService).evictUserStories(userId);
         }
@@ -418,7 +417,7 @@ class StoryServiceImplTest {
 
             storyService.delete(storyId);
 
-            verifyNoInteractions(cloudinaryService);
+            verifyNoInteractions(mediaUploadService);
             verify(storyRepository).delete(story);
             verify(storyCacheService).evictUserStories(userId);
         }

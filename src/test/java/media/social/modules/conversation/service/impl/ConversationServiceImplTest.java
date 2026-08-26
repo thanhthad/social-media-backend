@@ -19,7 +19,8 @@ import media.social.modules.conversation.repository.ConversationRepository;
 import media.social.modules.conversation.service.domain.ConversationDomainService;
 import media.social.modules.conversation.websocket.ConversationPublisher;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.service.domain.UserServiceDomain;
@@ -60,7 +61,7 @@ class ConversationServiceImplTest {
     private UserServiceDomain userServiceDomain;
 
     @Mock
-    private CloudinaryService cloudinaryService;
+    private MediaUploadService mediaUploadService;
 
     @Mock
     private ConversationPublisher conversationPublisher;
@@ -222,7 +223,7 @@ class ConversationServiceImplTest {
             when(userServiceDomain.getByUserId(2L)).thenReturn(user2);
             when(userServiceDomain.getByUserId(3L)).thenReturn(user3);
             when(conversationService.create(ConversationType.GROUP)).thenReturn(newConv);
-            when(cloudinaryService.uploadFile(avatarFile, "conversation/avatar", MediaType.IMAGE))
+            when(mediaUploadService.upload(avatarFile, MediaUploadContext.MESSAGE))
                     .thenReturn(uploadResponse);
             when(conversationMemberRepository.findMembersProjectionByConversationId(CONVERSATION_ID))
                     .thenReturn(Collections.emptyList());
@@ -234,7 +235,7 @@ class ConversationServiceImplTest {
             assertThat(response.getDisplayName()).isEqualTo("Dev Team");
             assertThat(response.getAvatarUrl()).isEqualTo("https://cloudinary.com/avatar.png");
 
-            verify(cloudinaryService).validateFile(avatarFile, MediaType.IMAGE);
+            verify(mediaUploadService).upload(avatarFile, MediaUploadContext.MESSAGE);
             verify(conversationRepository).save(newConv);
             verify(conversationMemberRepository).save(any(ConversationMember.class)); // owner
             verify(conversationMemberRepository).saveAll(anyList()); // other members
@@ -272,7 +273,7 @@ class ConversationServiceImplTest {
             assertThat(response.getDisplayName()).isEqualTo("Design Team");
             assertThat(response.getAvatarUrl()).isNull();
 
-            verify(cloudinaryService, never()).uploadFile(any(), any(), any());
+            verify(mediaUploadService, never()).upload(any(), any());
             verify(conversationRepository).save(newConv);
             verify(conversationMemberRepository).save(any(ConversationMember.class));
             verify(conversationMemberRepository).saveAll(anyList());
@@ -383,12 +384,11 @@ class ConversationServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
             mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
             when(conversationRepository.findById(CONVERSATION_ID)).thenReturn(Optional.of(conversation));
-            when(cloudinaryService.uploadFile(file, "conversation/avatar", MediaType.IMAGE)).thenReturn(uploadResponse);
+            when(mediaUploadService.upload(file, MediaUploadContext.MESSAGE)).thenReturn(uploadResponse);
 
             conversationServiceImpl.updateGroupAvatar(CONVERSATION_ID, file);
 
-            verify(cloudinaryService).validateFile(file, MediaType.IMAGE);
-            verify(cloudinaryService).deleteFile("old-pub-id", MediaType.IMAGE);
+            verify(mediaUploadService).delete("old-pub-id", MediaType.IMAGE);
             assertThat(conversation.getAvatarUrl()).isEqualTo("https://cloudinary.com/new.png");
             assertThat(conversation.getAvatarPublicId()).isEqualTo("new-pub-id");
         }
@@ -531,7 +531,7 @@ class ConversationServiceImplTest {
 
             conversationServiceImpl.deleteConversation(CONVERSATION_ID);
 
-            verify(cloudinaryService).deleteFile("avatar-id", MediaType.IMAGE);
+            verify(mediaUploadService).delete("avatar-id", MediaType.IMAGE);
             verify(conversationRepository).delete(conversation);
         }
     }
@@ -552,7 +552,7 @@ class ConversationServiceImplTest {
 
             conversationServiceImpl.deleteConversation(CONVERSATION_ID);
 
-            verify(cloudinaryService, never()).deleteFile(any(), any());
+            verify(mediaUploadService, never()).delete(any(), any());
             verify(conversationRepository).delete(conversation);
         }
     }

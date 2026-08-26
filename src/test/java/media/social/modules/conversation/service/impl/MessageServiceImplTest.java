@@ -19,7 +19,8 @@ import media.social.modules.conversation.repository.MessageRepository;
 import media.social.modules.conversation.service.domain.ConversationDomainService;
 import media.social.modules.conversation.websocket.MessagePublisher;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.user.entity.User;
@@ -68,7 +69,7 @@ class MessageServiceImplTest {
     private UserServiceDomain userServiceDomain;
 
     @Mock
-    private CloudinaryService cloudinaryService;
+    private MediaUploadService mediaUploadService;
 
     @Mock
     private MessageMediaRepository messageMediaRepository;
@@ -216,8 +217,6 @@ class MessageServiceImplTest {
     @Test
     void create_invalidFileMediaType_throwsInvalidMediaException() {
         MultipartFile badFile = mock(MultipartFile.class);
-        when(badFile.isEmpty()).thenReturn(false);
-        when(badFile.getOriginalFilename()).thenReturn("malicious.exe");
 
         CreateMessageRequest request = new CreateMessageRequest();
         request.setConversationId(CONVERSATION_ID);
@@ -233,6 +232,8 @@ class MessageServiceImplTest {
             when(conversationMemberRepository.existsByConversationIdAndUserId(CONVERSATION_ID, USER_ID))
                     .thenReturn(true);
             when(userServiceDomain.getByUserId(USER_ID)).thenReturn(sender);
+            when(mediaUploadService.upload(badFile, MediaUploadContext.MESSAGE))
+                    .thenThrow(new InvalidMediaException("Invalid media type"));
 
             assertThrows(InvalidMediaException.class,
                     () -> messageService.create(request));
@@ -242,8 +243,6 @@ class MessageServiceImplTest {
     @Test
     void create_success_withImageFileAndReply() {
         MultipartFile imageFile = mock(MultipartFile.class);
-        when(imageFile.isEmpty()).thenReturn(false);
-        when(imageFile.getOriginalFilename()).thenReturn("photo.png");
 
         CreateMessageRequest request = new CreateMessageRequest();
         request.setConversationId(CONVERSATION_ID);
@@ -259,6 +258,7 @@ class MessageServiceImplTest {
         UploadFileResponse uploadResponse = UploadFileResponse.builder()
                 .fileUrl("https://cloudinary.com/photo.png")
                 .publicId("photo-pub-id")
+                .resourceType("IMAGE")
                 .build();
 
         OffsetDateTime now = OffsetDateTime.now();
@@ -278,7 +278,7 @@ class MessageServiceImplTest {
                     .thenReturn(true);
             when(userServiceDomain.getByUserId(USER_ID)).thenReturn(sender);
             when(messageRepository.findById(200L)).thenReturn(Optional.of(replyMessage));
-            when(cloudinaryService.uploadFile(imageFile, "conversation/message", MediaType.IMAGE))
+            when(mediaUploadService.upload(imageFile, MediaUploadContext.MESSAGE))
                     .thenReturn(uploadResponse);
             when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
             when(conversationMemberRepository.findOtherMembers(CONVERSATION_ID, USER_ID))
@@ -432,7 +432,7 @@ class MessageServiceImplTest {
             messageService.delete(MESSAGE_ID);
 
             verify(conversationDomainService).checkOwner(messageToDelete);
-            verify(cloudinaryService).deleteFile("media-pub-id", MediaType.IMAGE);
+            verify(mediaUploadService).delete("media-pub-id", MediaType.IMAGE);
             assertThat(conversation.getLastMessage()).isEqualTo(previousMessage);
             assertThat(conversation.getLastMessageAt()).isEqualTo(prevTime);
             assertThat(messageToDelete.getDeleted()).isTrue();
@@ -469,8 +469,6 @@ class MessageServiceImplTest {
     @Test
     void create_success_withVideoFile() {
         MultipartFile videoFile = mock(MultipartFile.class);
-        when(videoFile.isEmpty()).thenReturn(false);
-        when(videoFile.getOriginalFilename()).thenReturn("video.mp4");
 
         CreateMessageRequest request = new CreateMessageRequest();
         request.setConversationId(CONVERSATION_ID);
@@ -482,6 +480,7 @@ class MessageServiceImplTest {
         UploadFileResponse uploadResponse = UploadFileResponse.builder()
                 .fileUrl("https://cloudinary.com/video.mp4")
                 .publicId("video-pub-id")
+                .resourceType("VIDEO")
                 .build();
 
         Message savedMessage = Message.builder()
@@ -497,7 +496,7 @@ class MessageServiceImplTest {
             when(conversationRepository.findById(CONVERSATION_ID)).thenReturn(Optional.of(conversation));
             when(conversationMemberRepository.existsByConversationIdAndUserId(CONVERSATION_ID, USER_ID)).thenReturn(true);
             when(userServiceDomain.getByUserId(USER_ID)).thenReturn(sender);
-            when(cloudinaryService.uploadFile(videoFile, "conversation/message", MediaType.VIDEO))
+            when(mediaUploadService.upload(videoFile, MediaUploadContext.MESSAGE))
                     .thenReturn(uploadResponse);
             when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
             when(conversationMemberRepository.findOtherMembers(CONVERSATION_ID, USER_ID))
@@ -506,7 +505,7 @@ class MessageServiceImplTest {
             MessageResponse response = messageService.create(request);
 
             assertThat(response).isNotNull();
-            verify(cloudinaryService).uploadFile(videoFile, "conversation/message", MediaType.VIDEO);
+            verify(mediaUploadService).upload(videoFile, MediaUploadContext.MESSAGE);
         }
     }
 
@@ -541,7 +540,7 @@ class MessageServiceImplTest {
 
             assertThat(response).isNotNull();
             assertThat(response.getContent()).isEqualTo("Simple text message");
-            verify(cloudinaryService, never()).uploadFile(any(), any(), any());
+            verify(mediaUploadService, never()).upload(any(), any());
         }
     }
 

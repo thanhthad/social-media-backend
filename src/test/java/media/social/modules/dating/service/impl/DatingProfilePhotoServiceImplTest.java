@@ -12,7 +12,8 @@ import media.social.modules.dating.exception.photo.UnauthorizedDatingProfilePhot
 import media.social.modules.dating.repository.DatingProfilePhotoRepository;
 import media.social.modules.dating.repository.DatingProfileRepository;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.user.entity.User;
 import media.social.modules.user.exception.user.UserNotFoundException;
@@ -38,7 +39,7 @@ class DatingProfilePhotoServiceImplTest {
     private DatingProfilePhotoRepository datingProfilePhotoRepository;
 
     @Mock
-    private CloudinaryService cloudinaryService;
+    private MediaUploadService mediaUploadService;
 
     @Mock
     private DatingProfileRepository datingProfileRepository;
@@ -81,6 +82,7 @@ class DatingProfilePhotoServiceImplTest {
         UploadFileResponse uploadResponse = UploadFileResponse.builder()
                 .fileUrl("https://cdn.example.com/photo.jpg")
                 .publicId("DatingPhoto/abc123")
+                .resourceType("IMAGE")
                 .build();
 
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
@@ -88,15 +90,13 @@ class DatingProfilePhotoServiceImplTest {
 
             when(datingProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(datingProfile));
             when(datingProfilePhotoRepository.countByDatingProfileId(PROFILE_ID)).thenReturn(0L);
-            when(cloudinaryService.detectMediaType(mockFile)).thenReturn(MediaType.IMAGE);
-            when(cloudinaryService.uploadFile(mockFile, "DatingPhoto/", MediaType.IMAGE)).thenReturn(uploadResponse);
+            when(mediaUploadService.upload(mockFile, MediaUploadContext.PROFILE)).thenReturn(uploadResponse);
             when(datingProfilePhotoRepository.findTopByDatingProfileIdOrderByDisplayOrderDesc(PROFILE_ID))
                     .thenReturn(Optional.empty());
 
             datingProfilePhotoService.createPhoto(request);
 
-            verify(cloudinaryService).validateFile(mockFile, MediaType.IMAGE);
-            verify(cloudinaryService).uploadFile(mockFile, "DatingPhoto/", MediaType.IMAGE);
+            verify(mediaUploadService).upload(mockFile, MediaUploadContext.PROFILE);
             verify(datingProfilePhotoRepository).save(argThat(photo ->
                     Boolean.TRUE.equals(photo.getPrimary())
                             && photo.getDisplayOrder() == 0
@@ -116,6 +116,7 @@ class DatingProfilePhotoServiceImplTest {
         UploadFileResponse uploadResponse = UploadFileResponse.builder()
                 .fileUrl("https://cdn.example.com/photo2.jpg")
                 .publicId("DatingPhoto/xyz789")
+                .resourceType("IMAGE")
                 .build();
 
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
@@ -123,8 +124,7 @@ class DatingProfilePhotoServiceImplTest {
 
             when(datingProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(datingProfile));
             when(datingProfilePhotoRepository.countByDatingProfileId(PROFILE_ID)).thenReturn(3L);
-            when(cloudinaryService.detectMediaType(mockFile)).thenReturn(MediaType.IMAGE);
-            when(cloudinaryService.uploadFile(mockFile, "DatingPhoto/", MediaType.IMAGE)).thenReturn(uploadResponse);
+            when(mediaUploadService.upload(mockFile, MediaUploadContext.PROFILE)).thenReturn(uploadResponse);
             when(datingProfilePhotoRepository.findTopByDatingProfileIdOrderByDisplayOrderDesc(PROFILE_ID))
                     .thenReturn(Optional.of(lastPhoto));
 
@@ -148,7 +148,7 @@ class DatingProfilePhotoServiceImplTest {
                     () -> datingProfilePhotoService.createPhoto(request));
 
             verify(datingProfilePhotoRepository, never()).save(any());
-            verify(cloudinaryService, never()).uploadFile(any(), any(), any());
+            verify(mediaUploadService, never()).upload(any(), any());
         }
     }
 
@@ -163,26 +163,31 @@ class DatingProfilePhotoServiceImplTest {
             assertThrows(DatingProfilePhotoLimitExceededException.class,
                     () -> datingProfilePhotoService.createPhoto(request));
 
-            verify(cloudinaryService, never()).detectMediaType(any());
-            verify(cloudinaryService, never()).uploadFile(any(), any(), any());
+            verify(mediaUploadService, never()).upload(any(), any());
             verify(datingProfilePhotoRepository, never()).save(any());
         }
     }
 
     @Test
     void createPhoto_videoFile_throwsInvalidDatingProfilePhotoException() {
+        UploadFileResponse videoResponse = UploadFileResponse.builder()
+                .fileUrl("https://cdn.example.com/video.mp4")
+                .publicId("DatingPhoto/vid123")
+                .resourceType("VIDEO")
+                .build();
+
         try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
             mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
 
             when(datingProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(datingProfile));
             when(datingProfilePhotoRepository.countByDatingProfileId(PROFILE_ID)).thenReturn(2L);
-            when(cloudinaryService.detectMediaType(mockFile)).thenReturn(MediaType.VIDEO);
+            when(mediaUploadService.upload(mockFile, MediaUploadContext.PROFILE)).thenReturn(videoResponse);
 
             assertThrows(InvalidDatingProfilePhotoException.class,
                     () -> datingProfilePhotoService.createPhoto(request));
 
-            verify(cloudinaryService, never()).validateFile(any(), any());
-            verify(cloudinaryService, never()).uploadFile(any(), any(), any());
+            verify(mediaUploadService).upload(mockFile, MediaUploadContext.PROFILE);
+            verify(mediaUploadService).delete("DatingPhoto/vid123", MediaType.VIDEO);
             verify(datingProfilePhotoRepository, never()).save(any());
         }
     }
@@ -217,7 +222,7 @@ class DatingProfilePhotoServiceImplTest {
 
             datingProfilePhotoService.deletePhoto(PHOTO_ID);
 
-            verify(cloudinaryService).deleteFile("DatingPhoto/primary123", MediaType.IMAGE);
+            verify(mediaUploadService).delete("DatingPhoto/primary123", MediaType.IMAGE);
             verify(datingProfilePhotoRepository).delete(photo);
             verify(datingProfilePhotoRepository).decreaseDisplayOrderAfterDelete(PROFILE_ID, 0);
             assertTrue(nextPhoto.getPrimary());
@@ -242,7 +247,7 @@ class DatingProfilePhotoServiceImplTest {
 
             datingProfilePhotoService.deletePhoto(PHOTO_ID);
 
-            verify(cloudinaryService).deleteFile("DatingPhoto/secondary456", MediaType.IMAGE);
+            verify(mediaUploadService).delete("DatingPhoto/secondary456", MediaType.IMAGE);
             verify(datingProfilePhotoRepository).delete(photo);
             verify(datingProfilePhotoRepository).decreaseDisplayOrderAfterDelete(PROFILE_ID, 2);
             verify(datingProfilePhotoRepository, never()).findTopByDatingProfileIdOrderByDisplayOrderAsc(any());
@@ -260,7 +265,7 @@ class DatingProfilePhotoServiceImplTest {
             assertThrows(DatingProfilePhotoNotFoundException.class,
                     () -> datingProfilePhotoService.deletePhoto(PHOTO_ID));
 
-            verify(cloudinaryService, never()).deleteFile(any(), any());
+            verify(mediaUploadService, never()).delete(any(), any());
             verify(datingProfilePhotoRepository, never()).delete(any());
         }
     }
@@ -284,7 +289,7 @@ class DatingProfilePhotoServiceImplTest {
 
             datingProfilePhotoService.deletePhoto(PHOTO_ID);
 
-            verify(cloudinaryService).deleteFile("DatingPhoto/onlyphoto", MediaType.IMAGE);
+            verify(mediaUploadService).delete("DatingPhoto/onlyphoto", MediaType.IMAGE);
             verify(datingProfilePhotoRepository).delete(photo);
             verify(datingProfilePhotoRepository).decreaseDisplayOrderAfterDelete(PROFILE_ID, 0);
             verify(datingProfilePhotoRepository, never()).save(any());

@@ -219,4 +219,12 @@ class MediaUploadServiceImplTest {
 
         verify(cloudinaryStorageService).upload(imageFile, "conversation/message", MediaType.IMAGE);
     }
+
+    @Test
+    @DisplayName("delete delegates to cloudinaryStorageService.delete")
+    void delete_delegatesToStorageService() {
+        service.delete("test-pub-id", MediaType.IMAGE);
+
+        verify(cloudinaryStorageService).delete("test-pub-id", MediaType.IMAGE);
+    }
 }

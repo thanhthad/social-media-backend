@@ -5,6 +5,7 @@ import media.social.modules.post.dto.projection.PostFlatProjection;
 import media.social.modules.post.dto.projection.PostMediaProjection;
 import media.social.modules.post.dto.response.post.PostCacheDTO;
 import media.social.modules.post.enums.MediaType;
+import media.social.modules.post.enums.PostType;
 import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.post.exception.post.PostNotFoundException;
@@ -58,7 +59,7 @@ class PostCacheServiceTest {
         when(media.getUrl()).thenReturn("http://media.url");
         when(media.getType()).thenReturn(MediaType.IMAGE);
 
-        when(postRepository.findPostDetailById(postId, Status.ACTIVE, visibilities, ReportStatus.APPROVED)).thenReturn(Optional.of(flat));
+        when(postRepository.findPostDetailById(postId, PostType.POST, Status.ACTIVE, visibilities, ReportStatus.APPROVED)).thenReturn(Optional.of(flat));
         when(postMediaRepository.findMediaByPostId(postId)).thenReturn(List.of(media));
 
         PostCacheDTO result = postCacheService.getPost(postId, visibilities);
@@ -76,7 +77,7 @@ class PostCacheServiceTest {
         assertEquals(1, result.getPostMediaResponses().size());
         assertEquals(100L, result.getPostMediaResponses().get(0).getPostMediaId());
 
-        verify(postRepository).findPostDetailById(postId, Status.ACTIVE, visibilities, ReportStatus.APPROVED);
+        verify(postRepository).findPostDetailById(postId, PostType.POST, Status.ACTIVE, visibilities, ReportStatus.APPROVED);
         verify(postMediaRepository).findMediaByPostId(postId);
     }
 
@@ -85,7 +86,7 @@ class PostCacheServiceTest {
         Long postId = 1L;
         List<Visibility> visibilities = List.of(Visibility.PUBLIC);
 
-        when(postRepository.findPostDetailById(postId, Status.ACTIVE, visibilities, ReportStatus.APPROVED)).thenReturn(Optional.empty());
+        when(postRepository.findPostDetailById(postId, PostType.POST, Status.ACTIVE, visibilities, ReportStatus.APPROVED)).thenReturn(Optional.empty());
 
         assertThrows(PostNotFoundException.class, () -> postCacheService.getPost(postId, visibilities));
         verify(postMediaRepository, never()).findMediaByPostId(any());
