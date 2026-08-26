@@ -48,6 +48,7 @@ public class MediaUploadProperties {
         private ContextPolicyProperties story   = new ContextPolicyProperties(100L * 1024 * 1024, 30);
         private ContextPolicyProperties message = new ContextPolicyProperties(50L * 1024 * 1024, 300);
         private ContextPolicyProperties profile = new ContextPolicyProperties(300L * 1024 * 1024, 0);
+        private ContextPolicyProperties reel = new ContextPolicyProperties(200 * 1024 * 1024, 300);
     }
 
     @Getter

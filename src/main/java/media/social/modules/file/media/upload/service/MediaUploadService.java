@@ -2,6 +2,7 @@ package media.social.modules.file.media.upload.service;
 
 import media.social.modules.file.dto.response.UploadFileResponse;
 import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.post.enums.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -25,4 +26,13 @@ public interface MediaUploadService {
      * @return upload result with URL, publicId and available metadata
      */
     UploadFileResponse upload(MultipartFile file, MediaUploadContext context);
+
+    /**
+     * Deletes a previously uploaded file from storage.
+     * If publicId is null or blank, the operation is silently skipped.
+     *
+     * @param publicId  the storage public ID returned at upload time
+     * @param mediaType IMAGE or VIDEO
+     */
+    void delete(String publicId, MediaType mediaType);
 }

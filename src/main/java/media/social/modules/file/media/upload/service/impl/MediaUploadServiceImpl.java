@@ -119,6 +119,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             case STORY   -> "stories";
             case MESSAGE -> "conversation/message";
             case PROFILE -> "profiles";
+            case REEL ->  "reels";
         };
     }
 
@@ -131,6 +132,12 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             case STORY   -> "Story";
             case MESSAGE -> "Message";
             case PROFILE -> "Profile";
+            case REEL ->  "reels";
         };
+    }
+
+    @Override
+    public void delete(String publicId, MediaType mediaType) {
+        cloudinaryStorageService.delete(publicId, mediaType);
     }
 }

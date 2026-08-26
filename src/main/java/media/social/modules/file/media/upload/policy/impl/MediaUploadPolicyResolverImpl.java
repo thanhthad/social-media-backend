@@ -67,6 +67,14 @@ public class MediaUploadPolicyResolverImpl implements MediaUploadPolicyResolver 
                 video.getAllowedExtensions()
         ));
 
+        map.put(MediaUploadContext.REEL, new MediaUploadPolicy(
+                img.getMaxSizeBytes(),
+                pol.getProfile().getMaxVideoSizeBytes(),
+                pol.getProfile().getMaxVideoDurationSeconds(),
+                img.getAllowedExtensions(),
+                video.getAllowedExtensions()
+        ));
+
         return map;
     }
 }
