@@ -10,7 +10,8 @@ import media.social.modules.dating.repository.DatingProfilePhotoRepository;
 import media.social.modules.dating.repository.DatingProfileRepository;
 import media.social.modules.dating.service.DatingProfilePhotoService;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.user.exception.user.UserNotFoundException;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DatingProfilePhotoServiceImpl implements DatingProfilePhotoService {
 
     private final DatingProfilePhotoRepository datingProfilePhotoRepository;
-    private final CloudinaryService cloudinaryService;
+    private final MediaUploadService mediaUploadService;
     private final DatingProfileRepository datingProfileRepository;
 
     @Override
@@ -50,28 +51,16 @@ public class DatingProfilePhotoServiceImpl implements DatingProfilePhotoService 
             );
         }
 
-        MediaType type =
-                cloudinaryService.detectMediaType(
-                        request.getFile()
-                );
+        UploadFileResponse result =
+                mediaUploadService.upload(request.getFile(), MediaUploadContext.PROFILE);
 
-        if (type.equals(MediaType.VIDEO)) {
+        if (MediaType.VIDEO.name().equalsIgnoreCase(result.getResourceType())) {
+            // Ảnh dating không cho phép video — xoá file vừa upload rồi throw
+            mediaUploadService.delete(result.getPublicId(), MediaType.VIDEO);
             throw new InvalidDatingProfilePhotoException(
                     "Dating profile photo must be an image"
             );
         }
-
-        cloudinaryService.validateFile(
-                request.getFile(),
-                type
-        );
-
-        UploadFileResponse result =
-                cloudinaryService.uploadFile(
-                        request.getFile(),
-                        "DatingPhoto/",
-                        type
-                );
 
         Integer displayOrder =
                 datingProfilePhotoRepository
@@ -127,10 +116,7 @@ public class DatingProfilePhotoServiceImpl implements DatingProfilePhotoService 
         Integer deletedOrder =
                 photo.getDisplayOrder();
 
-        cloudinaryService.deleteFile(
-                photo.getPublicId(),
-                MediaType.IMAGE
-        );
+        mediaUploadService.delete(photo.getPublicId(), MediaType.IMAGE);
 
         datingProfilePhotoRepository.delete(photo);
 

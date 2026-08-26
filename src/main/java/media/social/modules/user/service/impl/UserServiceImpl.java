@@ -22,7 +22,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.request.user.ChangePasswordRequest;
 import media.social.modules.user.dto.request.user.UpdateAvatarRequest;
@@ -47,7 +48,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
-    private final CloudinaryService cloudinaryService;
+    private final MediaUploadService mediaUploadService;
     private final PasswordEncoder passwordEncoder;
     private final UserRoleServiceDomain userRoleServiceDomain;
     private final FriendShipDomain friendShipDomain;
@@ -269,24 +270,11 @@ public class UserServiceImpl implements UserService {
 
         Profile profile = user.getProfile();
 
-        cloudinaryService.validateFile(
-                request.getFile(),
-                MediaType.IMAGE
-        );
-
         UploadFileResponse upload =
-                cloudinaryService.uploadFile(
-                        request.getFile(),
-                        "covers",
-                        MediaType.IMAGE
-                );
+                mediaUploadService.upload(request.getFile(), MediaUploadContext.PROFILE);
 
-        if(profile.getCoverPublicId() != null){
-
-            cloudinaryService.deleteFile(
-                    profile.getCoverPublicId(),
-                    MediaType.IMAGE
-            );
+        if (profile.getCoverPublicId() != null) {
+            mediaUploadService.delete(profile.getCoverPublicId(), MediaType.IMAGE);
         }
 
         profile.setCoverUrl(
@@ -318,23 +306,11 @@ public class UserServiceImpl implements UserService {
 
         Profile profile = user.getProfile();
 
-        cloudinaryService.validateFile(
-                request.getFile(),
-                MediaType.IMAGE
-        );
-
         UploadFileResponse upload =
-                cloudinaryService.uploadFile(
-                        request.getFile(),
-                        "avatars",
-                        MediaType.IMAGE
-                );
+                mediaUploadService.upload(request.getFile(), MediaUploadContext.PROFILE);
 
         if (profile.getAvatarPublicId() != null) {
-            cloudinaryService.deleteFile(
-                    profile.getAvatarPublicId(),
-                    MediaType.IMAGE
-            );
+            mediaUploadService.delete(profile.getAvatarPublicId(), MediaType.IMAGE);
         }
 
         profile.setAvatarUrl(upload.getFileUrl());
