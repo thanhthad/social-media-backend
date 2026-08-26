@@ -22,7 +22,8 @@ import media.social.modules.conversation.service.ConversationService;
 import media.social.modules.conversation.service.domain.ConversationDomainService;
 import media.social.modules.conversation.websocket.ConversationPublisher;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.service.CloudinaryService;
+import media.social.modules.file.media.upload.MediaUploadContext;
+import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.user.entity.User;
 import media.social.modules.auth.security.context.UserContextHolder;
@@ -46,7 +47,7 @@ public class ConversationServiceImpl implements ConversationService {
     private final ConversationRepository conversationRepository;
     private final ConversationDomainService conversationService;
     private final UserServiceDomain userServiceDomain;
-    private final CloudinaryService cloudinaryService;
+    private final MediaUploadService mediaUploadService;
     private final ConversationPublisher conversationPublisher;
 
     @Override
@@ -142,24 +143,14 @@ public class ConversationServiceImpl implements ConversationService {
         conversation.setOwner(currentUser);
         conversation.setName(request.getName());
 
-        if(request.getAvatar() != null
+        if (request.getAvatar() != null
                 && !request.getAvatar().isEmpty()) {
-            cloudinaryService.validateFile(
-                    request.getAvatar(),
-                    MediaType.IMAGE
-            );
+
             UploadFileResponse upload =
-                    cloudinaryService.uploadFile(
-                            request.getAvatar(),
-                            "conversation/avatar",
-                            MediaType.IMAGE
-                    );
-            conversation.setAvatarUrl(
-                    upload.getFileUrl()
-            );
-            conversation.setAvatarPublicId(
-                    upload.getPublicId()
-            );
+                    mediaUploadService.upload(request.getAvatar(), MediaUploadContext.MESSAGE);
+
+            conversation.setAvatarUrl(upload.getFileUrl());
+            conversation.setAvatarPublicId(upload.getPublicId());
         }
         conversationRepository.save(conversation);
         ConversationMember owner =
@@ -242,29 +233,13 @@ public class ConversationServiceImpl implements ConversationService {
                     "Only owner can update avatar"
             );
         }
-        cloudinaryService.validateFile(
-                file,
-                MediaType.IMAGE
-        );
         UploadFileResponse upload =
-                cloudinaryService.uploadFile(
-                        file,
-                        "conversation/avatar",
-                        MediaType.IMAGE
-                );
-        if(conversation.getAvatarPublicId()!=null){
-
-            cloudinaryService.deleteFile(
-                    conversation.getAvatarPublicId(),
-                    MediaType.IMAGE
-            );
+                mediaUploadService.upload(file, MediaUploadContext.MESSAGE);
+        if (conversation.getAvatarPublicId() != null) {
+            mediaUploadService.delete(conversation.getAvatarPublicId(), MediaType.IMAGE);
         }
-        conversation.setAvatarUrl(
-                upload.getFileUrl()
-        );
-        conversation.setAvatarPublicId(
-                upload.getPublicId()
-        );
+        conversation.setAvatarUrl(upload.getFileUrl());
+        conversation.setAvatarPublicId(upload.getPublicId());
     }
 
     @Transactional
@@ -327,12 +302,8 @@ public class ConversationServiceImpl implements ConversationService {
                     "Only owner can delete group"
             );
         }
-        if(conversation.getAvatarPublicId()!=null){
-
-            cloudinaryService.deleteFile(
-                    conversation.getAvatarPublicId(),
-                    MediaType.IMAGE
-            );
+        if (conversation.getAvatarPublicId() != null) {
+            mediaUploadService.delete(conversation.getAvatarPublicId(), MediaType.IMAGE);
         }
         conversationRepository.delete(conversation);
     }

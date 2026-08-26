@@ -16,7 +16,6 @@ import media.social.modules.conversation.service.MessageService;
 import media.social.modules.conversation.service.domain.ConversationDomainService;
 import media.social.modules.conversation.websocket.MessagePublisher;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.media.storage.CloudinaryStorageService;
 import media.social.modules.file.media.upload.MediaUploadContext;
 import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
@@ -47,7 +46,6 @@ public class MessageServiceImpl implements MessageService {
     private final ConversationDomainService conversationDomainService;
     private final UserServiceDomain userServiceDomain;
     private final MediaUploadService mediaUploadService;
-    private final CloudinaryStorageService cloudinaryStorageService;
     private final MessageMediaRepository messageMediaRepository;
     private final MessagePublisher messagePublisher;
     private final MessageReactionRepository messageReactionRepository;
@@ -277,13 +275,9 @@ public class MessageServiceImpl implements MessageService {
         }
 
         message.getMedia()
-                .forEach(media -> {
-
-                    if(media.getPublicId() != null) {
-                        cloudinaryStorageService.delete(
-                                media.getPublicId(),
-                                media.getMediaType()
-                        );
+                .forEach(m -> {
+                    if (m.getPublicId() != null) {
+                        mediaUploadService.delete(m.getPublicId(), m.getMediaType());
                     }
                 });
 
