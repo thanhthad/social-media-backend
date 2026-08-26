@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.media.storage.CloudinaryStorageService;
 import media.social.modules.file.media.upload.MediaUploadContext;
 import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.enums.MediaType;
@@ -46,7 +45,6 @@ public class StoryServiceImpl implements StoryService {
 
     private final StoryRepository storyRepository;
     private final MediaUploadService mediaUploadService;
-    private final CloudinaryStorageService cloudinaryStorageService;
     private final UserServiceDomain userServiceDomain;
     private final FriendShipDomain friendShipDomain;
     private final StoryCacheService storyCacheService;
@@ -305,10 +303,7 @@ public class StoryServiceImpl implements StoryService {
         StoryMedia media = story.getMedia();
 
         if (media != null) {
-            cloudinaryStorageService.delete(
-                    media.getPublicId(),
-                    media.getMediaType()
-            );
+            mediaUploadService.delete(media.getPublicId(), media.getMediaType());
         }
 
         storyRepository.delete(story);

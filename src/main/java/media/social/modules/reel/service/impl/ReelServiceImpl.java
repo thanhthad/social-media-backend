@@ -5,7 +5,6 @@ import lombok.extern.log4j.Log4j2;
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.file.dto.response.UploadFileResponse;
-import media.social.modules.file.media.storage.CloudinaryStorageService;
 import media.social.modules.file.media.upload.MediaUploadContext;
 import media.social.modules.file.media.upload.service.MediaUploadService;
 import media.social.modules.post.entity.Post;
@@ -52,7 +51,6 @@ public class ReelServiceImpl implements ReelService {
     private final ReelRepository reelRepository;
     private final UserServiceDomain userServiceDomain;
     private final MediaUploadService mediaUploadService;
-    private final CloudinaryStorageService cloudinaryStorageService;
     private final BlockPolicyService blockPolicyService;
     private final FriendShipDomain friendShipDomain;
     private final ReactionRepository reactionRepository;
@@ -276,20 +274,20 @@ public class ReelServiceImpl implements ReelService {
 
         checkOwner(post);
 
-        // Xoá ReelDetail (thumbnail trên Cloudinary)
+        // Xoá ReelDetail (thumbnail)
         reelRepository.findByPostId(reelId).ifPresent(detail -> {
-            cloudinaryStorageService.delete(
+            mediaUploadService.delete(
                     detail.getThumbnailPublicId(),
                     media.social.modules.post.enums.MediaType.IMAGE
             );
             reelRepository.delete(detail);
         });
 
-        // Xoá video media trên Cloudinary + DB
+        // Xoá video media + DB
         postMediaRepository.findByPostId(reelId)
-                .forEach(media -> cloudinaryStorageService.delete(
-                        media.getPublicId(),
-                        media.getMediaType()
+                .forEach(m -> mediaUploadService.delete(
+                        m.getPublicId(),
+                        m.getMediaType()
                 ));
 
         postMediaRepository.deleteByPostId(reelId);

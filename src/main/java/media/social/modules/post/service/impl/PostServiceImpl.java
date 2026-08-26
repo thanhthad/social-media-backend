@@ -17,7 +17,6 @@ import media.social.modules.post.dto.response.post.PostResponse;
 import media.social.modules.file.dto.response.UploadFileResponse;
 import media.social.modules.file.media.upload.MediaUploadContext;
 import media.social.modules.file.media.upload.service.MediaUploadService;
-import media.social.modules.file.media.storage.CloudinaryStorageService;
 import media.social.modules.post.enums.PostType;
 import media.social.modules.post.enums.ReportStatus;
 import media.social.modules.post.enums.Visibility;
@@ -56,7 +55,6 @@ public class PostServiceImpl implements PostService {
     private final PostMediaRepository postMediaRepository;
     private final UserServiceDomain userServiceDomain;
     private final MediaUploadService mediaUploadService;
-    private final CloudinaryStorageService cloudinaryStorageService;
     private final HashtagRepository hashtagRepository;
     private final PostHashtagRepository postHashtagRepository;
     private final BlockPolicyService blockPolicyService;
@@ -479,7 +477,7 @@ public class PostServiceImpl implements PostService {
 
         postMediaRepository.findByPostId(postId)
                 .forEach(media ->
-                        cloudinaryStorageService.delete(
+                        mediaUploadService.delete(
                                 media.getPublicId(),
                                 media.getMediaType()
                         ));
@@ -538,7 +536,7 @@ public class PostServiceImpl implements PostService {
             );
         }
 
-        cloudinaryStorageService.delete(media.getPublicId(), media.getMediaType());
+        mediaUploadService.delete(media.getPublicId(), media.getMediaType());
 
         postCacheService.evictPost(post.getId());
         postMediaRepository.delete(media);
