@@ -27,33 +27,30 @@ public class ReactionController {
             @RequestBody @Valid ReactionRequest request
     ) {
 
-        reactionService.react(
-                postId,
-                request.getType()
-        );
-
         return ResponseData.success(
-                null,
+                reactionService.react(
+                        postId,
+                        request.getType()
+                ),
                 "Reaction successfully",
                 HttpStatus.OK
         );
     }
 
-    // ================= REMOVE REACTION =================
-    @DeleteMapping("/{postId}/reaction")
-    @Operation(summary = "Remove reaction from post")
-    public ResponseEntity<?> removeReaction(
+    // ================= REEL REACTION =================
+
+    @PostMapping("/{postId}/reel/reaction")
+    @Operation(summary = "Love or unlove a reel")
+    public ResponseEntity<?> loveReel(
             @PathVariable Long postId
     ) {
-
-        reactionService.removeReaction(postId);
-
         return ResponseData.success(
-                null,
-                "Remove reaction successfully",
+                reactionService.loveReel(postId),
+                "Reel reaction successfully",
                 HttpStatus.OK
         );
     }
+
 
     // ================= COUNT REACTION =================
     @GetMapping("/{postId}/reactions/count")

@@ -6,7 +6,7 @@ public interface UserReactionProjection {
 
     Long getId();
 
-    String getEmail();
+    String getUserName();
 
     String getAvatarUrl();
 

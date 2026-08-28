@@ -140,4 +140,9 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     public void delete(String publicId, MediaType mediaType) {
         cloudinaryStorageService.delete(publicId, mediaType);
     }
+
+    @Override
+    public String generateVideoThumbnailUrl(String publicId) {
+        return cloudinaryStorageService.generateVideoThumbnailUrl(publicId, 1.0);
+    }
 }

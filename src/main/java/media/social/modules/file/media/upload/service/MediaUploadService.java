@@ -35,4 +35,12 @@ public interface MediaUploadService {
      * @param mediaType IMAGE or VIDEO
      */
     void delete(String publicId, MediaType mediaType);
+
+    /**
+     * Generates a thumbnail image URL from an uploaded video at ~1s frame.
+     *
+     * @param publicId the storage public ID of the video
+     * @return direct secure URL to the derived thumbnail image
+     */
+    String generateVideoThumbnailUrl(String publicId);
 }

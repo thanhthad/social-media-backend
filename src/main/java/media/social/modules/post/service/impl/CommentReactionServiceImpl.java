@@ -197,7 +197,7 @@ public class CommentReactionServiceImpl
                 .map(projection ->
                         UserReactionResponse.builder()
                                 .id(projection.getId())
-                                .email(projection.getEmail())
+                                .username(projection.getUserName())
                                 .avatarUrl(projection.getAvatarUrl())
                                 .createdAt(projection.getCreatedAt())
                                 .build()

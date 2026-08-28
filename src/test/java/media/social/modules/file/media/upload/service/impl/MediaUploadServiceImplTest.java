@@ -227,4 +227,16 @@ class MediaUploadServiceImplTest {
 
         verify(cloudinaryStorageService).delete("test-pub-id", MediaType.IMAGE);
     }
+
+    @Test
+    @DisplayName("generateVideoThumbnailUrl delegates to cloudinaryStorageService.generateVideoThumbnailUrl with 1.0s")
+    void generateVideoThumbnailUrl_delegatesToStorageService() {
+        when(cloudinaryStorageService.generateVideoThumbnailUrl("video-pid", 1.0))
+                .thenReturn("https://res.cloudinary.com/demo/video/upload/so_1.0/video-pid.jpg");
+
+        String result = service.generateVideoThumbnailUrl("video-pid");
+
+        assertThat(result).isEqualTo("https://res.cloudinary.com/demo/video/upload/so_1.0/video-pid.jpg");
+        verify(cloudinaryStorageService).generateVideoThumbnailUrl("video-pid", 1.0);
+    }
 }

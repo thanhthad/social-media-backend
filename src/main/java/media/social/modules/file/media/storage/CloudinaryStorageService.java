@@ -30,4 +30,13 @@ public interface CloudinaryStorageService {
      * @param mediaType used to determine Cloudinary resource_type
      */
     void delete(String publicId, MediaType mediaType);
+
+    /**
+     * Generates a video thumbnail / poster image URL at the specified offset in seconds.
+     *
+     * @param publicId      Cloudinary public_id of the video
+     * @param offsetSeconds timestamp in seconds (e.g. 1.0)
+     * @return direct secure URL to the derived frame image
+     */
+    String generateVideoThumbnailUrl(String publicId, double offsetSeconds);
 }

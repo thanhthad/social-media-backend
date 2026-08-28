@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class UserReactionResponse {
     private Long id;
-    private String email;
+    private String username;
     private String avatarUrl;
     private LocalDateTime createdAt;
 }

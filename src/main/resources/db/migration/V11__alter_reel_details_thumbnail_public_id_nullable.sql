@@ -1,0 +1,1 @@
+ALTER TABLE reel_details ALTER COLUMN thumbnail_public_id DROP NOT NULL;

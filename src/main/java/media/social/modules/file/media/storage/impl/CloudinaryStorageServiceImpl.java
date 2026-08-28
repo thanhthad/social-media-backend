@@ -105,6 +105,19 @@ public class CloudinaryStorageServiceImpl implements CloudinaryStorageService {
         }
     }
 
+    @Override
+    public String generateVideoThumbnailUrl(String publicId, double offsetSeconds) {
+        if (publicId == null || publicId.isBlank()) {
+            return null;
+        }
+
+        return cloudinary.url()
+                .resourceType("video")
+                .format("jpg")
+                .transformation(new com.cloudinary.Transformation().startOffset(offsetSeconds))
+                .generate(publicId);
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private UploadFileResponse mapToResponse(Map<String, Object> result, MediaType mediaType) {

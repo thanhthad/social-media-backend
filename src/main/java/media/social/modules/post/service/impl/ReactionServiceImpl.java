@@ -4,11 +4,14 @@ import lombok.AllArgsConstructor;
 import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
 import media.social.modules.notification.service.NotificationService;
+import media.social.modules.post.dto.response.post.PostReactionResponse;
 import media.social.modules.post.dto.response.reaction.ReactionCountResponse;
 import media.social.modules.post.dto.response.reaction.UserReactionResponse;
 import media.social.modules.post.entity.Post;
 import media.social.modules.post.entity.Reaction;
+import media.social.modules.post.enums.PostType;
 import media.social.modules.post.enums.ReactionType;
+import media.social.modules.post.exception.post.InvalidPostException;
 import media.social.modules.post.exception.reaction.ReactionNotFoundException;
 import media.social.modules.post.repository.ReactionRepository;
 import media.social.modules.post.service.ReactionService;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -36,17 +40,19 @@ public class ReactionServiceImpl implements ReactionService {
 
     @Override
     @Transactional
-    public void react(Long postId, ReactionType type) {
+    public PostReactionResponse react(Long postId, ReactionType type) {
 
         Long userId = UserContextHolder.getUserId();
 
         Post post = postDomainService.getByPostId(postId);
-
         User user = userServiceDomain.getByUserId(userId);
 
         Reaction reaction = reactionRepository
                 .findByUserIdAndPostId(userId, postId)
                 .orElse(null);
+
+        boolean isReacted;
+        ReactionType reactionType;
 
         if (reaction == null) {
 
@@ -60,46 +66,105 @@ public class ReactionServiceImpl implements ReactionService {
 
             postDomainService.increaseReactionCount(postId);
 
-            notificationService.create(
-                    post.getUser(),
-                    user,
-                    EntityType.POST,
-                    post.getId(),
-                    NotificationType.POST_REACTION
-            );
-            return;
+            if (!post.getUser().getId().equals(userId)) {
+                notificationService.create(
+                        post.getUser(),
+                        user,
+                        EntityType.POST,
+                        post.getId(),
+                        NotificationType.POST_REACTION
+                );
+            }
+
+            isReacted = true;
+            reactionType = type;
+
+        } else {
+
+            if (reaction.getType() == type) {
+
+                reactionRepository.delete(reaction);
+
+                postDomainService.decreaseReactionCount(postId);
+
+                isReacted = false;
+                reactionType = null;
+
+            } else {
+
+                reaction.setType(type);
+                reactionRepository.save(reaction);
+
+                isReacted = true;
+                reactionType = type;
+            }
         }
 
-        if (reaction.getType() != type) {
-            reaction.setType(type);
-            reactionRepository.save(reaction);
-        }
+        PostReactionResponse response = new PostReactionResponse();
+
+        response.setPostId(postId);
+        response.setReacted(isReacted);
+        response.setReactionType(reactionType);
+        response.setReactionCount(post.getReactionCount());
+
+        return response;
     }
 
     @Override
     @Transactional
-    public void removeReaction(Long postId) {
+    public PostReactionResponse loveReel(Long postId) {
 
         Long userId = UserContextHolder.getUserId();
 
-        Post post = postDomainService.getByPostId(postId);
+        Post reel = postDomainService.getByPostId(postId);
+
+        if (reel.getPostType() != PostType.REEL) {
+            throw new InvalidPostException("Post is not a reel");
+        }
+
+        User user = userServiceDomain.getByUserId(userId);
 
         Reaction reaction = reactionRepository
                 .findByUserIdAndPostId(userId, postId)
-                .orElseThrow(
-                        () -> new ReactionNotFoundException("Reaction Not Found")
-                );
+                .orElse(null);
 
-        reactionRepository.delete(reaction);
-        postDomainService.decreaseReactionCount(postId);
-        notificationService.delete(
-                post.getUser().getId(),
-                userId,
-                EntityType.POST,
-                post.getId(),
-                NotificationType.POST_REACTION
-        );
+        boolean isReacted;
+        ReactionType reactionType;
+
+        if (reaction == null) {
+
+            reaction = Reaction.builder()
+                    .user(user)
+                    .post(reel)
+                    .type(ReactionType.LOVE)
+                    .build();
+
+            reactionRepository.save(reaction);
+
+            postDomainService.increaseReactionCount(postId);
+
+            isReacted = true;
+            reactionType = ReactionType.LOVE;
+
+        } else {
+            reactionRepository.delete(reaction);
+
+            postDomainService.decreaseReactionCount(postId);
+
+            isReacted = false;
+            reactionType = null;
+        }
+
+        PostReactionResponse response = new PostReactionResponse();
+
+        response.setPostId(postId);
+        response.setReacted(isReacted);
+        response.setReactionType(reactionType);
+        response.setReactionCount(reel.getReactionCount());
+
+        return response;
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -146,7 +211,7 @@ public class ReactionServiceImpl implements ReactionService {
                 pageable
         ).map(projection -> UserReactionResponse.builder()
                 .id(projection.getId())
-                .email(projection.getEmail())
+                .username(projection.getUserName())
                 .avatarUrl(projection.getAvatarUrl())
                 .createdAt(projection.getCreatedAt())
                 .build());

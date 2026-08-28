@@ -69,8 +69,8 @@ public class MediaUploadPolicyResolverImpl implements MediaUploadPolicyResolver 
 
         map.put(MediaUploadContext.REEL, new MediaUploadPolicy(
                 img.getMaxSizeBytes(),
-                pol.getProfile().getMaxVideoSizeBytes(),
-                pol.getProfile().getMaxVideoDurationSeconds(),
+                pol.getReel().getMaxVideoSizeBytes(),
+                pol.getReel().getMaxVideoDurationSeconds(),
                 img.getAllowedExtensions(),
                 video.getAllowedExtensions()
         ));

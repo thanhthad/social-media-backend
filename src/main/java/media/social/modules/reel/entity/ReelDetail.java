@@ -42,7 +42,7 @@ public class ReelDetail {
     @Column(name = "thumbnail_url", nullable = false, length = 500)
     private String thumbnailUrl;
 
-    @Column(name = "thumbnail_public_id", nullable = false, length = 255)
+    @Column(name = "thumbnail_public_id", length = 255)
     private String thumbnailPublicId;
 
     @Column(

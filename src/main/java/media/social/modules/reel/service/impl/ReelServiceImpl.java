@@ -64,15 +64,28 @@ public class ReelServiceImpl implements ReelService {
         Long userId = UserContextHolder.getUserId();
         User user = userServiceDomain.getByUserId(userId);
 
-        // Upload video
+        // 1. Upload video
         UploadFileResponse videoUpload =
                 mediaUploadService.upload(request.getVideo(), MediaUploadContext.REEL);
 
-        // Upload thumbnail
-        UploadFileResponse thumbnailUpload =
-                mediaUploadService.upload(request.getThumbnail(), MediaUploadContext.REEL);
+        // 2. Media processing: duration, width, height from video upload response
+        int durationSeconds = (int) videoUpload.getDuration();
+        int width = videoUpload.getWidth() != null ? videoUpload.getWidth() : 0;
+        int height = videoUpload.getHeight() != null ? videoUpload.getHeight() : 0;
 
-        // Persist Post (type = REEL)
+        // 3. Handle thumbnail (custom or auto-generated ~1s frame from video)
+        String thumbnailUrl;
+        String thumbnailPublicId = null;
+
+        if (request.getThumbnail() != null && !request.getThumbnail().isEmpty()) {
+            UploadFileResponse thumbnailUpload =
+                    mediaUploadService.upload(request.getThumbnail(), MediaUploadContext.REEL);
+            thumbnailUrl = thumbnailUpload.getFileUrl();
+            thumbnailPublicId = thumbnailUpload.getPublicId();
+        } else {
+            thumbnailUrl = mediaUploadService.generateVideoThumbnailUrl(videoUpload.getPublicId());
+        }
+
         Post post = Post.builder()
                 .user(user)
                 .content(request.getContent())
@@ -82,7 +95,6 @@ public class ReelServiceImpl implements ReelService {
 
         postRepository.save(post);
 
-        // Persist video media
         PostMedia videoMedia = PostMedia.builder()
                 .post(post)
                 .mediaType(MediaType.VIDEO)
@@ -92,14 +104,13 @@ public class ReelServiceImpl implements ReelService {
 
         postMediaRepository.save(videoMedia);
 
-        // Persist ReelDetail
         ReelDetail reelDetail = ReelDetail.builder()
                 .post(post)
-                .durationSeconds(request.getDurationSeconds())
-                .width(request.getWidth())
-                .height(request.getHeight())
-                .thumbnailUrl(thumbnailUpload.getFileUrl())
-                .thumbnailPublicId(thumbnailUpload.getPublicId())
+                .durationSeconds(durationSeconds)
+                .width(width)
+                .height(height)
+                .thumbnailUrl(thumbnailUrl)
+                .thumbnailPublicId(thumbnailPublicId)
                 .build();
 
         reelRepository.save(reelDetail);
@@ -274,16 +285,16 @@ public class ReelServiceImpl implements ReelService {
 
         checkOwner(post);
 
-        // Xoá ReelDetail (thumbnail)
         reelRepository.findByPostId(reelId).ifPresent(detail -> {
-            mediaUploadService.delete(
-                    detail.getThumbnailPublicId(),
-                    media.social.modules.post.enums.MediaType.IMAGE
-            );
+            if (detail.getThumbnailPublicId() != null && !detail.getThumbnailPublicId().isBlank()) {
+                mediaUploadService.delete(
+                        detail.getThumbnailPublicId(),
+                        MediaType.IMAGE
+                );
+            }
             reelRepository.delete(detail);
         });
 
-        // Xoá video media + DB
         postMediaRepository.findByPostId(reelId)
                 .forEach(m -> mediaUploadService.delete(
                         m.getPublicId(),

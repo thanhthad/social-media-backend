@@ -45,7 +45,7 @@ AND r.post.id IN :postIds
     @Query("""
         SELECT
             u.id AS id,
-            u.email AS email,
+            u.username AS userName,
             p.avatarUrl AS avatarUrl,
             r.createdAt AS createdAt
         FROM Reaction r

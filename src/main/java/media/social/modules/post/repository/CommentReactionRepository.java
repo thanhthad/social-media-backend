@@ -43,7 +43,7 @@ public interface CommentReactionRepository
     @Query("""
     SELECT
         u.id AS id,
-        u.email AS email,
+        u.username AS userName,
         p.avatarUrl AS avatarUrl,
         r.createdAt AS createdAt
 

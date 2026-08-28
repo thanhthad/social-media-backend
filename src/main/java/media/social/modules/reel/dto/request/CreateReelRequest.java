@@ -22,15 +22,5 @@ public class CreateReelRequest {
     @NotNull(message = "Video file is required")
     private MultipartFile video;
 
-    @NotNull(message = "Thumbnail is required")
     private MultipartFile thumbnail;
-
-    @NotNull(message = "Duration is required")
-    private Integer durationSeconds;
-
-    @NotNull(message = "Width is required")
-    private Integer width;
-
-    @NotNull(message = "Height is required")
-    private Integer height;
 }
