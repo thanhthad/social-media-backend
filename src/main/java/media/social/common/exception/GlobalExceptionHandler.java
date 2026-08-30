@@ -75,6 +75,9 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import media.social.modules.user.exception.user.ForbiddenException;
+import media.social.modules.reel.exception.ReelNotFoundException;
+import media.social.modules.reel.exception.ReelForbiddenException;
+import media.social.modules.reel.exception.ReelViewNotFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -634,7 +637,24 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    //====================REEL==================
+    @ExceptionHandler(ReelNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReelNotFound(ReelNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ReelForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReelForbidden(ReelForbiddenException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(ReelViewNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReelViewNotFound(ReelViewNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
     //====================COMMENT==================
+
     @ExceptionHandler(CommentAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleCommentAlreadyExists(CommentAlreadyExistsException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
