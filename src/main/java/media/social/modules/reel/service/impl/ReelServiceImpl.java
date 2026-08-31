@@ -195,13 +195,14 @@ public class ReelServiceImpl implements ReelService {
 
         Long viewerId = UserContextHolder.getUserId();
 
+        // findReelExplore dùng nativeQuery nên phải truyền String (.name()) thay vì Enum trực tiếp
         Page<ReelFlatProjection> flatPage = reelRepository.findReelExplore(
                 viewerId,
-                Status.ACTIVE,
-                PostType.REEL,
-                ReportStatus.APPROVED,
-                Visibility.PUBLIC,
-                FriendshipStatus.ACCEPTED,
+                Status.ACTIVE.name(),
+                PostType.REEL.name(),
+                ReportStatus.APPROVED.name(),
+                Visibility.PUBLIC.name(),
+                FriendshipStatus.ACCEPTED.name(),
                 pageable
         );
 

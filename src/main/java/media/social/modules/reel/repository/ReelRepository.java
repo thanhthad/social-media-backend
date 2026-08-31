@@ -298,73 +298,131 @@ public interface ReelRepository extends JpaRepository<ReelDetail, Long> {
 
     // ─── EXPLORE (public reels, not from friends) ──────────────────────────────
 
-    @Query("""
+    @Query(
+            value = """
         SELECT
-            p.id               AS id,
+            p.post_id          AS id,
             p.content          AS content,
             p.visibility       AS visibility,
-            p.createdAt        AS createdAt,
+            p.created_at       AS createdAt,
 
-            u.id               AS userId,
+            u.user_id          AS userId,
             u.username         AS username,
-            pr.avatarUrl       AS avatarUrl,
+            pr.avatar_url      AS avatarUrl,
 
-            p.commentCount     AS commentCount,
-            p.reactionCount    AS reactionCount,
+            p.comment_count    AS commentCount,
+            p.reaction_count   AS reactionCount,
 
-            rd.durationSeconds AS durationSeconds,
-            rd.width           AS width,
-            rd.height          AS height,
-            rd.thumbnailUrl    AS thumbnailUrl,
-            rd.viewCount       AS viewCount,
-            rd.shareCount      AS shareCount
+            rd.duration_seconds AS durationSeconds,
+            rd.width            AS width,
+            rd.height           AS height,
+            rd.thumbnail_url    AS thumbnailUrl,
+            rd.view_count       AS viewCount,
+            rd.share_count      AS shareCount
 
-        FROM Post p
-        JOIN p.user u
-        LEFT JOIN u.profile pr
-        JOIN ReelDetail rd ON rd.post.id = p.id
+        FROM posts p
+
+        JOIN users u
+            ON u.user_id = p.user_id
+
+        LEFT JOIN profiles pr
+            ON pr.user_id = u.user_id
+
+        JOIN reel_details rd
+            ON rd.reel_id = p.post_id
 
         WHERE NOT EXISTS (
             SELECT 1
-            FROM Block b
-            WHERE (b.blocker.id = :viewerId AND b.blocked.id = u.id)
-               OR (b.blocker.id = u.id AND b.blocked.id = :viewerId)
+            FROM blocks b
+            WHERE (b.blocker_id = :viewerId AND b.blocked_id = u.user_id)
+               OR (b.blocker_id = u.user_id AND b.blocked_id = :viewerId)
         )
 
           AND u.status = :activeStatus
-          AND p.postType = :postType
+          AND p.post_type = :postType
 
           AND NOT EXISTS (
               SELECT 1
-              FROM Report r
-              WHERE r.post.id = p.id
+              FROM reports r
+              WHERE r.post_id = p.post_id
                 AND r.status = :approvedReportStatus
           )
 
-          AND u.id <> :viewerId
+          AND u.user_id <> :viewerId
 
           AND p.visibility = :publicVisibility
 
           AND NOT EXISTS (
               SELECT 1
-              FROM Friendship f
+              FROM friendships f
               WHERE (
-                  (f.userOne.id = :viewerId AND f.userTwo.id = u.id)
+                  (f.user_one_id = :viewerId AND f.user_two_id = u.user_id)
                   OR
-                  (f.userOne.id = u.id AND f.userTwo.id = :viewerId)
+                  (f.user_one_id = u.user_id AND f.user_two_id = :viewerId)
               )
               AND f.status = :acceptedStatus
           )
 
-        ORDER BY rd.viewCount DESC, p.createdAt DESC
-    """)
+        ORDER BY
+            (
+                (p.reaction_count * 1.0 + p.comment_count * 2.0
+                    + rd.share_count * 4.0 + rd.view_count * 0.5)
+                /
+                POW(
+                    GREATEST(
+                        EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600.0,
+                        0
+                    ) + 2,
+                    1.3
+                )
+            ) DESC,
+            p.created_at DESC
+    """,
+
+            countQuery = """
+        SELECT COUNT(*)
+        FROM posts p
+        JOIN users u
+            ON u.user_id = p.user_id
+        JOIN reel_details rd
+            ON rd.reel_id = p.post_id
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM blocks b
+            WHERE (b.blocker_id = :viewerId AND b.blocked_id = u.user_id)
+               OR (b.blocker_id = u.user_id AND b.blocked_id = :viewerId)
+        )
+        AND u.status = :activeStatus
+        AND p.post_type = :postType
+        AND NOT EXISTS (
+            SELECT 1
+            FROM reports r
+            WHERE r.post_id = p.post_id
+              AND r.status = :approvedReportStatus
+        )
+        AND u.user_id <> :viewerId
+        AND p.visibility = :publicVisibility
+        AND NOT EXISTS (
+            SELECT 1
+            FROM friendships f
+            WHERE (
+                (f.user_one_id = :viewerId AND f.user_two_id = u.user_id)
+                OR
+                (f.user_one_id = u.user_id AND f.user_two_id = :viewerId)
+            )
+            AND f.status = :acceptedStatus
+        )
+    """,
+
+            nativeQuery = true
+    )
     Page<ReelFlatProjection> findReelExplore(
             @Param("viewerId") Long viewerId,
-            @Param("activeStatus") Status activeStatus,
-            @Param("postType") PostType postType,
-            @Param("approvedReportStatus") ReportStatus approvedReportStatus,
-            @Param("publicVisibility") Visibility publicVisibility,
-            @Param("acceptedStatus") FriendshipStatus acceptedStatus,
+            @Param("activeStatus") String activeStatus,
+            @Param("postType") String postType,
+            @Param("approvedReportStatus") String approvedReportStatus,
+            @Param("publicVisibility") String publicVisibility,
+            @Param("acceptedStatus") String acceptedStatus,
             Pageable pageable
     );
 }
