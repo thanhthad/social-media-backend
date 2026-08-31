@@ -90,14 +90,15 @@ public class PostServiceImpl implements PostService {
 
         Long viewerId = UserContextHolder.getUserId();
 
+        // findExplore dùng nativeQuery nên phải truyền String (.name()) thay vì Enum trực tiếp
         Page<PostFlatProjection> flatPage =
                 postRepository.findExplore(
                         viewerId,
-                        Status.ACTIVE,
-                        PostType.POST,
-                        ReportStatus.APPROVED,
-                        Visibility.PUBLIC,
-                        FriendshipStatus.ACCEPTED,
+                        Status.ACTIVE.name(),
+                        PostType.POST.name(),
+                        ReportStatus.APPROVED.name(),
+                        Visibility.PUBLIC.name(),
+                        FriendshipStatus.ACCEPTED.name(),
                         pageable
                 );
 
