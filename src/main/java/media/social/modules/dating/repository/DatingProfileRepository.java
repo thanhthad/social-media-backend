@@ -113,7 +113,9 @@ public interface DatingProfileRepository
                     )
                 ) / 1000.0 AS "distanceKm",
                 COUNT(DISTINCT common_interest.interest_id)
-                    AS "commonInterestCount"
+                    AS "commonInterestCount",
+                u_target.last_active_at AS "lastActiveAt",
+                COUNT(DISTINCT dph.photo_id) AS "photoCount"
 
             FROM dating_profiles me
 
@@ -123,11 +125,15 @@ public interface DatingProfileRepository
                 ON target.user_id <> me.user_id
             JOIN profiles profile
                 ON profile.user_id = target.user_id
+            JOIN users u_target
+                ON u_target.user_id = target.user_id
             LEFT JOIN dating_profile_interests my_interest
                 ON my_interest.dating_profile_id = me.dating_profile_id
             LEFT JOIN dating_profile_interests common_interest
                 ON common_interest.dating_profile_id = target.dating_profile_id
                 AND common_interest.interest_id = my_interest.interest_id
+            LEFT JOIN dating_profile_photos dph
+                ON dph.dating_profile_id = target.dating_profile_id
             WHERE me.user_id = :currentUserId
 
               AND target.is_active = TRUE
@@ -209,7 +215,8 @@ public interface DatingProfileRepository
                 target.latitude,
                 target.longitude,
                 me.latitude,
-                me.longitude
+                me.longitude,
+                u_target.last_active_at
             ORDER BY
                 "commonInterestCount" DESC,
                 "distanceKm" ASC
