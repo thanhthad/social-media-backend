@@ -12,4 +12,5 @@ public class DatingSwipeResponse {
     private Long targetUserId;
     private DatingSwipeAction action;
     private OffsetDateTime createdAt;
+    private boolean isMatch;
 }

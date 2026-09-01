@@ -65,9 +65,10 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
         DatingSwipe savedSwipe =
                 datingSwipeRepository.save(swipe);
 
+        boolean isMatched = false;
         if (request.getAction() == DatingSwipeAction.LIKE) {
 
-            boolean isMatched =
+            isMatched =
                     datingSwipeRepository
                             .existsBySwiperIdAndTargetIdAndAction(
                                     target.getId(),
@@ -83,7 +84,9 @@ public class DatingSwipeServiceImpl implements DatingSwipeService {
             }
         }
 
-        return mapToResponse(savedSwipe);
+        DatingSwipeResponse response = mapToResponse(savedSwipe);
+        response.setMatch(isMatched);
+        return response;
     }
 
     @Override
