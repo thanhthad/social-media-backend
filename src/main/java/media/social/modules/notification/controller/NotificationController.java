@@ -96,4 +96,24 @@ public class NotificationController {
                 HttpStatus.OK
         );
     }
+
+    // ================= DELETE NOTIFICATION =================
+    @DeleteMapping("/{notificationId}")
+    @Operation(summary = "Delete / dismiss a notification")
+    @RateLimit(
+            name = "NOTIFICATION_DELETE",
+            limit = 120,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> deleteNotification(
+            @PathVariable Long notificationId
+    ) {
+        notificationService.deleteById(notificationId);
+
+        return ResponseData.success(
+                null,
+                "Notification deleted successfully",
+                HttpStatus.OK
+        );
+    }
 }

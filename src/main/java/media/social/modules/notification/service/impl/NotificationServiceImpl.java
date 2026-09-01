@@ -174,4 +174,23 @@ public class NotificationServiceImpl implements NotificationService {
                 userId
         );
     }
+
+    @Override
+    @Transactional
+    public void deleteById(Long notificationId) {
+        Long userId = UserContextHolder.getUserId();
+
+        Notification notification = notificationRepository
+                .findByIdAndReceiver_Id(
+                        notificationId,
+                        userId
+                )
+                .orElseThrow(() ->
+                        new NotificationNotFoundException(
+                                "Notification not found"
+                        )
+                );
+
+        notificationRepository.delete(notification);
+    }
 }

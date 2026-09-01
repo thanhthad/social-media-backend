@@ -37,4 +37,5 @@ public interface NotificationService {
 
     long countUnread();
 
+    void deleteById(Long notificationId);
 }
