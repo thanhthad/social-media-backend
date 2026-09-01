@@ -60,17 +60,3 @@ CREATE TABLE reel_views (
 );
 
 
-CREATE TABLE reel_shares (
-                             share_id BIGSERIAL PRIMARY KEY,
-
-                             reel_id BIGINT NOT NULL
-                                 REFERENCES posts(post_id)
-                                     ON DELETE CASCADE,
-
-                             user_id BIGINT
-                                            REFERENCES users(user_id)
-                                                ON DELETE SET NULL,
-
-                             created_at TIMESTAMP WITH TIME ZONE NOT NULL
-                                 DEFAULT CURRENT_TIMESTAMP
-);

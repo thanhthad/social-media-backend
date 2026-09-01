@@ -143,7 +143,7 @@ CREATE TABLE posts (
                            CHECK (post_type IN ('POST', 'REEL')),
 
                        CONSTRAINT chk_posts_visibility
-                           CHECK (visibility IN ('PUBLIC', 'FOLLOWERS', 'PRIVATE'))
+                           CHECK (visibility IN ('PUBLIC', 'FRIEND', 'PRIVATE'))
 );
 
 CREATE TABLE post_media (
