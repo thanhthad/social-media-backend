@@ -30,4 +30,17 @@ public class StoryViewController {
                 HttpStatus.OK
         );
     }
+
+    // ================= GET VIEWERS =================
+    @GetMapping("/{storyId}/viewers")
+    @Operation(summary = "Get story viewers list (story owner only)")
+    public ResponseEntity<?> getViewers(
+            @PathVariable Long storyId
+    ) {
+        return ResponseData.success(
+                storyViewService.getViewers(storyId),
+                "Get story viewers successfully",
+                HttpStatus.OK
+        );
+    }
 }
