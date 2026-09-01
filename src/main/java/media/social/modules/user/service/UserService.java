@@ -44,4 +44,5 @@ public interface UserService {
 
     public Page<UserSearchResponse> findUsersByName(String username, Pageable pageable);
 
+    public UserStatsResponse getUserStats(Long targetUserId);
 }

@@ -172,8 +172,6 @@ public class UserController {
     }
 
 
-    // ================= PUBLIC PROFILE =================
-
     @GetMapping("/{id}")
     @Operation(summary = "Get public profile by user id")
     @RateLimit(name = "USER_PUBLIC_PROFILE", limit = 300, windowSeconds = 60)
@@ -183,6 +181,19 @@ public class UserController {
         return ResponseData.success(
                 userService.getUserById(id),
                 "Get user successfully",
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/{id}/stats")
+    @Operation(summary = "Get user statistics and friendship status")
+    @RateLimit(name = "USER_STATS", limit = 300, windowSeconds = 60)
+    public ResponseEntity<?> getUserStats(
+            @PathVariable Long id
+    ) {
+        return ResponseData.success(
+                userService.getUserStats(id),
+                "Get user stats successfully",
                 HttpStatus.OK
         );
     }

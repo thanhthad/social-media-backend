@@ -24,6 +24,20 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     );
 
     @Query("""
+    SELECT f
+    FROM Friendship f
+    WHERE (
+        (f.userOne.id = :userId AND f.userTwo.id = :targetUserId)
+        OR
+        (f.userOne.id = :targetUserId AND f.userTwo.id = :userId)
+    )
+    """)
+    Optional<Friendship> findFriendshipBetween(
+            @Param("userId") Long userId,
+            @Param("targetUserId") Long targetUserId
+    );
+
+    @Query("""
     SELECT COUNT(f) > 0
     FROM Friendship f
     WHERE (

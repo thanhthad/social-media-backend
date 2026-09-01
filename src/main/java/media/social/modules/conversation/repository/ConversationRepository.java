@@ -29,12 +29,12 @@ public interface ConversationRepository
     @Query("""
     SELECT
         c.id AS conversationId,
-        target.id,
+        target.id AS userId,
         c.type AS type,
 
         CASE
             WHEN c.type = :privateType
-            THEN pr.fullName
+            THEN COALESCE(pr.fullName, target.username)
             ELSE c.name
         END AS displayName,
 
@@ -65,21 +65,22 @@ public interface ConversationRepository
 
     FROM Conversation c
 
-    LEFT JOIN c.lastMessage m
-
-    LEFT JOIN m.media mm
-
     JOIN ConversationMember me
         ON me.conversation.id = c.id
        AND me.user.id = :currentUserId
 
-    JOIN ConversationMember targetMember
+    LEFT JOIN c.lastMessage m
+
+    LEFT JOIN m.media mm
+
+    LEFT JOIN ConversationMember targetMember
         ON targetMember.conversation.id = c.id
        AND targetMember.user.id <> :currentUserId
+       AND c.type = :privateType
 
-    JOIN targetMember.user target
+    LEFT JOIN targetMember.user target
 
-    JOIN target.profile pr
+    LEFT JOIN target.profile pr
 
     WHERE c.type <> :excludedType
 
@@ -93,9 +94,10 @@ public interface ConversationRepository
         m.id,
         m.content,
         pr.fullName,
-        pr.avatarUrl
+        pr.avatarUrl,
+        target.username
 
-    ORDER BY c.lastMessageAt DESC
+    ORDER BY c.lastMessageAt DESC NULLS LAST, c.id DESC
 """)
     List<ConversationListProjection> findConversationList(
             @Param("currentUserId") Long currentUserId,

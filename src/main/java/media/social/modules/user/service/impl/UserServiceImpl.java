@@ -42,6 +42,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 
+import media.social.modules.post.enums.PostType;
+import media.social.modules.post.repository.PostRepository;
+import media.social.modules.user.enums.FriendshipStatus;
+import media.social.modules.user.entity.Friendship;
+import media.social.modules.user.repository.FriendshipRepository;
+import java.util.Optional;
+
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -54,6 +61,8 @@ public class UserServiceImpl implements UserService {
     private final FriendShipDomain friendShipDomain;
     private final UserProfileCacheService userProfileCacheService;
     private final BlockPolicyService blockPolicyService;
+    private final PostRepository postRepository;
+    private final FriendshipRepository friendshipRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -367,23 +376,20 @@ public class UserServiceImpl implements UserService {
     public PublicProfileResponse getUserById(Long userId) {
 
         Long currentUserId = UserContextHolder.getUserId();
+        boolean isSelf = Objects.equals(userId, currentUserId);
 
-        if (Objects.equals(userId, currentUserId)) {
-            throw new UserAlreadyExistsException(
-                    "Please use /me endpoint"
+        if (!isSelf) {
+            if (blockPolicyService.isBlocked(currentUserId, userId)) {
+                throw new UserBlockedException(
+                        "You cannot view this user's profile."
+                );
+            }
+
+            validateCanViewProfile(
+                    currentUserId,
+                    userId
             );
         }
-
-        if (blockPolicyService.isBlocked(currentUserId, userId)) {
-            throw new UserBlockedException(
-                    "You cannot view this user's profile."
-            );
-        }
-
-        validateCanViewProfile(
-                currentUserId,
-                userId
-        );
 
         PublicUserProfileCacheResponse cache =
                 userProfileCacheService.getUserProfile(userId);
@@ -391,36 +397,30 @@ public class UserServiceImpl implements UserService {
         FriendshipCountResponse totalFriend =
                 userProfileCacheService.getTotalFriend(userId);
 
-        MutualFriendCountResponse mutualFriendCount =
-                userProfileCacheService.getTotalMutualFriend(
+        MutualFriendCountResponse mutualFriendCount = isSelf
+                ? MutualFriendCountResponse.builder().totalMutualCount(0L).build()
+                : userProfileCacheService.getTotalMutualFriend(
                         currentUserId,
                         userId
                 );
 
-        List<String> listAvatar =
-                userProfileCacheService.getMutualFriendAvatars(
+        List<String> listAvatar = isSelf
+                ? List.of()
+                : userProfileCacheService.getMutualFriendAvatars(
                         currentUserId,
                         userId
                 );
 
-        boolean friends =
-                friendShipDomain.areFriends(
-                        currentUserId,
-                        userId
-                );
+        boolean friends = !isSelf && friendShipDomain.areFriends(
+                currentUserId,
+                userId
+        );
 
-        boolean canViewFullProfile =
-                switch (cache.getVisibility()) {
-
-                    case PUBLIC ->
-                            true;
-
-                    case FRIEND ->
-                            friends;
-
-                    case PRIVATE ->
-                            false;
-                };
+        boolean canViewFullProfile = isSelf || switch (cache.getVisibility()) {
+            case PUBLIC -> true;
+            case FRIEND -> friends;
+            case PRIVATE -> false;
+        };
 
         PublicProfileResponse.PublicProfileResponseBuilder builder =
                 PublicProfileResponse.builder()
@@ -457,6 +457,56 @@ public class UserServiceImpl implements UserService {
         }
 
         return builder.build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserStatsResponse getUserStats(Long targetUserId) {
+        Long currentUserId = UserContextHolder.getUserId();
+
+        PublicUserProfileCacheResponse cache =
+                userProfileCacheService.getUserProfile(targetUserId);
+
+        FriendshipCountResponse totalFriend =
+                userProfileCacheService.getTotalFriend(targetUserId);
+
+        long totalPost = postRepository.countByUserIdAndPostType(targetUserId, PostType.POST);
+        long totalReel = postRepository.countByUserIdAndPostType(targetUserId, PostType.REEL);
+        long totalLikes = postRepository.sumReactionsByUserId(targetUserId);
+
+        String friendshipStatus = "NONE";
+        if (Objects.equals(targetUserId, currentUserId)) {
+            friendshipStatus = "SELF";
+        } else if (blockPolicyService.isBlocked(currentUserId, targetUserId)) {
+            friendshipStatus = "BLOCKED";
+        } else {
+            Optional<Friendship> friendship = friendshipRepository.findFriendshipBetween(currentUserId, targetUserId);
+            if (friendship.isPresent()) {
+                Friendship f = friendship.get();
+                if (f.getStatus() == FriendshipStatus.ACCEPTED) {
+                    friendshipStatus = "FRIENDS";
+                } else if (f.getStatus() == FriendshipStatus.PENDING) {
+                    if (Objects.equals(f.getUserOne().getId(), currentUserId)) {
+                        friendshipStatus = "PENDING_SENT";
+                    } else {
+                        friendshipStatus = "PENDING_RECEIVED";
+                    }
+                }
+            }
+        }
+
+        return UserStatsResponse.builder()
+                .userId(cache.getId())
+                .username(cache.getUsername())
+                .fullName(cache.getFullName())
+                .avatarUrl(cache.getAvatarUrl())
+                .totalPost(totalPost)
+                .totalReel(totalReel)
+                .totalFriend(totalFriend.getTotalFriends())
+                .totalLikesReceived(totalLikes)
+                .friendshipStatus(friendshipStatus)
+                .isOnline(true)
+                .build();
     }
 
     private void validateCanViewProfile(

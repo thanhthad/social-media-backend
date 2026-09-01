@@ -101,6 +101,48 @@ public class ConversationController {
         );
     }
 
+    // ================= GET MY DATING CONVERSATIONS =================
+    @Operation(
+            summary = "Get my dating conversations",
+            description = "Get all dating conversations of current user"
+    )
+    @GetMapping("/dating")
+    @RateLimit(
+            name = "CONVERSATION_GET_MY_DATING_LIST",
+            limit = 300,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> getMyDatingConversations(){
+
+        return ResponseData.success(
+                conversationService.getMyDatingConversations(),
+                "Get dating conversations successfully",
+                HttpStatus.OK
+        );
+    }
+
+    // ================= GET CONVERSATION DETAIL =================
+    @Operation(
+            summary = "Get conversation detail",
+            description = "Get detailed information of a conversation including members"
+    )
+    @GetMapping("/{conversationId}")
+    @RateLimit(
+            name = "CONVERSATION_GET_DETAIL",
+            limit = 300,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> getConversationDetail(
+            @PathVariable Long conversationId
+    ){
+
+        return ResponseData.success(
+                conversationService.getConversationDetail(conversationId),
+                "Get conversation detail successfully",
+                HttpStatus.OK
+        );
+    }
+
     // ================= UPDATE GROUP AVATAR =================
     @Operation(
             summary = "Update group avatar",
