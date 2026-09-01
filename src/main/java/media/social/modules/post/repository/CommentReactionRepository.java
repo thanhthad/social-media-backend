@@ -44,7 +44,9 @@ public interface CommentReactionRepository
     SELECT
         u.id AS id,
         u.username AS userName,
+        p.fullName AS fullName,
         p.avatarUrl AS avatarUrl,
+        r.type AS type,
         r.createdAt AS createdAt
 
     FROM CommentReaction r

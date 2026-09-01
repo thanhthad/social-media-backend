@@ -46,7 +46,9 @@ AND r.post.id IN :postIds
         SELECT
             u.id AS id,
             u.username AS userName,
+            p.fullName AS fullName,
             p.avatarUrl AS avatarUrl,
+            r.type AS type,
             r.createdAt AS createdAt
         FROM Reaction r
         JOIN r.user u
@@ -59,4 +61,15 @@ AND r.post.id IN :postIds
             @Param("type") ReactionType type,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT r.post.id, COUNT(r)
+        FROM Reaction r
+        WHERE r.post.id IN :postIds
+        GROUP BY r.post.id
+    """)
+    List<Object[]> countReactionsByPostIds(@Param("postIds") List<Long> postIds);
+
+    @Query("SELECT COUNT(r) FROM Reaction r WHERE r.post.id = :postId")
+    long countByPostId(@Param("postId") Long postId);
 }

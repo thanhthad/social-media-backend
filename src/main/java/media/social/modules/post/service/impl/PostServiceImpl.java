@@ -61,6 +61,7 @@ public class PostServiceImpl implements PostService {
     private final FriendShipDomain friendShipDomain;
     private final PostDomainService postDomainService;
     private final ReactionRepository reactionRepository;
+    private final CommentRepository commentRepository;
     private final PostCacheService postCacheService;
 
     @Override
@@ -206,6 +207,8 @@ public class PostServiceImpl implements PostService {
                         .findByUserIdAndPostId(viewerId, postId)
                         .orElse(null);
 
+        long realReactionCount = reactionRepository.countByPostId(postId);
+        long realCommentCount = commentRepository.countByPostId(postId);
 
         return PostResponse.builder()
                 .id(flat.getId())
@@ -216,8 +219,8 @@ public class PostServiceImpl implements PostService {
                 .username(flat.getUsername())
                 .avatarUrl(flat.getAvatarUrl())
                 .postMediaResponses(flat.getPostMediaResponses())
-                .commentCount(flat.getCommentCount())
-                .reactionCount(flat.getReactionCount())
+                .commentCount(realCommentCount)
+                .reactionCount(realReactionCount)
                 .reacted(reaction != null)
                 .myReactionType(
                         reaction != null
@@ -352,12 +355,34 @@ public class PostServiceImpl implements PostService {
                                 r -> r
                         ));
 
+        Map<Long, Long> reactionCountMap = new HashMap<>();
+        for (Object[] rCount : reactionRepository.countReactionsByPostIds(postIds)) {
+            if (rCount != null && rCount.length >= 2) {
+                reactionCountMap.put((Long) rCount[0], (Long) rCount[1]);
+            }
+        }
+
+        Map<Long, Long> commentCountMap = new HashMap<>();
+        for (Object[] cCount : commentRepository.countCommentsByPostIds(postIds)) {
+            if (cCount != null && cCount.length >= 2) {
+                commentCountMap.put((Long) cCount[0], (Long) cCount[1]);
+            }
+        }
+
         List<PostResponse> result =
                 flatPage.getContent()
                         .stream()
                         .map(row -> {
                             Reaction reaction =
                                     reactionMap.get(row.getId());
+                            long rCount = reactionCountMap.getOrDefault(
+                                    row.getId(),
+                                    row.getReactionCount() != null ? row.getReactionCount() : 0L
+                            );
+                            long cCount = commentCountMap.getOrDefault(
+                                    row.getId(),
+                                    row.getCommentCount() != null ? row.getCommentCount() : 0L
+                            );
                             return PostResponse.builder()
                                     .id(row.getId())
                                     .content(row.getContent())
@@ -367,8 +392,8 @@ public class PostServiceImpl implements PostService {
                                     .userId(row.getUserId())
                                     .username(row.getUsername())
                                     .avatarUrl(row.getAvatarUrl())
-                                    .commentCount(row.getCommentCount())
-                                    .reactionCount(row.getReactionCount())
+                                    .commentCount(cCount)
+                                    .reactionCount(rCount)
                                     .reacted(reaction != null)
                                     .myReactionType(
                                             reaction != null
@@ -379,9 +404,9 @@ public class PostServiceImpl implements PostService {
                                             mediaMap.getOrDefault(
                                                     row.getId(),
                                                     Collections.emptyList()
-                                            )
-                                    )
-                                    .build();
+                                             )
+                                     )
+                                     .build();
 
                         })
                         .toList();

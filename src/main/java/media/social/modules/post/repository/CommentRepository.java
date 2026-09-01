@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
@@ -145,4 +146,15 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     );
 
     long countByParent_Id(Long parentId);
+
+    @Query("""
+        SELECT c.post.id, COUNT(c)
+        FROM Comment c
+        WHERE c.post.id IN :postIds
+        GROUP BY c.post.id
+    """)
+    List<Object[]> countCommentsByPostIds(@Param("postIds") List<Long> postIds);
+
+    @Query("SELECT COUNT(c) FROM Comment c WHERE c.post.id = :postId")
+    long countByPostId(@Param("postId") Long postId);
 }

@@ -198,7 +198,9 @@ public class CommentReactionServiceImpl
                         UserReactionResponse.builder()
                                 .id(projection.getId())
                                 .username(projection.getUserName())
+                                .fullName(projection.getFullName())
                                 .avatarUrl(projection.getAvatarUrl())
+                                .type(projection.getType())
                                 .createdAt(projection.getCreatedAt())
                                 .build()
                 );

@@ -43,6 +43,26 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     """)
     void decreaseCommentCount(Long postId);
 
+    @Query("""
+    SELECT COUNT(p)
+    FROM Post p
+    WHERE p.user.id = :userId
+      AND p.postType = :postType
+    """)
+    long countByUserIdAndPostType(
+            @Param("userId") Long userId,
+            @Param("postType") PostType postType
+    );
+
+    @Query("""
+    SELECT COALESCE(SUM(p.reactionCount), 0)
+    FROM Post p
+    WHERE p.user.id = :userId
+    """)
+    long sumReactionsByUserId(
+            @Param("userId") Long userId
+    );
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
     UPDATE Post p

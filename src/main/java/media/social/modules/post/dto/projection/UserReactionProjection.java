@@ -1,5 +1,6 @@
 package media.social.modules.post.dto.projection;
 
+import media.social.modules.post.enums.ReactionType;
 import java.time.LocalDateTime;
 
 public interface UserReactionProjection {
@@ -8,7 +9,11 @@ public interface UserReactionProjection {
 
     String getUserName();
 
+    String getFullName();
+
     String getAvatarUrl();
+
+    ReactionType getType();
 
     LocalDateTime getCreatedAt();
 }

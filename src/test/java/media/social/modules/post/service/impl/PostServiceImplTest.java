@@ -66,6 +66,7 @@ class PostServiceImplTest {
     @Mock private FriendShipDomain friendShipDomain;
     @Mock private PostDomainService postDomainService;
     @Mock private ReactionRepository reactionRepository;
+    @Mock private CommentRepository commentRepository;
     @Mock private PostCacheService postCacheService;
 
     // ==========================================
@@ -145,8 +146,15 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findExplore(viewerId, Status.ACTIVE, PostType.POST, ReportStatus.APPROVED, Visibility.PUBLIC, FriendshipStatus.ACCEPTED, pageable))
-                    .thenReturn(flatPage);
+            when(postRepository.findExplore(
+                    viewerId,
+                    Status.ACTIVE.name(),
+                    PostType.POST.name(),
+                    ReportStatus.APPROVED.name(),
+                    Visibility.PUBLIC.name(),
+                    FriendshipStatus.ACCEPTED.name(),
+                    pageable
+            )).thenReturn(flatPage);
 
             Page<PostResponse> result = postService.getExplore(pageable);
 

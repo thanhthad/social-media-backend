@@ -65,6 +65,7 @@ public class ReactionServiceImpl implements ReactionService {
             reactionRepository.save(reaction);
 
             postDomainService.increaseReactionCount(postId);
+            post.setReactionCount(post.getReactionCount() + 1);
 
             if (!post.getUser().getId().equals(userId)) {
                 notificationService.create(
@@ -86,6 +87,7 @@ public class ReactionServiceImpl implements ReactionService {
                 reactionRepository.delete(reaction);
 
                 postDomainService.decreaseReactionCount(postId);
+                post.setReactionCount(Math.max(0, post.getReactionCount() - 1));
 
                 isReacted = false;
                 reactionType = null;
@@ -142,6 +144,7 @@ public class ReactionServiceImpl implements ReactionService {
             reactionRepository.save(reaction);
 
             postDomainService.increaseReactionCount(postId);
+            reel.setReactionCount(reel.getReactionCount() + 1);
 
             isReacted = true;
             reactionType = ReactionType.LOVE;
@@ -150,6 +153,7 @@ public class ReactionServiceImpl implements ReactionService {
             reactionRepository.delete(reaction);
 
             postDomainService.decreaseReactionCount(postId);
+            reel.setReactionCount(Math.max(0, reel.getReactionCount() - 1));
 
             isReacted = false;
             reactionType = null;
@@ -212,7 +216,9 @@ public class ReactionServiceImpl implements ReactionService {
         ).map(projection -> UserReactionResponse.builder()
                 .id(projection.getId())
                 .username(projection.getUserName())
+                .fullName(projection.getFullName())
                 .avatarUrl(projection.getAvatarUrl())
+                .type(projection.getType())
                 .createdAt(projection.getCreatedAt())
                 .build());
     }
