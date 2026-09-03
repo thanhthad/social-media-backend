@@ -128,11 +128,25 @@ public class FriendshipServiceImpl implements FriendshipService {
         friendship.setStatus(FriendshipStatus.ACCEPTED);
         friendshipRepository.save(friendship);
 
+        User currentUser = userRepository.findById(currentUserId)
+                .orElse(null);
+        User requester = userRepository.findById(requesterId)
+                .orElse(null);
+
+        if (currentUser != null && requester != null) {
+            notificationService.create(
+                    requester,
+                    currentUser,
+                    EntityType.USER,
+                    currentUser.getId(),
+                    NotificationType.FRIEND_ACCEPTED
+            );
+        }
+
         userCacheService.evictProfile(currentUserId);
         userCacheService.evictProfile(requesterId);
         userCacheService.evictFriendShipCount(requesterId);
         userCacheService.evictFriendShipCount(currentUserId);
-
     }
 
     @Override
