@@ -137,11 +137,13 @@ class DatingDiscoveryServiceImplTest {
             assertThat(response.getDistanceKm()).isEqualTo(10.0);
 
             // Calculations:
-            // interestScore: 2 interests -> 75.0
-            // ageScore: abs(25 - 27) = 2 -> 100 - (2 * 10) = 80.0
-            // distanceScore: 100 - (10.0 * 2) = 80.0
-            // Compatibility Score = 75.0 * 0.10 + 80.0 * 0.30 + 80.0 * 0.60 = 7.5 + 24.0 + 48.0 = 79.5 -> rounded to 80
-            assertThat(response.getCompatibilityScore()).isEqualTo(80);
+            // interestScore: 2 interests -> 75.0 * 0.15 = 11.25
+            // ageScore: abs(25 - 27) = 2 -> 100 - (2 * 10) = 80.0 * 0.20 = 16.0
+            // distanceScore: 100 - (10.0 * 2) = 80.0 * 0.40 = 32.0
+            // recencyScore: null -> 0.0
+            // qualityScore: null -> 0.0
+            // Compatibility Score = 11.25 + 16.0 + 32.0 = 59.25 -> rounded to 59
+            assertThat(response.getCompatibilityScore()).isEqualTo(59);
         }
     }
 
@@ -188,16 +190,16 @@ class DatingDiscoveryServiceImplTest {
             assertThat(result.getContent()).hasSize(3);
 
             // Candidate 1: interestScore = 0. ageScore = 100. distanceScore = 100.
-            // score = 0 * 0.10 + 100 * 0.30 + 100 * 0.60 = 90
-            assertThat(result.getContent().get(0).getCompatibilityScore()).isEqualTo(90);
+            // score = 0 * 0.15 + 100 * 0.20 + 100 * 0.40 = 60
+            assertThat(result.getContent().get(0).getCompatibilityScore()).isEqualTo(60);
 
             // Candidate 2: interestScore = 50. ageScore = 100. distanceScore = 100.
-            // score = 50 * 0.10 + 100 * 0.30 + 100 * 0.60 = 5 + 30 + 60 = 95
-            assertThat(result.getContent().get(1).getCompatibilityScore()).isEqualTo(95);
+            // score = 50 * 0.15 + 100 * 0.20 + 100 * 0.40 = 7.5 + 20 + 40 = 67.5 -> rounded to 68
+            assertThat(result.getContent().get(1).getCompatibilityScore()).isEqualTo(68);
 
             // Candidate 3: interestScore = 100. ageScore = 100. distanceScore = 100.
-            // score = 100 * 0.10 + 100 * 0.30 + 100 * 0.60 = 10 + 30 + 60 = 100
-            assertThat(result.getContent().get(2).getCompatibilityScore()).isEqualTo(100);
+            // score = 100 * 0.15 + 100 * 0.20 + 100 * 0.40 = 15 + 20 + 40 = 75
+            assertThat(result.getContent().get(2).getCompatibilityScore()).isEqualTo(75);
         }
     }
 

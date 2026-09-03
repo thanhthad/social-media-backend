@@ -107,6 +107,15 @@ class StoryRepositoryTest {
         createStoryReaction(activeStory, alice, ReactionType.LOVE);
 
         em.flush();
+
+        // Cập nhật createdAt và expiresAt trong DB thỏa mãn ck_story_expiration (expires_at > created_at)
+        LocalDateTime now = LocalDateTime.now();
+        em.getEntityManager().createQuery("UPDATE Story s SET s.createdAt = :created, s.expiresAt = :expired WHERE s.id = :id")
+                .setParameter("created", now.minusHours(26))
+                .setParameter("expired", now.minusHours(2))
+                .setParameter("id", expiredStory.getId())
+                .executeUpdate();
+
         em.clear();
     }
 

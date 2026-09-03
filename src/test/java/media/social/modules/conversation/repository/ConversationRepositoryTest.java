@@ -187,12 +187,13 @@ class ConversationRepositoryTest {
         @DisplayName("findConversationList: Loại trừ hoàn toàn loại cuộc trò chuyện excludedType (DATING)")
         void findConversationList_excludesType() {
             // Tạo cuộc trò chuyện DATING
+            User managedAlice = em.find(User.class, alice.getId());
             Conversation datingConv = em.persist(Conversation.builder()
                     .type(ConversationType.DATING)
-                    .owner(alice)
+                    .owner(managedAlice)
                     .lastMessageAt(OffsetDateTime.now())
                     .build());
-            addMember(datingConv, alice);
+            addMember(datingConv, managedAlice);
             em.flush();
             em.clear();
 
@@ -232,10 +233,11 @@ class ConversationRepositoryTest {
     }
 
     private void addMember(Conversation conversation, User user) {
+        User managedUser = em.find(User.class, user.getId());
         em.persist(ConversationMember.builder()
-                .id(new ConversationMemberId(conversation.getId(), user.getId()))
+                .id(new ConversationMemberId(conversation.getId(), managedUser.getId()))
                 .conversation(conversation)
-                .user(user)
+                .user(managedUser)
                 .build());
     }
 }

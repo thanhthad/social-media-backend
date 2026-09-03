@@ -209,6 +209,8 @@ class NotificationServiceImplTest {
         NotificationProjection mockProjection = mock(NotificationProjection.class);
         when(mockProjection.getNotificationId()).thenReturn(500L);
         when(mockProjection.getSenderUsername()).thenReturn("sender");
+        when(mockProjection.getType()).thenReturn(NotificationType.POST_REACTION);
+        when(mockProjection.getEntityType()).thenReturn(EntityType.POST);
         Page<NotificationProjection> mockPage = new PageImpl<>(List.of(mockProjection));
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {

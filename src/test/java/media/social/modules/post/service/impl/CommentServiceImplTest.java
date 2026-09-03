@@ -162,7 +162,7 @@ class CommentServiceImplTest {
             assertEquals(parentId, response.getParentId());
 
             verify(postDomainService).increaseCommentCount(postId);
-            verify(notificationService).create(parentOwner, user, EntityType.COMMENT, parentId, NotificationType.COMMENT_REPLY);
+            verify(notificationService).create(parentOwner, user, EntityType.POST, postId, NotificationType.COMMENT_REPLY);
         }
     }
 

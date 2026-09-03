@@ -10,6 +10,7 @@ import media.social.modules.post.dto.response.reaction.ReactionResponse;
 import media.social.modules.post.dto.response.reaction.UserReactionResponse;
 import media.social.modules.post.entity.Comment;
 import media.social.modules.post.entity.CommentReaction;
+import media.social.modules.post.entity.Post;
 import media.social.modules.post.enums.ReactionType;
 import media.social.modules.post.exception.comment.CanNotCommentYourself;
 import media.social.modules.post.exception.comment.CommentNotFoundException;
@@ -70,9 +71,13 @@ class CommentReactionServiceImplTest {
         User commentOwner = new User();
         commentOwner.setId(commentOwnerId);
 
+        Post post = new Post();
+        post.setId(99L);
+
         Comment comment = Comment.builder()
                 .id(commentId)
                 .user(commentOwner)
+                .post(post)
                 .build();
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
@@ -92,7 +97,7 @@ class CommentReactionServiceImplTest {
             assertEquals(comment, saved.getComment());
             assertEquals(type, saved.getType());
 
-            verify(notificationService).create(commentOwner, user, EntityType.COMMENT, commentId, NotificationType.COMMENT_REACTION);
+            verify(notificationService).create(commentOwner, user, EntityType.POST, 99L, NotificationType.COMMENT_REACTION);
         }
     }
 
