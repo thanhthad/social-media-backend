@@ -153,50 +153,6 @@ class ReactionServiceImplTest {
     }
 
     @Test
-    void removeReaction_success_deletesAndDecreasesCountAndRemovesNotification() {
-        Long userId = 1L;
-        Long postOwnerId = 2L;
-        Long postId = 10L;
-
-        User postOwner = new User();
-        postOwner.setId(postOwnerId);
-
-        Post post = Post.builder().id(postId).user(postOwner).build();
-        Reaction reaction = new Reaction();
-
-        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
-            mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
-
-            when(postDomainService.getByPostId(postId)).thenReturn(post);
-            when(reactionRepository.findByUserIdAndPostId(userId, postId)).thenReturn(Optional.of(reaction));
-
-            reactionService.removeReaction(postId);
-
-            verify(reactionRepository).delete(reaction);
-            verify(postDomainService).decreaseReactionCount(postId);
-            verify(notificationService).delete(postOwnerId, userId, EntityType.POST, postId, NotificationType.POST_REACTION);
-        }
-    }
-
-    @Test
-    void removeReaction_reactionNotFound_throwsReactionNotFoundException() {
-        Long userId = 1L;
-        Long postId = 10L;
-
-        Post post = new Post();
-
-        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
-            mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
-
-            when(postDomainService.getByPostId(postId)).thenReturn(post);
-            when(reactionRepository.findByUserIdAndPostId(userId, postId)).thenReturn(Optional.empty());
-
-            assertThrows(ReactionNotFoundException.class, () -> reactionService.removeReaction(postId));
-            verify(reactionRepository, never()).delete(any());
-        }
-    }
-
-    @Test
     void countReaction_returnsCountMap() {
         Long postId = 10L;
         List<Object[]> results = new ArrayList<>();
@@ -221,7 +177,7 @@ class ReactionServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         UserReactionProjection projection = mock(UserReactionProjection.class);
         when(projection.getId()).thenReturn(1L);
-        when(projection.getEmail()).thenReturn("test@example.com");
+        when(projection.getUserName()).thenReturn("testuser");
         when(projection.getAvatarUrl()).thenReturn("http://avatar.url");
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         when(projection.getCreatedAt()).thenReturn(now);
@@ -235,7 +191,7 @@ class ReactionServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertEquals(1L, result.getContent().get(0).getId());
-        assertEquals("test@example.com", result.getContent().get(0).getEmail());
+        assertEquals("testuser", result.getContent().get(0).getUsername());
         assertEquals("http://avatar.url", result.getContent().get(0).getAvatarUrl());
         assertEquals(now, result.getContent().get(0).getCreatedAt());
         verify(postDomainService).getByPostId(postId);

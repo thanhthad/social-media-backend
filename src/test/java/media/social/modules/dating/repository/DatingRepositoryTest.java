@@ -8,8 +8,10 @@ import media.social.modules.dating.entity.*;
 import media.social.modules.dating.enums.DatingMatchStatus;
 import media.social.modules.dating.enums.DatingReportStatus;
 import media.social.modules.dating.enums.DatingSwipeAction;
+import media.social.modules.dating.enums.GenderPreference;
 import media.social.modules.user.entity.Profile;
 import media.social.modules.user.entity.User;
+import media.social.modules.user.enums.Gender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -102,15 +104,15 @@ class DatingRepositoryTest {
         createProfile(charlie, "Charlie Le");
 
         // Dating profile
-        aliceDatingProfile = createDatingProfile(alice, "Alice", "FEMALE", LocalDate.of(1998, 5, 20),
+        aliceDatingProfile = createDatingProfile(alice, "Alice", Gender.FEMALE, LocalDate.of(1998, 5, 20),
                 BigDecimal.valueOf(21.0285), BigDecimal.valueOf(105.8542)); // Hà Nội
 
-        bobDatingProfile = createDatingProfile(bob, "Bob", "MALE", LocalDate.of(1996, 3, 15),
+        bobDatingProfile = createDatingProfile(bob, "Bob", Gender.MALE, LocalDate.of(1996, 3, 15),
                 BigDecimal.valueOf(21.0300), BigDecimal.valueOf(105.8500));
 
         // Preferences
-        createDatingPreference(alice, 22, 35, "MALE", 50);
-        createDatingPreference(bob, 20, 30, "FEMALE", 50);
+        createDatingPreference(alice, 22, 35, GenderPreference.MALE, 50);
+        createDatingPreference(bob, 20, 30, GenderPreference.FEMALE, 50);
 
         // Swipe: alice likes bob
         createSwipe(alice, bob, DatingSwipeAction.LIKE);
@@ -251,7 +253,7 @@ class DatingRepositoryTest {
             DatingProfileCacheProjection p = cacheOpt.get();
             assertThat(p.getUsername()).isEqualTo("alice");
             assertThat(p.getDisplayName()).isEqualTo("Alice");
-            assertThat(p.getGender()).isEqualTo("FEMALE");
+            assertThat(p.getGender()).isEqualTo(Gender.FEMALE);
         }
 
         @Test
@@ -262,7 +264,7 @@ class DatingRepositoryTest {
 
             Optional<DatingPreference> prefOpt = datingPreferenceRepository.findByUserId(alice.getId());
             assertThat(prefOpt).isPresent();
-            assertThat(prefOpt.get().getGenderPreference()).isEqualTo("MALE");
+            assertThat(prefOpt.get().getGenderPreference()).isEqualTo(GenderPreference.MALE);
             assertThat(prefOpt.get().getMinAge()).isEqualTo(22);
             assertThat(prefOpt.get().getMaxAge()).isEqualTo(35);
         }
@@ -314,7 +316,7 @@ class DatingRepositoryTest {
                 .build());
     }
 
-    private DatingProfile createDatingProfile(User user, String displayName, String gender,
+    private DatingProfile createDatingProfile(User user, String displayName, Gender gender,
                                               LocalDate birthday, BigDecimal lat, BigDecimal lng) {
         return em.persist(DatingProfile.builder()
                 .user(user)
@@ -327,7 +329,7 @@ class DatingRepositoryTest {
                 .build());
     }
 
-    private void createDatingPreference(User user, Integer minAge, Integer maxAge, String genderPref, Integer maxDist) {
+    private void createDatingPreference(User user, Integer minAge, Integer maxAge, GenderPreference genderPref, Integer maxDist) {
         em.persist(DatingPreference.builder()
                 .user(user)
                 .minAge(minAge)

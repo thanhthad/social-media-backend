@@ -326,7 +326,7 @@ class CommentReactionServiceImplTest {
         Comment comment = new Comment();
         UserReactionProjection projection = mock(UserReactionProjection.class);
         when(projection.getId()).thenReturn(1L);
-        when(projection.getEmail()).thenReturn("test@example.com");
+        when(projection.getUserName()).thenReturn("testuser");
         when(projection.getAvatarUrl()).thenReturn("http://avatar.url");
         LocalDateTime now = LocalDateTime.now();
         when(projection.getCreatedAt()).thenReturn(now);
@@ -341,7 +341,7 @@ class CommentReactionServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertEquals(1L, result.getContent().get(0).getId());
-        assertEquals("test@example.com", result.getContent().get(0).getEmail());
+        assertEquals("testuser", result.getContent().get(0).getUsername());
         assertEquals("http://avatar.url", result.getContent().get(0).getAvatarUrl());
         assertEquals(now, result.getContent().get(0).getCreatedAt());
     }

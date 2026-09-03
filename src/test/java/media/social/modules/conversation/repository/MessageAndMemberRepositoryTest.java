@@ -131,7 +131,7 @@ class MessageAndMemberRepositoryTest {
         em.persist(MessageReaction.builder()
                 .message(msg1)
                 .user(alice)
-                .type(ReactionType.LOVE.name())
+                .type(ReactionType.LOVE)
                 .build());
 
         em.flush();
@@ -152,7 +152,7 @@ class MessageAndMemberRepositoryTest {
             MessageReaction duplicate = MessageReaction.builder()
                     .message(msg1)
                     .user(alice)
-                    .type(ReactionType.LIKE.name())
+                    .type(ReactionType.LIKE)
                     .build();
 
             assertThatThrownBy(() -> {
@@ -233,7 +233,7 @@ class MessageAndMemberRepositoryTest {
 
             assertThat(reactions).hasSize(1);
             assertThat(reactions.get(0).getUserName()).isEqualTo("alice");
-            assertThat(reactions.get(0).getReactionType()).isEqualTo(ReactionType.LOVE.name());
+            assertThat(reactions.get(0).getReactionType()).isEqualTo(ReactionType.LOVE);
         }
     }
 

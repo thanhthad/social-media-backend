@@ -215,7 +215,7 @@ class NotificationServiceImplTest {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
             when(notificationRepository.findMyNotifications(userId, pageable)).thenReturn(mockPage);
 
-            Page<NotificationResponse> result = notificationService.getMyNotifications(pageable);
+            Page<NotificationResponse> result = notificationService.getMyNotifications(pageable, false);
 
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
