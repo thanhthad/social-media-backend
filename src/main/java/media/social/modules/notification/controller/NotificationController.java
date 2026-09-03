@@ -8,6 +8,8 @@ import media.social.common.ratelimit.annotation.RateLimit;
 import media.social.common.response.ResponseData;
 import media.social.modules.notification.service.NotificationService;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,18 +25,18 @@ public class NotificationController {
 
     // ================= GET MY NOTIFICATIONS =================
     @GetMapping
-    @Operation(summary = "Get my notifications")
+    @Operation(summary = "Get my notifications (optionally filter unread only)")
     @RateLimit(
             name = "NOTIFICATION_GET_LIST",
             limit = 120,
             windowSeconds = 60
     )
     public ResponseEntity<?> getMyNotifications(
-            Pageable pageable
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(value = "unreadOnly", defaultValue = "false") boolean unreadOnly
     ) {
-
         return ResponseData.success(
-                notificationService.getMyNotifications(pageable),
+                notificationService.getMyNotifications(pageable, unreadOnly),
                 "Get notifications successfully",
                 HttpStatus.OK
         );
@@ -51,14 +53,8 @@ public class NotificationController {
     public ResponseEntity<?> markAsRead(
             @PathVariable Long notificationId
     ) {
-
         notificationService.markAsRead(notificationId);
-
-        return ResponseData.success(
-                null,
-                "Notification marked as read",
-                HttpStatus.OK
-        );
+        return ResponseData.success(null, "Notification marked as read", HttpStatus.OK);
     }
 
     // ================= MARK ALL AS READ =================
@@ -70,14 +66,8 @@ public class NotificationController {
             windowSeconds = 60
     )
     public ResponseEntity<?> markAllAsRead() {
-
         notificationService.markAllAsRead();
-
-        return ResponseData.success(
-                null,
-                "All notifications marked as read",
-                HttpStatus.OK
-        );
+        return ResponseData.success(null, "All notifications marked as read", HttpStatus.OK);
     }
 
     // ================= COUNT UNREAD =================
@@ -89,7 +79,6 @@ public class NotificationController {
             windowSeconds = 60
     )
     public ResponseEntity<?> countUnread() {
-
         return ResponseData.success(
                 notificationService.countUnread(),
                 "Count unread notifications successfully",
@@ -109,11 +98,6 @@ public class NotificationController {
             @PathVariable Long notificationId
     ) {
         notificationService.deleteById(notificationId);
-
-        return ResponseData.success(
-                null,
-                "Notification deleted successfully",
-                HttpStatus.OK
-        );
+        return ResponseData.success(null, "Notification deleted successfully", HttpStatus.OK);
     }
 }

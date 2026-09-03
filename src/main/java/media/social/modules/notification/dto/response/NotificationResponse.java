@@ -19,6 +19,8 @@ public class NotificationResponse {
 
     private String senderUsername;
 
+    private String senderFullName;
+
     private String senderAvatar;
 
     private NotificationType type;
@@ -31,4 +33,9 @@ public class NotificationResponse {
 
     private LocalDateTime createdAt;
 
+    /** Human-readable message built server-side, e.g. "Minh đã thích bài viết của bạn." */
+    private String message;
+
+    /** Client-side navigation target, e.g. "/posts/42" or "/friends" */
+    private String targetUrl;
 }

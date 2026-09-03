@@ -26,12 +26,11 @@ public interface NotificationService {
     );
 
     Page<NotificationResponse> getMyNotifications(
-            Pageable pageable
+            Pageable pageable,
+            boolean unreadOnly
     );
 
-    void markAsRead(
-            Long notificationId
-    );
+    void markAsRead(Long notificationId);
 
     void markAllAsRead();
 

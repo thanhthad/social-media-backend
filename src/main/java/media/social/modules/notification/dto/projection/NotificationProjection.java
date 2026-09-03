@@ -13,6 +13,8 @@ public interface NotificationProjection {
 
     String getSenderUsername();
 
+    String getSenderFullName();
+
     String getSenderAvatar();
 
     NotificationType getType();

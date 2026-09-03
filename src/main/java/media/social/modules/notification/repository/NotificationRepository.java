@@ -1,7 +1,6 @@
 package media.social.modules.notification.repository;
 
 import media.social.modules.notification.dto.projection.NotificationProjection;
-import media.social.modules.notification.dto.response.NotificationResponse;
 import media.social.modules.notification.entity.Notification;
 import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
@@ -43,15 +42,16 @@ public interface NotificationRepository
 
     @Query("""
         SELECT
-            n.id AS notificationId,
-            s.id AS senderId,
-            s.username AS senderUsername,
-            p.avatarUrl AS senderAvatar,
-            n.type AS type,
-            n.entityType AS entityType,
-            n.entityId AS entityId,
-            n.isRead AS isRead,
-            n.createdAt AS createdAt
+            n.id            AS notificationId,
+            s.id            AS senderId,
+            s.username      AS senderUsername,
+            p.fullName      AS senderFullName,
+            p.avatarUrl     AS senderAvatar,
+            n.type          AS type,
+            n.entityType    AS entityType,
+            n.entityId      AS entityId,
+            n.isRead        AS isRead,
+            n.createdAt     AS createdAt
         FROM Notification n
         JOIN n.sender s
         LEFT JOIN s.profile p
@@ -59,6 +59,30 @@ public interface NotificationRepository
         ORDER BY n.createdAt DESC
     """)
     Page<NotificationProjection> findMyNotifications(
+            @Param("receiverId") Long receiverId,
+            Pageable pageable
+    );
+
+    @Query("""
+        SELECT
+            n.id            AS notificationId,
+            s.id            AS senderId,
+            s.username      AS senderUsername,
+            p.fullName      AS senderFullName,
+            p.avatarUrl     AS senderAvatar,
+            n.type          AS type,
+            n.entityType    AS entityType,
+            n.entityId      AS entityId,
+            n.isRead        AS isRead,
+            n.createdAt     AS createdAt
+        FROM Notification n
+        JOIN n.sender s
+        LEFT JOIN s.profile p
+        WHERE n.receiver.id = :receiverId
+          AND n.isRead = false
+        ORDER BY n.createdAt DESC
+    """)
+    Page<NotificationProjection> findMyUnreadNotifications(
             @Param("receiverId") Long receiverId,
             Pageable pageable
     );
@@ -79,6 +103,5 @@ public interface NotificationRepository
         WHERE n.receiver.id = :receiverId
           AND n.isRead = false
     """)
-    void markAllAsRead(Long receiverId);
-
+    void markAllAsRead(@Param("receiverId") Long receiverId);
 }
