@@ -23,6 +23,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,7 +52,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@DisplayName("UserRepository – Integration Tests với PostgreSQL Testcontainers")
+@DisplayName("UserRepository – Integration Tests với PostgreSQL Container")
 class UserRepositoryTest {
 
     // =========================================================================
@@ -60,7 +61,7 @@ class UserRepositoryTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
+            new PostgreSQLContainer<>(DockerImageName.parse("postgis/postgis:16-3.4-alpine").asCompatibleSubstituteFor("postgres"))
                     .withDatabaseName("social_test_user_db")
                     .withUsername("postgres")
                     .withPassword("postgres");
@@ -213,12 +214,14 @@ class UserRepositoryTest {
         }
 
         @Test
-        @DisplayName("JOIN: INNER JOIN loại bỏ user không có profile (diana -> empty)")
-        void findCurrentUserProfileCache_userWithoutProfile_returnsEmpty() {
+        @DisplayName("LEFT JOIN: User không có profile (diana) vẫn lấy được cache nhưng thông tin profile là null")
+        void findCurrentUserProfileCache_userWithoutProfile_hasNullProfileFields() {
             Optional<PublicUserProfileCacheProjection> projection =
                     userRepository.findCurrentUserProfileCache(diana.getId());
 
-            assertThat(projection).isEmpty();
+            assertThat(projection).isPresent();
+            assertThat(projection.get().getUsername()).isEqualTo("diana_banned");
+            assertThat(projection.get().getFullName()).isNull();
         }
     }
 
@@ -574,10 +577,12 @@ class UserRepositoryTest {
     }
 
     private void createBlock(User blocker, User blocked) {
+        User managedBlocker = em.find(User.class, blocker.getId());
+        User managedBlocked = em.find(User.class, blocked.getId());
         Block block = Block.builder()
-                .id(new BlockId(blocker.getId(), blocked.getId()))
-                .blocker(blocker)
-                .blocked(blocked)
+                .id(new BlockId(managedBlocker.getId(), managedBlocked.getId()))
+                .blocker(managedBlocker)
+                .blocked(managedBlocked)
                 .build();
         em.persist(block);
     }

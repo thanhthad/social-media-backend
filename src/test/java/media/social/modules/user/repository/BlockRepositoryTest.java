@@ -23,6 +23,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,10 +37,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * <p>Kiểm thử:
  * <ul>
- *     <li>Migration test (Flyway V1 bảng blocks, khóa chính phức hợp BlockId(blocker_id, blocked_id), ON DELETE CASCADE)</li>
- *     <li>existsByBlockerIdAndBlockedId (Derived query kiểm tra trạng thái chặn)</li>
- *     <li>findBlock (JPQL query tìm đối tượng Block cụ thể)</li>
- *     <li>findBlockedUsers (JPQL JOIN b.blocked u LEFT JOIN u.profile p với ORDER BY và Pageable)</li>
+ *     <li>Migration test (schema Flyway V1: bảng blocks, composite PK BlockId, foreign keys)</li>
+ *     <li>existsByBlockerIdAndBlockedId</li>
+ *     <li>findBlock (tìm quan hệ block 2 chiều)</li>
+ *     <li>findBlockedUsers (JOIN + LEFT JOIN profile, phân trang Pageable)</li>
+ *     <li>Cascade delete khi xóa User</li>
  * </ul>
  */
 @Testcontainers
@@ -50,7 +52,7 @@ class BlockRepositoryTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
+            new PostgreSQLContainer<>(DockerImageName.parse("postgis/postgis:16-3.4-alpine").asCompatibleSubstituteFor("postgres"))
                     .withDatabaseName("social_test_block_db")
                     .withUsername("postgres")
                     .withPassword("postgres");
@@ -215,10 +217,12 @@ class BlockRepositoryTest {
     }
 
     private void createBlock(User blocker, User blocked) {
+        User managedBlocker = em.find(User.class, blocker.getId());
+        User managedBlocked = em.find(User.class, blocked.getId());
         em.persist(Block.builder()
-                .id(new BlockId(blocker.getId(), blocked.getId()))
-                .blocker(blocker)
-                .blocked(blocked)
+                .id(new BlockId(managedBlocker.getId(), managedBlocked.getId()))
+                .blocker(managedBlocker)
+                .blocked(managedBlocked)
                 .build());
     }
 }

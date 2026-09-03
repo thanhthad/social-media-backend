@@ -25,6 +25,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,17 +37,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Migration & Query Integration Test cho {@link FriendshipRepository} sử dụng PostgreSQL Testcontainers.
  *
- * <p>Kiểm thử toàn diện các query nghiệp vụ quan trọng trong Friendship:
+ * <p>Kiểm thử các query thực tế có sẵn trong FriendshipRepository:
  * <ul>
- *     <li>Migration test (schema Flyway V1: bảng friendships, unique uk_friendship_pair, check chk_friendship_different_users)</li>
- *     <li>EXISTS (getFriends: kiểm tra viewerFriendship qua EXISTS sub-query để xem danh sách bạn bè với Visibility.FRIEND)</li>
- *     <li>NOT EXISTS (findSuggestedUsers: loại bỏ người đã là bạn qua NOT EXISTS sub-query)</li>
- *     <li>GROUP BY + COUNT (findSuggestedUsers: GROUP BY f2.friend_id, u.username, p.avatar_url COUNT(*) AS mutual_count)</li>
- *     <li>ORDER BY (findSuggestedUsers: ORDER BY mutual_count DESC; findMutualFriends: ORDER BY u.username)</li>
- *     <li>COUNT (findMutualFriendCount: COUNT(*), findFriendshipCount: COUNT(f.id), areFriends: COUNT(f) > 0)</li>
- *     <li>Complex CTE Native Query (findSuggestedUsers, findMutualFriends dùng WITH friend_pairs AS (...))</li>
- *     <li>Pagination (getMyFriends, getPendingFriendRequests, getFriends qua Pageable)</li>
- *     <li>Complex WHERE (getFriends: visibility check PUBLIC or (FRIEND and EXISTS viewerFriendship))</li>
+ *     <li>Migration test (Flyway V1, ràng buộc chk_friendship_different_users, uk_friendship_pair)</li>
+ *     <li>getFriends: EXISTS subquery kiểm tra viewerFriendship khi visibility = FRIEND, ORDER BY acceptedAt DESC</li>
+ *     <li>findSuggestedUsers: CTE native query WITH friend_pairs AS (...), GROUP BY, COUNT(*) AS mutual_count,
+ *         NOT EXISTS bạn bè hiện tại, ORDER BY mutual_count DESC</li>
+ *     <li>findMutualFriendCount, findFriendshipCount, areFriends (COUNT(f) > 0)</li>
+ *     <li>findMutualFriends, findMutualFriendAvatars (lọc avatar_url IS NOT NULL)</li>
+ *     <li>getMyFriends, getPendingFriendRequests</li>
  * </ul>
  */
 @Testcontainers
@@ -57,7 +56,7 @@ class FriendshipRepositoryTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
+            new PostgreSQLContainer<>(DockerImageName.parse("postgis/postgis:16-3.4-alpine").asCompatibleSubstituteFor("postgres"))
                     .withDatabaseName("social_test_friendship_db")
                     .withUsername("postgres")
                     .withPassword("postgres");

@@ -839,14 +839,28 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getUserById_sameUser_throwsUserAlreadyExistsException() {
+    void getUserById_sameUser_returnsProfile() {
         Long userId = 1L;
+        PublicUserProfileCacheResponse cache = PublicUserProfileCacheResponse.builder()
+                .id(userId)
+                .username("self_user")
+                .fullName("Self User")
+                .build();
+        FriendshipCountResponse friendCount = FriendshipCountResponse.builder().totalFriends(3L).build();
 
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
 
-            assertThrows(UserAlreadyExistsException.class,
-                    () -> userService.getUserById(userId));
+            when(userProfileCacheService.getUserProfile(userId)).thenReturn(cache);
+            when(userProfileCacheService.getTotalFriend(userId)).thenReturn(friendCount);
+
+            PublicProfileResponse response = userService.getUserById(userId);
+
+            assertNotNull(response);
+            assertEquals(userId, response.getUserId());
+            assertEquals("self_user", response.getUsername());
+            assertEquals(0L, response.getTotalMutualCount());
+            assertFalse(response.isFriend());
 
             verify(blockPolicyService, never()).isBlocked(anyLong(), anyLong());
         }

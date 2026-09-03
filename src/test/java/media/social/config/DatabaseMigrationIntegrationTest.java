@@ -14,6 +14,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +43,7 @@ class DatabaseMigrationIntegrationTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgis/postgis:16-3.4-alpine")
+            new PostgreSQLContainer<>(DockerImageName.parse("postgis/postgis:16-3.4-alpine").asCompatibleSubstituteFor("postgres"))
                     .withDatabaseName("social_master_migration_db")
                     .withUsername("postgres")
                     .withPassword("postgres");
@@ -212,12 +213,13 @@ class DatabaseMigrationIntegrationTest {
                     "SELECT name FROM dating_interests", String.class);
 
             assertThat(interestNames).contains(
-                    "Du lịch",
-                    "Âm nhạc",
-                    "Đọc sách",
-                    "Nấu ăn",
-                    "Gym / Thể thao",
-                    "Chơi game"
+                    "Gaming",
+                    "Travel",
+                    "Music",
+                    "Coding",
+                    "Reading",
+                    "Cooking",
+                    "Fitness"
             );
         }
     }

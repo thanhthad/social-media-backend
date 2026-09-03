@@ -18,6 +18,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,11 +34,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * <p>Kiểm thử:
  * <ul>
- *     <li>Migration test (Flyway V1, V2: bảng roles, user_roles composite PK, profiles 1-1 unique constraint, JSONB)</li>
- *     <li>existsByUserIdAndRoleName, existsUserRole (CASE WHEN COUNT(ur) > 0 THEN true ELSE false END)</li>
- *     <li>findRolesByUserId (JPQL JOIN ur.role r)</li>
- *     <li>findUsersByRole (JPQL JOIN ur.user u)</li>
- *     <li>ProfileRepository: findByUser, findByUserId, existsByUserId</li>
+ *     <li>Migration test (schema Flyway V1, V2 seed roles USER, ADMIN, MODERATOR)</li>
+ *     <li>existsUserRole (CASE WHEN COUNT(ur) > 0 THEN true ELSE false END)</li>
+ *     <li>findRolesByUserId (JOIN FETCH ur.role r)</li>
+ *     <li>findUsersByRole (JOIN ur.user u)</li>
+ *     <li>ProfileRepository (JSONB mapping social_links, CRUD profile)</li>
  * </ul>
  */
 @Testcontainers
@@ -48,7 +49,7 @@ class UserRoleAndProfileRepositoryTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
+            new PostgreSQLContainer<>(DockerImageName.parse("postgis/postgis:16-3.4-alpine").asCompatibleSubstituteFor("postgres"))
                     .withDatabaseName("social_test_role_profile_db")
                     .withUsername("postgres")
                     .withPassword("postgres");
