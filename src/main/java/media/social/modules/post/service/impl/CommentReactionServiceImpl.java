@@ -78,8 +78,8 @@ public class CommentReactionServiceImpl
             notificationService.create(
                     comment.getUser(),
                     user,
-                    EntityType.COMMENT,
-                    comment.getId(),
+                    EntityType.POST,
+                    comment.getPost().getId(),
                     NotificationType.COMMENT_REACTION
             );
 

@@ -69,8 +69,8 @@ public class CommentServiceImpl implements CommentService {
             notificationService.create(
                     parent.getUser(),
                     user,
-                    EntityType.COMMENT,
-                    parent.getId(),
+                    EntityType.POST,
+                    post.getId(),
                     NotificationType.COMMENT_REPLY
             );
         }
