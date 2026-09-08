@@ -153,4 +153,22 @@ public class DatingProfileController {
                 HttpStatus.OK
         );
     }
-}
+
+    /**
+     * Cập nhật 1 field riêng lẻ trên hồ sơ dating (Facebook-style inline edit).
+     * Dùng từ popup inline edit trên trang hồ sơ dating.
+     * Ví dụ: {"fieldName":"BIO","value":"Tôi thích đi phượt và chụp ảnh đẹp"}
+     */
+    @PatchMapping("/me/profile/field")
+    @Operation(summary = "Update a single dating profile field (Facebook-style inline edit)")
+    @RateLimit(name = "DATING_UPDATE_PROFILE_FIELD", limit = 30, windowSeconds = 60)
+    public ResponseEntity<?> updateDatingProfileField(
+            @Valid @RequestBody UpdateDatingProfileFieldRequest request
+    ) {
+        return ResponseData.success(
+                datingProfileService.updateDatingProfileField(request),
+                "Update dating profile field successfully",
+                HttpStatus.OK
+        );
+    }
+}

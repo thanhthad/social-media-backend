@@ -20,6 +20,9 @@ import media.social.modules.user.exception.user.UserNotFoundException;
 import media.social.modules.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import media.social.modules.user.enums.Gender;
+import media.social.modules.dating.enums.DatingProfileFieldName;
+import java.time.LocalDate;
 
 
 @Service
@@ -266,4 +269,123 @@ public class DatingProfileServiceImpl implements DatingProfileService {
 
         datingProfile.setActive(false);
     }
+
+    /**
+     * Cập nhật từng field riêng lẻ trên hồ sơ dating (Facebook-style inline edit).
+     * Endpoint: PATCH /api/dating/me/profile/field
+     * Value luôn nhận dưới dạng String rồi parse theo từng fieldName.
+     */
+    @Override
+    @Transactional
+    public DatingProfileResponse updateDatingProfileField(UpdateDatingProfileFieldRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+        DatingProfile profile = getDatingProfile(userId);
+
+        String raw = request.getValue() != null ? request.getValue().trim() : null;
+        DatingProfileResponse.DatingProfileResponseBuilder builder = DatingProfileResponse.builder();
+
+        switch (request.getFieldName()) {
+
+            // ── Basic Info ─────────────────────────────────────────
+            case DISPLAY_NAME -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("Display name cannot exceed 100 characters");
+                profile.setDisplayName(raw == null || raw.isEmpty() ? null : raw);
+                builder.displayName(profile.getDisplayName());
+            }
+
+            case BIO -> {
+                if (raw != null && raw.length() > 500)
+                    throw new IllegalArgumentException("Bio cannot exceed 500 characters");
+                profile.setBio(raw == null || raw.isEmpty() ? null : raw);
+                builder.bio(profile.getBio());
+            }
+
+            case GENDER -> {
+                profile.setGender(raw == null || raw.isEmpty() ? null : Gender.valueOf(raw.toUpperCase()));
+                builder.gender(profile.getGender());
+            }
+
+            case BIRTHDAY -> {
+                // Nhận ISO yyyy-MM-dd; null/rỗng → xóa
+                LocalDate bday = (raw == null || raw.isEmpty()) ? null : LocalDate.parse(raw);
+                if (bday != null && !bday.isBefore(LocalDate.now()))
+                    throw new IllegalArgumentException("Birthday must be in the past");
+                profile.setBirthday(bday);
+                builder.birthday(profile.getBirthday());
+            }
+
+            case HEIGHT -> {
+                if (raw == null || raw.isEmpty()) {
+                    profile.setHeight(null);
+                } else {
+                    int h = Integer.parseInt(raw);
+                    if (h < 100 || h > 250)
+                        throw new IllegalArgumentException("Height must be between 100 and 250 cm");
+                    profile.setHeight(h);
+                }
+                builder.height(profile.getHeight());
+            }
+
+            // ── Career ──────────────────────────────────────────
+            case OCCUPATION -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("Occupation cannot exceed 100 characters");
+                profile.setOccupation(raw == null || raw.isEmpty() ? null : raw);
+                builder.occupation(profile.getOccupation());
+            }
+
+            case EDUCATION -> {
+                if (raw != null && raw.length() > 150)
+                    throw new IllegalArgumentException("Education cannot exceed 150 characters");
+                profile.setEducation(raw == null || raw.isEmpty() ? null : raw);
+                builder.education(profile.getEducation());
+            }
+
+            // ── Location ────────────────────────────────────────
+            case COUNTRY -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("Country cannot exceed 100 characters");
+                profile.setCountry(raw == null || raw.isEmpty() ? null : raw);
+                builder.country(profile.getCountry());
+            }
+
+            case CITY -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("City cannot exceed 100 characters");
+                profile.setCity(raw == null || raw.isEmpty() ? null : raw);
+                builder.city(profile.getCity());
+            }
+
+            case DISTRICT -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("District cannot exceed 100 characters");
+                profile.setDistrict(raw == null || raw.isEmpty() ? null : raw);
+                builder.district(profile.getDistrict());
+            }
+
+            // ── Status & Visibility ──────────────────────────────
+            case VISIBILITY -> {
+                Visibility vis = (raw == null || raw.isEmpty())
+                        ? Visibility.PUBLIC
+                        : Visibility.valueOf(raw.toUpperCase());
+                profile.setVisibility(vis);
+                builder.visibility(profile.getVisibility());
+            }
+
+            case ACTIVE -> {
+                // "true" hoặc "false"
+                boolean active = Boolean.parseBoolean(raw);
+                profile.setActive(active);
+                builder.active(profile.getActive());
+            }
+        }
+
+        datingProfileRepository.save(profile);
+        datingProfileCacheService.evictProfile(userId);
+
+        return builder.build();
+    }
 }
+

@@ -40,4 +40,10 @@ public interface DatingProfileService {
     );
 
     void deleteProfile();
-}
+
+    /**
+     * Cập nhật từng field riêng lẻ trên hồ sơ dating (Facebook-style inline edit).
+     * Endpoint: PATCH /api/dating/me/profile/field
+     */
+    DatingProfileResponse updateDatingProfileField(UpdateDatingProfileFieldRequest request);
+}
