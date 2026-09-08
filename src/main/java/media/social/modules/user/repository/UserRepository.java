@@ -2,14 +2,9 @@ package media.social.modules.user.repository;
 
 import media.social.modules.auth.Enum.Status;
 import media.social.modules.user.dto.projection.AdminUserProjection;
-import media.social.modules.user.dto.projection.FriendshipCountProjection;
 import media.social.modules.user.dto.projection.PublicUserProfileCacheProjection;
 import media.social.modules.user.dto.projection.UserSearchProjection;
-import media.social.modules.user.dto.response.cache.PublicUserProfileCacheResponse;
-import media.social.modules.user.dto.response.user.AdminUserResponse;
-import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
 import media.social.modules.user.entity.User;
-import media.social.modules.user.enums.FriendshipStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
