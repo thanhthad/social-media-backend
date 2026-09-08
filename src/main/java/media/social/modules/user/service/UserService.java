@@ -10,6 +10,12 @@ import org.springframework.data.domain.Pageable;
 
 public interface UserService {
 
+    /**
+     * Cập nhật từng field riêng lẻ trên Profile (Facebook-style per-field edit).
+     * Endpoint: PATCH /api/users/me/profile/field
+     */
+    ProfileResponse updateProfileField(UpdateProfileFieldRequest request);
+
     public MyProfileResponse getMe();
 
     ProfileResponse updateBasicProfile(

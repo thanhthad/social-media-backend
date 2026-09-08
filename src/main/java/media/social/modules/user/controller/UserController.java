@@ -108,6 +108,24 @@ public class UserController {
         );
     }
 
+    /**
+     * Cập nhật 1 field riêng lẻ trên Profile (Facebook-style per-field edit).
+     * Dùng từ popup inline edit trên trang cá nhân.
+     * Ví dụ: {"fieldName":"BIO","value":"Xin chào mọi người!"}
+     */
+    @PatchMapping("/me/profile/field")
+    @Operation(summary = "Update a single profile field (Facebook-style inline edit)")
+    @RateLimit(name = "USER_UPDATE_PROFILE_FIELD", limit = 30, windowSeconds = 60)
+    public ResponseEntity<?> updateProfileField(
+            @Valid @RequestBody media.social.modules.user.dto.request.profile.UpdateProfileFieldRequest request
+    ) {
+        return ResponseData.success(
+                userService.updateProfileField(request),
+                "Update profile field successfully",
+                HttpStatus.OK
+        );
+    }
+
     @PutMapping("/me/username")
     @Operation(summary = "Update username")
     @RateLimit(name = "USER_UPDATE_USERNAME", limit = 10, windowSeconds = 60)

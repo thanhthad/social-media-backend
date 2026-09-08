@@ -48,6 +48,14 @@ import media.social.modules.user.enums.FriendshipStatus;
 import media.social.modules.user.entity.Friendship;
 import media.social.modules.user.repository.FriendshipRepository;
 import java.util.Optional;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import media.social.modules.post.enums.Visibility;
+import media.social.modules.user.enums.Gender;
+import media.social.modules.user.enums.ProfileFieldName;
+import java.time.LocalDate;
+import java.util.Map;
+
 
 @Service
 @AllArgsConstructor
@@ -244,8 +252,158 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    /**
+     * Cập nhật từng field riêng lẻ trên Profile (Facebook-style).
+     * Endpoint: PATCH /api/users/me/profile/field
+     * Value luôn nhận dưới dạng String rồi parse theo từng fieldName.
+     * Trả về ProfileResponse chứa đúng field vừa cập nhật.
+     */
     @Override
     @Transactional
+    public ProfileResponse updateProfileField(UpdateProfileFieldRequest request) {
+
+        Long userId = UserContextHolder.getUserId();
+
+        User user = userRepository.findByIdWithProfile(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Profile profile = user.getProfile();
+        String raw = request.getValue() != null ? request.getValue().trim() : null;
+
+        ProfileResponse.ProfileResponseBuilder builder = ProfileResponse.builder();
+
+        switch (request.getFieldName()) {
+
+            // ── Basic Info ─────────────────────────────────────────────
+            case FULL_NAME -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("Full name cannot exceed 100 characters");
+                profile.setFullName(raw);
+                builder.fullName(profile.getFullName());
+            }
+
+            case BIO -> {
+                if (raw != null && raw.length() > 500)
+                    throw new IllegalArgumentException("Bio cannot exceed 500 characters");
+                profile.setBio(raw);
+                builder.bio(profile.getBio());
+            }
+
+            case DATE_OF_BIRTH -> {
+                // Nhận dạng ISO yyyy-MM-dd; null hoặc rỗng → xóa ngày sinh
+                LocalDate dob = (raw == null || raw.isEmpty()) ? null : LocalDate.parse(raw);
+                if (dob != null && !dob.isBefore(LocalDate.now()))
+                    throw new IllegalArgumentException("Date of birth must be in the past");
+                profile.setDateOfBirth(dob);
+                builder.dateOfBirth(profile.getDateOfBirth());
+            }
+
+            case GENDER -> {
+                // Null/rỗng → xóa gender
+                profile.setGender(raw == null || raw.isEmpty() ? null : Gender.valueOf(raw.toUpperCase()));
+                builder.gender(profile.getGender());
+            }
+
+            // ── Contact ───────────────────────────────────────────────
+            case PHONE -> {
+                if (raw != null && !raw.isEmpty() && !raw.matches("^(03|05|07|08|09)[0-9]{8}$"))
+                    throw new IllegalArgumentException("Invalid phone number");
+                profile.setPhone(raw == null || raw.isEmpty() ? null : raw);
+                builder.phone(profile.getPhone());
+            }
+
+            case WEBSITE -> {
+                if (raw != null && raw.length() > 255)
+                    throw new IllegalArgumentException("Website cannot exceed 255 characters");
+                profile.setWebsite(raw == null || raw.isEmpty() ? null : raw);
+                builder.website(profile.getWebsite());
+            }
+
+            case COUNTRY -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("Country cannot exceed 100 characters");
+                profile.setCountry(raw == null || raw.isEmpty() ? null : raw);
+                builder.country(profile.getCountry());
+            }
+
+            case CITY -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("City cannot exceed 100 characters");
+                profile.setCity(raw == null || raw.isEmpty() ? null : raw);
+                builder.city(profile.getCity());
+            }
+
+            case DISTRICT -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("District cannot exceed 100 characters");
+                profile.setDistrict(raw == null || raw.isEmpty() ? null : raw);
+                builder.district(profile.getDistrict());
+            }
+
+            // ── Career ────────────────────────────────────────────────
+            case OCCUPATION -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("Occupation cannot exceed 100 characters");
+                profile.setOccupation(raw == null || raw.isEmpty() ? null : raw);
+                builder.occupation(profile.getOccupation());
+            }
+
+            case COMPANY -> {
+                if (raw != null && raw.length() > 100)
+                    throw new IllegalArgumentException("Company cannot exceed 100 characters");
+                profile.setCompany(raw == null || raw.isEmpty() ? null : raw);
+                builder.company(profile.getCompany());
+            }
+
+            case EDUCATION -> {
+                if (raw != null && raw.length() > 150)
+                    throw new IllegalArgumentException("Education cannot exceed 150 characters");
+                profile.setEducation(raw == null || raw.isEmpty() ? null : raw);
+                builder.education(profile.getEducation());
+            }
+
+            // ── Social Links ──────────────────────────────────────────
+            case SOCIAL_LINKS -> {
+                // Value là JSON string: {"facebook":"https://...","twitter":"https://..."}
+                if (raw == null || raw.isEmpty()) {
+                    profile.setSocialLinks(null);
+                } else {
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        Map<String, String> links = mapper.readValue(
+                                raw, new TypeReference<Map<String, String>>() {}
+                        );
+                        if (links.size() > 5)
+                            throw new IllegalArgumentException("Maximum 5 social links allowed");
+                        profile.setSocialLinks(links);
+                    } catch (IllegalArgumentException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("Invalid social links format. Expected JSON object.");
+                    }
+                }
+                builder.socialLinks(profile.getSocialLinks());
+            }
+
+            // ── Visibility ────────────────────────────────────────────
+            case VISIBILITY -> {
+                Visibility vis = (raw == null || raw.isEmpty())
+                        ? Visibility.PUBLIC
+                        : Visibility.valueOf(raw.toUpperCase());
+                profile.setVisibility(vis);
+                builder.profileVisibility(profile.getVisibility());
+            }
+        }
+
+        profileRepository.save(profile);
+        userProfileCacheService.evictProfile(userId);
+
+        return builder.build();
+    }
+
+    @Override
+    @Transactional
+
     public UserProfileResponse updateUserName(UpdateUsernameRequest request) {
         boolean checked = userRepository.existsByUsername(request.getUserName());
         if(checked){
