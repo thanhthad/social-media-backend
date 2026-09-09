@@ -1,8 +1,8 @@
 package media.social.modules.user.service.impl;
+import media.social.infrastructure.kafka.producer.KafkaEventPublisher;
 import media.social.modules.post.enums.MediaType;
 import media.social.modules.auth.Enum.AuthProvider;
 import media.social.modules.auth.Enum.RoleName;
-import media.social.modules.user.dto.projection.MutualFriendCountProjection;
 import media.social.modules.user.dto.projection.UserSearchProjection;
 import media.social.modules.user.dto.request.profile.*;
 import media.social.modules.user.dto.request.user.UpdateUsernameRequest;
@@ -10,10 +10,10 @@ import media.social.modules.user.dto.response.cache.PublicUserProfileCacheRespon
 import media.social.modules.user.dto.response.friend.FriendshipCountResponse;
 import media.social.modules.user.dto.response.friend.MutualFriendCountResponse;
 import media.social.modules.user.dto.response.user.*;
+import media.social.modules.user.event.ProfileUpdatedEvent;
 import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
-import media.social.modules.user.service.cache.UserCacheService;
 import media.social.modules.user.service.cache.UserProfileCacheService;
 import media.social.modules.user.service.domain.BlockPolicyService;
 import media.social.modules.user.service.domain.FriendShipDomain;
@@ -39,6 +39,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -52,7 +53,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import media.social.modules.post.enums.Visibility;
 import media.social.modules.user.enums.Gender;
-import media.social.modules.user.enums.ProfileFieldName;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -71,6 +71,7 @@ public class UserServiceImpl implements UserService {
     private final BlockPolicyService blockPolicyService;
     private final PostRepository postRepository;
     private final FriendshipRepository friendshipRepository;
+    private final KafkaEventPublisher kafkaEventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -112,7 +113,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public ProfileResponse updateBasicProfile(UpdateBasicProfileRequest request) {
+    public ProfileResponse updateBasicProfile(
+            UpdateBasicProfileRequest request
+    ) {
 
         Long userId = UserContextHolder.getUserId();
 
@@ -131,6 +134,25 @@ public class UserServiceImpl implements UserService {
         profileRepository.save(profile);
 
         userProfileCacheService.evictProfile(userId);
+
+        ProfileUpdatedEvent event = new ProfileUpdatedEvent(
+                userId,
+                profile.getFullName(),
+                profile.getBio(),
+                profile.getDateOfBirth() != null
+                        ? profile.getDateOfBirth().toString()
+                        : null,
+                profile.getGender() != null
+                        ? profile.getGender().name()
+                        : null,
+                Instant.now()
+        );
+
+        kafkaEventPublisher.publish(
+                "user-profile-events",
+                userId.toString(),
+                event
+        );
 
         return ProfileResponse.builder()
                 .fullName(profile.getFullName())
