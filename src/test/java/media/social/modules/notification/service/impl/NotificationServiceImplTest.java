@@ -30,6 +30,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import media.social.infrastructure.kafka.producer.KafkaEventPublisher;
+import media.social.modules.notification.event.NotificationEvent;
+import media.social.modules.user.repository.UserRepository;
+
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {
 
@@ -42,8 +46,14 @@ class NotificationServiceImplTest {
     @Mock
     private NotificationPublisher notificationPublisher;
 
+    @Mock
+    private KafkaEventPublisher kafkaEventPublisher;
+
+    @Mock
+    private UserRepository userRepository;
+
     // =========================================================================
-    // create()
+    // create() & sendNotificationEvent()
     // =========================================================================
 
     @Test
@@ -52,12 +62,33 @@ class NotificationServiceImplTest {
 
         notificationService.create(user, user, EntityType.POST, 100L, NotificationType.POST_REACTION);
 
+        verifyNoInteractions(kafkaEventPublisher);
         verifyNoInteractions(notificationRepository);
         verifyNoInteractions(notificationPublisher);
     }
 
     @Test
-    void create_NewNotification_SavesAndPublishes() {
+    void create_NewNotification_PublishesKafkaEvent() {
+        User receiver = User.builder().id(1L).build();
+        User sender = User.builder().id(2L).username("sender_username").build();
+        EntityType entityType = EntityType.POST;
+        Long entityId = 100L;
+        NotificationType type = NotificationType.POST_REACTION;
+
+        notificationService.create(receiver, sender, entityType, entityId, type);
+
+        ArgumentCaptor<NotificationEvent> eventCaptor = ArgumentCaptor.forClass(NotificationEvent.class);
+        verify(kafkaEventPublisher).publish(any(), eq("1"), eventCaptor.capture());
+        NotificationEvent capturedEvent = eventCaptor.getValue();
+        assertEquals(1L, capturedEvent.receiverId());
+        assertEquals(2L, capturedEvent.senderId());
+        assertEquals(entityType, capturedEvent.entityType());
+        assertEquals(entityId, capturedEvent.entityId());
+        assertEquals(type, capturedEvent.type());
+    }
+
+    @Test
+    void saveAndPublish_NewNotification_SavesAndPublishes() {
         User receiver = User.builder().id(1L).build();
         Profile senderProfile = Profile.builder().avatarUrl("http://sender.avatar").build();
         User sender = User.builder()
@@ -87,7 +118,7 @@ class NotificationServiceImplTest {
 
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
 
-        notificationService.create(receiver, sender, entityType, entityId, type);
+        notificationService.saveAndPublish(receiver, sender, entityType, entityId, type);
 
         ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository).save(notificationCaptor.capture());
@@ -115,7 +146,7 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void create_ExistingNotification_UpdatesAndPublishes() {
+    void saveAndPublish_ExistingNotification_UpdatesAndPublishes() {
         User receiver = User.builder().id(1L).build();
         Profile senderProfile = Profile.builder().avatarUrl("http://sender.avatar").build();
         User sender = User.builder()
@@ -146,7 +177,7 @@ class NotificationServiceImplTest {
 
         when(notificationRepository.save(any(Notification.class))).thenReturn(existingNotification);
 
-        notificationService.create(receiver, sender, entityType, entityId, type);
+        notificationService.saveAndPublish(receiver, sender, entityType, entityId, type);
 
         ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository).save(notificationCaptor.capture());
@@ -155,6 +186,38 @@ class NotificationServiceImplTest {
         assertFalse(captured.getIsRead());
         assertTrue(captured.getCreatedAt().isAfter(initialTime));
 
+        verify(notificationPublisher).sendToUser(eq(1L), any(NotificationResponse.class));
+    }
+
+    @Test
+    void processNotificationEvent_ValidEvent_LoadsUsersAndProcesses() {
+        User receiver = User.builder().id(1L).build();
+        User sender = User.builder().id(2L).username("sender").build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(receiver));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(sender));
+
+        when(notificationRepository.findByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
+                1L, 2L, EntityType.POST, 100L, NotificationType.POST_REACTION))
+                .thenReturn(Optional.empty());
+
+        Notification savedNotification = Notification.builder()
+                .id(500L)
+                .receiver(receiver)
+                .sender(sender)
+                .entityType(EntityType.POST)
+                .entityId(100L)
+                .type(NotificationType.POST_REACTION)
+                .isRead(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
+
+        NotificationEvent event = new NotificationEvent(1L, 2L, EntityType.POST, 100L, NotificationType.POST_REACTION);
+        notificationService.processNotificationEvent(event);
+
+        verify(notificationRepository).save(any(Notification.class));
         verify(notificationPublisher).sendToUser(eq(1L), any(NotificationResponse.class));
     }
 

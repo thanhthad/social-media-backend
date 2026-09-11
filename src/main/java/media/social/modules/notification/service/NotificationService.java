@@ -25,6 +25,18 @@ public interface NotificationService {
             NotificationType type
     );
 
+    void sendNotificationEvent(media.social.modules.notification.event.NotificationEvent event);
+
+    void processNotificationEvent(media.social.modules.notification.event.NotificationEvent event);
+
+    void saveAndPublish(
+            User receiver,
+            User sender,
+            EntityType entityType,
+            Long entityId,
+            NotificationType type
+    );
+
     Page<NotificationResponse> getMyNotifications(
             Pageable pageable,
             boolean unreadOnly

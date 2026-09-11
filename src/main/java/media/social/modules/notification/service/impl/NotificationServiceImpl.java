@@ -1,16 +1,21 @@
 package media.social.modules.notification.service.impl;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import media.social.infrastructure.kafka.producer.KafkaEventPublisher;
 import media.social.modules.notification.dto.response.NotificationResponse;
 import media.social.modules.notification.entity.Notification;
 import media.social.modules.notification.enums.EntityType;
 import media.social.modules.notification.enums.NotificationType;
+import media.social.modules.notification.event.NotificationEvent;
 import media.social.modules.notification.exception.NotificationNotFoundException;
 import media.social.modules.notification.repository.NotificationRepository;
 import media.social.modules.notification.service.NotificationService;
 import media.social.modules.notification.websocket.NotificationPublisher;
 import media.social.modules.user.entity.User;
+import media.social.modules.user.repository.UserRepository;
 import media.social.modules.auth.security.context.UserContextHolder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,12 +23,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationPublisher notificationPublisher;
+    private final KafkaEventPublisher kafkaEventPublisher;
+    private final UserRepository userRepository;
+
+    @Value("${app.kafka.topics.notification:social.notification.events}")
+    private String notificationTopic = "social.notification.events";
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -96,8 +107,65 @@ public class NotificationServiceImpl implements NotificationService {
     // ── Service Methods ───────────────────────────────────────────────────────
 
     @Override
-    @Transactional
     public void create(
+            User receiver,
+            User sender,
+            EntityType entityType,
+            Long entityId,
+            NotificationType type
+    ) {
+        if (sender != null && receiver.getId().equals(sender.getId())) {
+            return;
+        }
+
+        NotificationEvent event = new NotificationEvent(
+                receiver.getId(),
+                sender != null ? sender.getId() : null,
+                entityType,
+                entityId,
+                type,
+                LocalDateTime.now()
+        );
+
+        sendNotificationEvent(event);
+    }
+
+    @Override
+    public void sendNotificationEvent(NotificationEvent event) {
+        if (event.senderId() != null && event.senderId().equals(event.receiverId())) {
+            return;
+        }
+
+        kafkaEventPublisher.publish(
+                notificationTopic,
+                event.receiverId().toString(),
+                event
+        );
+    }
+
+    @Override
+    @Transactional
+    public void processNotificationEvent(NotificationEvent event) {
+        if (event.senderId() != null && event.senderId().equals(event.receiverId())) {
+            return;
+        }
+
+        User receiver = userRepository.findById(event.receiverId()).orElse(null);
+        if (receiver == null) {
+            log.warn("Cannot process notification: receiver with id {} not found", event.receiverId());
+            return;
+        }
+
+        User sender = event.senderId() != null
+                ? userRepository.findById(event.senderId()).orElse(null)
+                : null;
+
+        saveAndPublish(receiver, sender, event.entityType(), event.entityId(), event.type());
+    }
+
+    @Override
+    @Transactional
+    public void saveAndPublish(
             User receiver,
             User sender,
             EntityType entityType,
@@ -111,7 +179,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationRepository
                 .findByReceiver_IdAndSender_IdAndEntityTypeAndEntityIdAndType(
                         receiver.getId(),
-                        sender.getId(),
+                        sender != null ? sender.getId() : null,
                         entityType,
                         entityId,
                         type
@@ -129,13 +197,14 @@ public class NotificationServiceImpl implements NotificationService {
 
         Notification saved = notificationRepository.save(notification);
 
-        String senderFullName = (sender.getProfile() != null) ? sender.getProfile().getFullName() : null;
-        String senderAvatar   = (sender.getProfile() != null) ? sender.getProfile().getAvatarUrl()  : null;
+        String senderFullName = (sender != null && sender.getProfile() != null) ? sender.getProfile().getFullName() : null;
+        String senderAvatar   = (sender != null && sender.getProfile() != null) ? sender.getProfile().getAvatarUrl()  : null;
+        String senderUsername = sender != null ? sender.getUsername() : "Hệ thống";
 
         NotificationResponse response = toResponse(
                 saved.getId(),
-                sender.getId(),
-                sender.getUsername(),
+                sender != null ? sender.getId() : null,
+                senderUsername,
                 senderFullName,
                 senderAvatar,
                 saved.getType(),
