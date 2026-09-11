@@ -9,6 +9,10 @@ import media.social.modules.auth.repository.PasswordResetTokenRepository;
 import media.social.modules.auth.service.EmailService;
 import media.social.modules.auth.service.PasswordResetService;
 import media.social.modules.user.entity.User;
+import media.social.infrastructure.kafka.producer.KafkaEventPublisher;
+import media.social.modules.auth.event.EmailType;
+import media.social.modules.auth.event.SendEmailEvent;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +27,10 @@ public class PasswordResetServiceImpl
 
     private final PasswordResetTokenRepository repository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
+    private final KafkaEventPublisher kafkaEventPublisher;
+
+    @Value("${app.kafka.topics.email:social.email.events}")
+    private String emailTopic;
 
     @Override
     @Transactional
@@ -46,9 +53,16 @@ public class PasswordResetServiceImpl
 
         repository.save(resetToken);
 
-        emailService.sendPasswordResetEmail(
+        SendEmailEvent event = new SendEmailEvent(
                 user.getEmail(),
-                token
+                token,
+                EmailType.RESET_PASSWORD
+        );
+
+        kafkaEventPublisher.publish(
+                emailTopic,
+                user.getEmail(),
+                event
         );
         return token;
     }

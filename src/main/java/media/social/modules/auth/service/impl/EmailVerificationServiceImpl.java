@@ -9,6 +9,10 @@ import media.social.modules.auth.exception.verification.EmailVerificationTokenUs
 import media.social.modules.auth.repository.EmailVerificationTokenRepository;
 import media.social.modules.auth.service.EmailService;
 import media.social.modules.auth.service.EmailVerificationService;
+import media.social.infrastructure.kafka.producer.KafkaEventPublisher;
+import media.social.modules.auth.event.EmailType;
+import media.social.modules.auth.event.SendEmailEvent;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +25,10 @@ public class EmailVerificationServiceImpl
         implements EmailVerificationService {
 
     private final EmailVerificationTokenRepository repository;
-    private final EmailService emailService;
+    private final KafkaEventPublisher kafkaEventPublisher;
+
+    @Value("${app.kafka.topics.email:social.email.events}")
+    private String emailTopic;
 
     @Override
     public void createVerificationToken(User user) {
@@ -40,9 +47,16 @@ public class EmailVerificationServiceImpl
 
         repository.save(verificationToken);
 
-        emailService.sendVerificationEmail(
+        SendEmailEvent event = new SendEmailEvent(
                 user.getEmail(),
-                token
+                token,
+                EmailType.VERIFY_EMAIL
+        );
+
+        kafkaEventPublisher.publish(
+                emailTopic,
+                user.getEmail(),
+                event
         );
     }
 
