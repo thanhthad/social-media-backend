@@ -24,6 +24,10 @@ import media.social.modules.user.enums.Gender;
 import media.social.modules.user.exception.block.UserBlockedException;
 import media.social.modules.user.exception.user.UserAlreadyExistsException;
 import media.social.modules.user.exception.user.UserNotFoundException;
+import media.social.infrastructure.kafka.producer.KafkaEventPublisher;
+import media.social.modules.post.repository.PostRepository;
+import media.social.modules.user.enums.ProfileFieldName;
+import media.social.modules.user.repository.FriendshipRepository;
 import media.social.modules.user.repository.ProfileRepository;
 import media.social.modules.user.repository.UserRepository;
 import media.social.modules.user.service.cache.UserProfileCacheService;
@@ -85,6 +89,15 @@ class UserServiceImplTest {
 
     @Mock
     private BlockPolicyService blockPolicyService;
+
+    @Mock
+    private PostRepository postRepository;
+
+    @Mock
+    private FriendshipRepository friendshipRepository;
+
+    @Mock
+    private KafkaEventPublisher kafkaEventPublisher;
 
     // =========================================================
     // getMe()
@@ -180,6 +193,7 @@ class UserServiceImplTest {
 
             verify(profileRepository).save(profile);
             verify(userProfileCacheService).evictProfile(userId);
+            verify(kafkaEventPublisher).publish(any(), eq(userId.toString()), any());
         }
     }
 
@@ -407,6 +421,106 @@ class UserServiceImplTest {
 
             verify(profileRepository, never()).save(any());
             verify(userProfileCacheService, never()).evictProfile(anyLong());
+        }
+    }
+
+    // =========================================================
+    // updateProfileField()
+    // =========================================================
+
+    @Test
+    void updateProfileField_fullName_success() {
+        Long userId = 1L;
+        UpdateProfileFieldRequest request = new UpdateProfileFieldRequest();
+        request.setFieldName(ProfileFieldName.FULL_NAME);
+        request.setValue("Jane Doe");
+
+        Profile profile = new Profile();
+        User user = new User();
+        user.setProfile(profile);
+
+        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
+            mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
+            when(userRepository.findByIdWithProfile(userId)).thenReturn(Optional.of(user));
+
+            ProfileResponse response = userService.updateProfileField(request);
+
+            assertEquals("Jane Doe", profile.getFullName());
+            assertEquals("Jane Doe", response.getFullName());
+            verify(profileRepository).save(profile);
+            verify(userProfileCacheService).evictProfile(userId);
+            verify(kafkaEventPublisher).publish(any(), eq(userId.toString()), any());
+        }
+    }
+
+    @Test
+    void updateProfileField_bio_success() {
+        Long userId = 1L;
+        UpdateProfileFieldRequest request = new UpdateProfileFieldRequest();
+        request.setFieldName(ProfileFieldName.BIO);
+        request.setValue("New bio");
+
+        Profile profile = new Profile();
+        User user = new User();
+        user.setProfile(profile);
+
+        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
+            mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
+            when(userRepository.findByIdWithProfile(userId)).thenReturn(Optional.of(user));
+
+            ProfileResponse response = userService.updateProfileField(request);
+
+            assertEquals("New bio", profile.getBio());
+            assertEquals("New bio", response.getBio());
+            verify(profileRepository).save(profile);
+            verify(userProfileCacheService).evictProfile(userId);
+            verify(kafkaEventPublisher).publish(any(), eq(userId.toString()), any());
+        }
+    }
+
+    @Test
+    void updateProfileField_gender_success() {
+        Long userId = 1L;
+        UpdateProfileFieldRequest request = new UpdateProfileFieldRequest();
+        request.setFieldName(ProfileFieldName.GENDER);
+        request.setValue("FEMALE");
+
+        Profile profile = new Profile();
+        User user = new User();
+        user.setProfile(profile);
+
+        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
+            mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
+            when(userRepository.findByIdWithProfile(userId)).thenReturn(Optional.of(user));
+
+            ProfileResponse response = userService.updateProfileField(request);
+
+            assertEquals(Gender.FEMALE, profile.getGender());
+            assertEquals(Gender.FEMALE, response.getGender());
+            verify(profileRepository).save(profile);
+            verify(userProfileCacheService).evictProfile(userId);
+            verify(kafkaEventPublisher).publish(any(), eq(userId.toString()), any());
+        }
+    }
+
+    @Test
+    void updateProfileField_phone_invalid_throwsIllegalArgumentException() {
+        Long userId = 1L;
+        UpdateProfileFieldRequest request = new UpdateProfileFieldRequest();
+        request.setFieldName(ProfileFieldName.PHONE);
+        request.setValue("12345");
+
+        Profile profile = new Profile();
+        User user = new User();
+        user.setProfile(profile);
+
+        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
+            mockedContext.when(UserContextHolder::getUserId).thenReturn(userId);
+            when(userRepository.findByIdWithProfile(userId)).thenReturn(Optional.of(user));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> userService.updateProfileField(request));
+            verify(profileRepository, never()).save(any());
         }
     }
 

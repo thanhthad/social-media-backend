@@ -20,7 +20,8 @@ import media.social.modules.user.service.domain.FriendShipDomain;
 import media.social.modules.user.service.domain.UserRoleServiceDomain;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import media.social.modules.file.dto.response.UploadFileResponse;
 import media.social.modules.file.media.upload.MediaUploadContext;
 import media.social.modules.file.media.upload.service.MediaUploadService;
@@ -58,7 +59,7 @@ import java.util.Map;
 
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -72,6 +73,9 @@ public class UserServiceImpl implements UserService {
     private final PostRepository postRepository;
     private final FriendshipRepository friendshipRepository;
     private final KafkaEventPublisher kafkaEventPublisher;
+
+    @Value("${app.kafka.topics.user-profile:user-profile-events}")
+    private String userProfileTopic = "user-profile-events";
 
     @Override
     @Transactional(readOnly = true)
@@ -149,7 +153,7 @@ public class UserServiceImpl implements UserService {
         );
 
         kafkaEventPublisher.publish(
-                "user-profile-events",
+                userProfileTopic,
                 userId.toString(),
                 event
         );
@@ -419,6 +423,25 @@ public class UserServiceImpl implements UserService {
 
         profileRepository.save(profile);
         userProfileCacheService.evictProfile(userId);
+
+        ProfileUpdatedEvent event = new ProfileUpdatedEvent(
+                userId,
+                profile.getFullName(),
+                profile.getBio(),
+                profile.getDateOfBirth() != null
+                        ? profile.getDateOfBirth().toString()
+                        : null,
+                profile.getGender() != null
+                        ? profile.getGender().name()
+                        : null,
+                Instant.now()
+        );
+
+        kafkaEventPublisher.publish(
+                userProfileTopic,
+                userId.toString(),
+                event
+        );
 
         return builder.build();
     }
