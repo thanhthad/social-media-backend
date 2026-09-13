@@ -27,6 +27,7 @@ public class Role {
     @Column(length = 255)
     private String description;
 
+    @Builder.Default
     @OneToMany(
             mappedBy = "role",
             cascade = CascadeType.ALL,

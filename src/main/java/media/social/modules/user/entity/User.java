@@ -24,6 +24,7 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
+    @Builder.Default
     @OneToMany(
             mappedBy = "user",
             cascade = CascadeType.ALL,
@@ -44,6 +45,7 @@ public class User {
     @Column(nullable = false)
     private AuthProvider provider;
 
+    @Builder.Default
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
 

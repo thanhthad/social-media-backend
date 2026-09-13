@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 @Builder
 public class UserRole {
 
+    @Builder.Default
     @EmbeddedId
     private UserRoleId id = new UserRoleId();
 

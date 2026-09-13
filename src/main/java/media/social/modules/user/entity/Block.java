@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Block{
 
+    @Builder.Default
     @EmbeddedId
     private BlockId id = new BlockId();
 

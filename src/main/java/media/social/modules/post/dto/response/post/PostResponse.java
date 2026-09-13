@@ -21,6 +21,7 @@ public class PostResponse {
 
     private Visibility visibility;
 
+    @Builder.Default
     private List<PostMediaResponse> postMediaResponses = new ArrayList<>();
 
     private LocalDateTime createdAt;
