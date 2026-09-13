@@ -2,6 +2,7 @@ package media.social.modules.dating.service.impl;
 
 import media.social.modules.auth.security.context.UserContextHolder;
 import media.social.modules.dating.dto.request.profile.*;
+import media.social.modules.dating.enums.DatingProfileFieldName;
 import media.social.modules.dating.dto.response.cache.DatingProfileCacheResponse;
 import media.social.modules.dating.dto.response.profile.DatingProfileResponse;
 import media.social.modules.dating.dto.response.profile.MyDatingProfileResponse;
@@ -477,6 +478,103 @@ class DatingProfileServiceImplTest {
                     () -> datingProfileServiceImpl.deleteProfile());
 
             verify(datingProfileRepository, never()).save(any());
+        }
+    }
+
+    // ===========================================================================
+    // updateProfileField
+    // ===========================================================================
+
+    @Test
+    void updateProfileField_displayName_success() {
+        DatingProfile profile = buildDatingProfile();
+        UpdateDatingProfileFieldRequest request = new UpdateDatingProfileFieldRequest();
+        request.setFieldName(DatingProfileFieldName.DISPLAY_NAME);
+        request.setValue("Jane Doe");
+
+        try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
+            mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
+            when(datingProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile));
+
+            DatingProfileResponse result = datingProfileServiceImpl.updateDatingProfileField(request);
+
+            assertThat(result.getDisplayName()).isEqualTo("Jane Doe");
+            verify(datingProfileRepository).save(profile);
+            verify(datingProfileCacheService).evictProfile(USER_ID);
+        }
+    }
+
+    @Test
+    void updateProfileField_bio_success() {
+        DatingProfile profile = buildDatingProfile();
+        UpdateDatingProfileFieldRequest request = new UpdateDatingProfileFieldRequest();
+        request.setFieldName(DatingProfileFieldName.BIO);
+        request.setValue("New dating bio");
+
+        try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
+            mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
+            when(datingProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile));
+
+            DatingProfileResponse result = datingProfileServiceImpl.updateDatingProfileField(request);
+
+            assertThat(result.getBio()).isEqualTo("New dating bio");
+            verify(datingProfileRepository).save(profile);
+            verify(datingProfileCacheService).evictProfile(USER_ID);
+        }
+    }
+
+    @Test
+    void updateProfileField_height_success() {
+        DatingProfile profile = buildDatingProfile();
+        UpdateDatingProfileFieldRequest request = new UpdateDatingProfileFieldRequest();
+        request.setFieldName(DatingProfileFieldName.HEIGHT);
+        request.setValue("180");
+
+        try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
+            mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
+            when(datingProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile));
+
+            DatingProfileResponse result = datingProfileServiceImpl.updateDatingProfileField(request);
+
+            assertThat(result.getHeight()).isEqualTo(180);
+            verify(datingProfileRepository).save(profile);
+            verify(datingProfileCacheService).evictProfile(USER_ID);
+        }
+    }
+
+    @Test
+    void updateProfileField_height_invalid_throwsIllegalArgumentException() {
+        DatingProfile profile = buildDatingProfile();
+        UpdateDatingProfileFieldRequest request = new UpdateDatingProfileFieldRequest();
+        request.setFieldName(DatingProfileFieldName.HEIGHT);
+        request.setValue("50");
+
+        try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
+            mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
+            when(datingProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> datingProfileServiceImpl.updateDatingProfileField(request));
+            verify(datingProfileRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void updateProfileField_active_success() {
+        DatingProfile profile = buildDatingProfile();
+        UpdateDatingProfileFieldRequest request = new UpdateDatingProfileFieldRequest();
+        request.setFieldName(DatingProfileFieldName.ACTIVE);
+        request.setValue("false");
+
+        try (MockedStatic<UserContextHolder> mockedStatic = mockStatic(UserContextHolder.class)) {
+            mockedStatic.when(UserContextHolder::getUserId).thenReturn(USER_ID);
+            when(datingProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile));
+
+            DatingProfileResponse result = datingProfileServiceImpl.updateDatingProfileField(request);
+
+            assertThat(result.getActive()).isFalse();
+            verify(datingProfileRepository).save(profile);
+            verify(datingProfileCacheService).evictProfile(USER_ID);
         }
     }
 }

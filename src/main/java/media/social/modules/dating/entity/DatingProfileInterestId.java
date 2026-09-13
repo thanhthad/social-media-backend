@@ -10,6 +10,7 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class DatingProfileInterestId implements Serializable {
 
     private Long datingProfileId;
