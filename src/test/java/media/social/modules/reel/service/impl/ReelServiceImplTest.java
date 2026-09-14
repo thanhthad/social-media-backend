@@ -310,4 +310,24 @@ class ReelServiceImplTest {
             assertThat(result.isEmpty()).isTrue();
         }
     }
+
+    @Test
+    @DisplayName("Get public reel feed returns public reels without authentication")
+    void getPublicReelFeed_empty_returnsEmptyPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReelFlatProjection> emptyFlatPage = new org.springframework.data.domain.PageImpl<>(Collections.emptyList());
+
+        when(reelRepository.findPublicReelFeed(
+                Status.ACTIVE.name(),
+                PostType.REEL.name(),
+                ReportStatus.APPROVED.name(),
+                Visibility.PUBLIC.name(),
+                pageable
+        )).thenReturn(emptyFlatPage);
+
+        Page<ReelResponse> result = reelService.getPublicReelFeed(pageable);
+
+        assertThat(result).isNotNull();
+        assertThat(result.isEmpty()).isTrue();
+    }
 }

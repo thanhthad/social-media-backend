@@ -164,6 +164,25 @@ class PostServiceImplTest {
     }
 
     @Test
+    void getPublicFeed_success() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<PostFlatProjection> flatPage = new PageImpl<>(Collections.emptyList());
+
+        when(postRepository.findPublicFeed(
+                Status.ACTIVE.name(),
+                PostType.POST.name(),
+                ReportStatus.APPROVED.name(),
+                Visibility.PUBLIC.name(),
+                pageable
+        )).thenReturn(flatPage);
+
+        Page<PostResponse> result = postService.getPublicFeed(pageable);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
     void getAllPostMe_success() {
         Long userId = 1L;
         Pageable pageable = PageRequest.of(0, 10);

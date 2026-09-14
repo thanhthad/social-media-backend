@@ -38,6 +38,14 @@ public class ReelController {
         return ResponseData.successPaginate(reelService.getReelExplore(pageable), "Get reel explore successfully", HttpStatus.OK);
     }
 
+    // ================= PUBLIC REEL FEED (NO AUTH) =================
+    @GetMapping({"/public/feed", "/public"})
+    @Operation(summary = "Get public reel feed (guest users, no login required)")
+    @RateLimit(name = "REEL_PUBLIC_FEED", limit = 120, windowSeconds = 60)
+    public ResponseEntity<?> getPublicReelFeed(Pageable pageable) {
+        return ResponseData.successPaginate(reelService.getPublicReelFeed(pageable), "Get public reel feed successfully", HttpStatus.OK);
+    }
+
     @GetMapping
     @Operation(summary = "Get my reels")
     @RateLimit(name = "REEL_MY_LIST", limit = 120, windowSeconds = 60)

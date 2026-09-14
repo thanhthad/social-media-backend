@@ -57,6 +57,23 @@ public class PostController {
         );
     }
 
+    // ================= PUBLIC FEED (NO AUTH) =================
+    @GetMapping({"/public/feed", "/public"})
+    @Operation(summary = "Get public post feed (guest users, no login required)")
+    @RateLimit(
+            name = "POST_PUBLIC_FEED",
+            limit = 120,
+            windowSeconds = 60
+    )
+    public ResponseEntity<?> getPublicFeed(Pageable pageable) {
+
+        return ResponseData.success(
+                postService.getPublicFeed(pageable),
+                "Get public feed successfully",
+                HttpStatus.OK
+        );
+    }
+
     // ================= SEARCH BY CONTENT =================
     @GetMapping("/search")
     @Operation(summary = "Search posts by content")

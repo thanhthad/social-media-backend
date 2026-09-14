@@ -488,4 +488,93 @@ public interface ReelRepository extends JpaRepository<ReelDetail, Long> {
             @Param("acceptedStatus") String acceptedStatus,
             Pageable pageable
     );
+
+    // ─── PUBLIC REEL FEED (guest users, no login required) ────────────────────
+
+    @Query(
+            value = """
+        SELECT
+            p.post_id           AS id,
+            p.content           AS content,
+            p.visibility        AS visibility,
+            p.created_at        AS createdAt,
+
+            u.user_id           AS userId,
+            u.username          AS username,
+            pr.avatar_url       AS avatarUrl,
+
+            p.comment_count     AS commentCount,
+            p.reaction_count    AS reactionCount,
+
+            rd.duration_seconds AS durationSeconds,
+            rd.width            AS width,
+            rd.height           AS height,
+            rd.thumbnail_url    AS thumbnailUrl,
+            rd.view_count       AS viewCount,
+            rd.share_count      AS shareCount
+
+        FROM posts p
+
+        JOIN users u
+            ON u.user_id = p.user_id
+
+        LEFT JOIN profiles pr
+            ON pr.user_id = u.user_id
+
+        JOIN reel_details rd
+            ON rd.reel_id = p.post_id
+
+        WHERE u.status = :activeStatus
+          AND p.post_type = :postType
+          AND p.visibility = :publicVisibility
+          AND NOT EXISTS (
+              SELECT 1
+              FROM reports r
+              WHERE r.post_id = p.post_id
+                AND r.status = :approvedReportStatus
+          )
+
+        ORDER BY
+            (
+                (p.reaction_count * 1.0 + p.comment_count * 2.0
+                    + rd.share_count * 4.0 + rd.view_count * 0.5)
+                /
+                POW(
+                    GREATEST(
+                        EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600.0,
+                        0
+                    ) + 2,
+                    1.3
+                )
+            ) DESC,
+            p.created_at DESC
+    """,
+
+            countQuery = """
+        SELECT COUNT(*)
+        FROM posts p
+        JOIN users u
+            ON u.user_id = p.user_id
+        JOIN reel_details rd
+            ON rd.reel_id = p.post_id
+        WHERE u.status = :activeStatus
+          AND p.post_type = :postType
+          AND p.visibility = :publicVisibility
+          AND NOT EXISTS (
+              SELECT 1
+              FROM reports r
+              WHERE r.post_id = p.post_id
+                AND r.status = :approvedReportStatus
+          )
+    """,
+
+            nativeQuery = true
+    )
+    Page<ReelFlatProjection> findPublicReelFeed(
+            @Param("activeStatus") String activeStatus,
+            @Param("postType") String postType,
+            @Param("approvedReportStatus") String approvedReportStatus,
+            @Param("publicVisibility") String publicVisibility,
+            Pageable pageable
+    );
 }

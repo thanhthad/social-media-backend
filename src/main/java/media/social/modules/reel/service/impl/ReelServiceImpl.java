@@ -210,6 +210,24 @@ public class ReelServiceImpl implements ReelService {
         return buildPage(flatPage, viewerId, pageable);
     }
 
+    // ─── PUBLIC REEL FEED ──────────────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReelResponse> getPublicReelFeed(Pageable pageable) {
+
+        Page<ReelFlatProjection> flatPage = reelRepository.findPublicReelFeed(
+                Status.ACTIVE.name(),
+                PostType.REEL.name(),
+                ReportStatus.APPROVED.name(),
+                Visibility.PUBLIC.name(),
+                pageable
+        );
+
+        Long viewerId = UserContextHolder.isAuthenticated() ? UserContextHolder.getUserId() : null;
+        return buildPage(flatPage, viewerId, pageable);
+    }
+
     // ─── MY REELS ──────────────────────────────────────────────────────────────
 
     @Override
@@ -365,7 +383,9 @@ public class ReelServiceImpl implements ReelService {
                 ));
 
         // Batch load reactions
-        var reactions = reactionRepository.findMyReactions(viewerId, postIds);
+        var reactions = viewerId != null
+                ? reactionRepository.findMyReactions(viewerId, postIds)
+                : Collections.<media.social.modules.post.entity.Reaction>emptyList();
 
         var reactionMap = reactions.stream()
                 .collect(java.util.stream.Collectors.toMap(

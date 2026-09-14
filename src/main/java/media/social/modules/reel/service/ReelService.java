@@ -30,6 +30,11 @@ public interface ReelService {
     Page<ReelResponse> getReelExplore(Pageable pageable);
 
     /**
+     * Public reel feed dành cho khách vãng lai (không cần đăng nhập).
+     */
+    Page<ReelResponse> getPublicReelFeed(Pageable pageable);
+
+    /**
      * Lấy tất cả reel của bản thân (mọi visibility).
      */
     Page<ReelResponse> getMyReels(Pageable pageable);

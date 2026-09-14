@@ -83,7 +83,7 @@ public class PostServiceImpl implements PostService {
                         pageable
                 );
 
-        return buildPostResponse(flatPage, pageable);
+        return buildPostResponse(flatPage, viewerId, pageable);
     }
 
     @Override
@@ -104,7 +104,24 @@ public class PostServiceImpl implements PostService {
                         pageable
                 );
 
-        return buildPostResponse(flatPage, pageable);
+        return buildPostResponse(flatPage, viewerId, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getPublicFeed(Pageable pageable) {
+
+        Page<PostFlatProjection> flatPage =
+                postRepository.findPublicFeed(
+                        Status.ACTIVE.name(),
+                        PostType.POST.name(),
+                        ReportStatus.APPROVED.name(),
+                        Visibility.PUBLIC.name(),
+                        pageable
+                );
+
+        Long viewerId = UserContextHolder.isAuthenticated() ? UserContextHolder.getUserId() : null;
+        return buildPostResponse(flatPage, viewerId, pageable);
     }
 
     @Override
@@ -121,7 +138,7 @@ public class PostServiceImpl implements PostService {
                         pageable
                 );
 
-        return buildPostResponse(flatPage, pageable);
+        return buildPostResponse(flatPage, userId, pageable);
     }
 
     @Override
@@ -153,6 +170,7 @@ public class PostServiceImpl implements PostService {
 
         return buildPostResponse(
                 flatPage,
+                viewerId,
                 pageable
         );
     }
@@ -252,7 +270,7 @@ public class PostServiceImpl implements PostService {
                         pageable
                 );
 
-        return buildPostResponse(projections, pageable);
+        return buildPostResponse(projections, viewerId, pageable);
     }
 
     @Override
@@ -276,7 +294,7 @@ public class PostServiceImpl implements PostService {
                         pageable
                 );
 
-        return buildPostResponse(page, pageable);
+        return buildPostResponse(page, viewerId, pageable);
     }
 
     @Override
@@ -299,12 +317,14 @@ public class PostServiceImpl implements PostService {
 
         return buildPostResponse(
                 postFlatResponses,
+                userId,
                 pageable
         );
     }
 
     private Page<PostResponse> buildPostResponse(
             Page<PostFlatProjection> flatPage,
+            Long viewerId,
             Pageable pageable
     ) {
 
@@ -341,13 +361,9 @@ public class PostServiceImpl implements PostService {
                     );
         }
 
-        Long userId = UserContextHolder.getUserId();
-
-        List<Reaction> reactions =
-                reactionRepository.findMyReactions(
-                        userId,
-                        postIds
-                );
+        List<Reaction> reactions = viewerId != null
+                ? reactionRepository.findMyReactions(viewerId, postIds)
+                : Collections.emptyList();
 
         Map<Long, Reaction> reactionMap =
                 reactions.stream()

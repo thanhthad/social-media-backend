@@ -422,6 +422,24 @@ class PostRepositoryTest {
             assertThat(result.getContent()).isNotEmpty();
             assertThat(result.getContent().get(0).getContent()).contains("PostgreSQL");
         }
+
+        @Test
+        @DisplayName("findPublicFeed: Khách vãng lai xem bài viết PUBLIC, loại trừ bài bị report APPROVED và sắp xếp theo gravity decay")
+        void findPublicFeed_guestUser_showsPublicAndRanksByGravityDecay() {
+            Page<PostFlatProjection> publicFeed = postRepository.findPublicFeed(
+                    Status.ACTIVE.name(),
+                    PostType.POST.name(),
+                    ReportStatus.APPROVED.name(),
+                    Visibility.PUBLIC.name(),
+                    PageRequest.of(0, 10)
+            );
+
+            assertThat(publicFeed.getContent()).isNotEmpty();
+            List<Long> postIds = publicFeed.getContent().stream().map(PostFlatProjection::getId).toList();
+            assertThat(postIds).contains(alicePublicPost.getId(), bobPublicPost.getId());
+            assertThat(postIds).doesNotContain(aliceFriendOnlyPost.getId(), reportedPost.getId());
+            assertThat(publicFeed.getContent().get(0).getId()).isEqualTo(alicePublicPost.getId());
+        }
     }
 
     // =========================================================================

@@ -200,6 +200,23 @@ class ReelRepositoryTest {
             assertThat(explore.getContent()).isNotEmpty();
             assertThat(explore.getContent().get(0).getId()).isEqualTo(bobReelPost.getId());
         }
+
+        @Test
+        @DisplayName("findPublicReelFeed: Khách vãng lai xem reels PUBLIC, không cần đăng nhập, sắp xếp theo gravity decay")
+        void findPublicReelFeed_guestUser_showsPublicReelsRanked() {
+            Page<ReelFlatProjection> publicFeed = reelRepository.findPublicReelFeed(
+                    Status.ACTIVE.name(),
+                    PostType.REEL.name(),
+                    ReportStatus.APPROVED.name(),
+                    Visibility.PUBLIC.name(),
+                    PageRequest.of(0, 10)
+            );
+
+            assertThat(publicFeed.getContent()).hasSize(2);
+            // bobReelPost có 1000 views, 200 shares -> viral nhất nên đứng đầu
+            assertThat(publicFeed.getContent().get(0).getId()).isEqualTo(bobReelPost.getId());
+            assertThat(publicFeed.getContent().get(1).getId()).isEqualTo(aliceReelPost.getId());
+        }
     }
 
     // =========================================================================

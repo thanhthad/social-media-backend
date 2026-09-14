@@ -494,6 +494,80 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query(
             value = """
     SELECT
+        p.post_id          AS id,
+        p.content          AS content,
+        p.visibility       AS visibility,
+        p.created_at       AS createdAt,
+
+        u.user_id          AS userId,
+        u.username         AS username,
+        pr.avatar_url      AS avatarUrl,
+
+        p.comment_count    AS commentCount,
+        p.reaction_count   AS reactionCount
+
+    FROM posts p
+
+    JOIN users u
+        ON u.user_id = p.user_id
+
+    LEFT JOIN profiles pr
+        ON pr.user_id = u.user_id
+
+    WHERE u.status = :activeStatus
+      AND p.post_type = :postType
+      AND p.visibility = :publicVisibility
+      AND NOT EXISTS (
+          SELECT 1
+          FROM reports r
+          WHERE r.post_id = p.post_id
+            AND r.status = :approvedReportStatus
+      )
+
+    ORDER BY
+        (
+            (p.reaction_count * 1.0 + p.comment_count * 2.0)
+            /
+            POW(
+                GREATEST(
+                    EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600.0,
+                    0
+                ) + 2,
+                1.3
+            )
+        ) DESC,
+        p.created_at DESC
+    """,
+
+            countQuery = """
+    SELECT COUNT(*)
+    FROM posts p
+    JOIN users u
+        ON u.user_id = p.user_id
+    WHERE u.status = :activeStatus
+      AND p.post_type = :postType
+      AND p.visibility = :publicVisibility
+      AND NOT EXISTS (
+          SELECT 1
+          FROM reports r
+          WHERE r.post_id = p.post_id
+            AND r.status = :approvedReportStatus
+      )
+    """,
+
+            nativeQuery = true
+    )
+    Page<PostFlatProjection> findPublicFeed(
+            @Param("activeStatus") String activeStatus,
+            @Param("postType") String postType,
+            @Param("approvedReportStatus") String approvedReportStatus,
+            @Param("publicVisibility") String publicVisibility,
+            Pageable pageable
+    );
+
+    @Query(
+            value = """
+    SELECT
         p.post_id AS id,
         p.content AS content,
         p.visibility AS visibility,
