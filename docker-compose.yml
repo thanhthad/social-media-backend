@@ -24,6 +24,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d social"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     container_name: social-redis
@@ -53,7 +59,7 @@ services:
 
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
       redis:
         condition: service_healthy
       kafka:
@@ -73,6 +79,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
 
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
 
   kafka:
     image: apache/kafka:4.0.0

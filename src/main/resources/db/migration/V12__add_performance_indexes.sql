@@ -68,6 +68,19 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_valid
     WHERE revoked = FALSE;
 
 -- [Bảng: email_verification_tokens]
+CREATE TABLE IF NOT EXISTS email_verification_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_email_verification_user
+        FOREIGN KEY (user_id)
+            REFERENCES users(user_id)
+            ON DELETE CASCADE
+);
+
 -- Query: EmailVerificationTokenRepository.deleteByUser(User user) và ON DELETE CASCADE từ users(user_id).
 -- Lý do: Khóa ngoại user_id chưa có index. Khi user xác thực xong hoặc bị xóa tài khoản,
 -- DB cần index trên user_id để xóa token nhanh chóng thay vì quét toàn bộ bảng.
@@ -75,6 +88,18 @@ CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user_id
     ON email_verification_tokens(user_id);
 
 -- [Bảng: password_reset_tokens]
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    CONSTRAINT fk_password_reset_user
+        FOREIGN KEY(user_id)
+            REFERENCES users(user_id)
+            ON DELETE CASCADE
+);
+
 -- Query: PasswordResetTokenRepository.deleteByUser(User user) và ON DELETE CASCADE từ users(user_id).
 -- Lý do: Tương tự token email, tối ưu thao tác dọn dẹp token quên mật khẩu theo user_id.
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id

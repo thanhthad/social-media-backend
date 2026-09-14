@@ -31,5 +31,22 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secrets & Environment Configs ###
 application-local.properties
 application-docker.properties
+**/application-local.properties
+**/application-docker.properties
+src/main/resources/application-local.properties
+src/main/resources/application-docker.properties
+application-*.properties
+!application.properties
+application-*.yml
+!application.yml
+application-*.yaml
+!application.yaml
+.env
+.env.*
+*.env
+*.local
+
