@@ -362,12 +362,12 @@ class PostRepositoryTest {
             // Bob xem feed: thấy bài của chính mình (bobPublicPost) + bài của alice (bạn bè)
             Page<PostFlatProjection> feed = postRepository.findFeed(
                     bob.getId(),
-                    Status.ACTIVE,
-                    PostType.POST,
-                    ReportStatus.APPROVED,
-                    FriendshipStatus.ACCEPTED,
-                    Visibility.PUBLIC,
-                    Visibility.FRIEND,
+                    Status.ACTIVE.name(),
+                    PostType.POST.name(),
+                    ReportStatus.APPROVED.name(),
+                    FriendshipStatus.ACCEPTED.name(),
+                    Visibility.PUBLIC.name(),
+                    Visibility.FRIEND.name(),
                     PageRequest.of(0, 10)
             );
 

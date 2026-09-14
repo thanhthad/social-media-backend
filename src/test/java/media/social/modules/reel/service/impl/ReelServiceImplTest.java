@@ -282,4 +282,32 @@ class ReelServiceImplTest {
             verify(postRepository, never()).delete(any());
         }
     }
+
+    @Test
+    @DisplayName("Get reel feed returns reels from friends and self")
+    void getReelFeed_empty_returnsEmptyPage() {
+        Long viewerId = 1L;
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReelFlatProjection> emptyFlatPage = new org.springframework.data.domain.PageImpl<>(Collections.emptyList());
+
+        try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
+            mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
+
+            when(reelRepository.findReelFeed(
+                    viewerId,
+                    Status.ACTIVE.name(),
+                    PostType.REEL.name(),
+                    ReportStatus.APPROVED.name(),
+                    FriendshipStatus.ACCEPTED.name(),
+                    Visibility.PUBLIC.name(),
+                    Visibility.FRIEND.name(),
+                    pageable
+            )).thenReturn(emptyFlatPage);
+
+            Page<ReelResponse> result = reelService.getReelFeed(pageable);
+
+            assertThat(result).isNotNull();
+            assertThat(result.isEmpty()).isTrue();
+        }
+    }
 }

@@ -100,7 +100,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findFeed(viewerId, Status.ACTIVE, PostType.POST, ReportStatus.APPROVED, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
+            when(postRepository.findFeed(viewerId, Status.ACTIVE.name(), PostType.POST.name(), ReportStatus.APPROVED.name(), FriendshipStatus.ACCEPTED.name(), Visibility.PUBLIC.name(), Visibility.FRIEND.name(), pageable))
                     .thenReturn(flatPage);
             when(postMediaRepository.findMediaByPostIds(List.of(10L))).thenReturn(List.of(media));
             when(reactionRepository.findMyReactions(viewerId, List.of(10L))).thenReturn(List.of(reaction));
@@ -127,7 +127,7 @@ class PostServiceImplTest {
         try (MockedStatic<UserContextHolder> mockedContext = mockStatic(UserContextHolder.class)) {
             mockedContext.when(UserContextHolder::getUserId).thenReturn(viewerId);
 
-            when(postRepository.findFeed(viewerId, Status.ACTIVE, PostType.POST, ReportStatus.APPROVED, FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, pageable))
+            when(postRepository.findFeed(viewerId, Status.ACTIVE.name(), PostType.POST.name(), ReportStatus.APPROVED.name(), FriendshipStatus.ACCEPTED.name(), Visibility.PUBLIC.name(), Visibility.FRIEND.name(), pageable))
                     .thenReturn(emptyFlatPage);
 
             Page<PostResponse> result = postService.getFeed(pageable);

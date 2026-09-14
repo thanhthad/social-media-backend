@@ -70,15 +70,16 @@ public class PostServiceImpl implements PostService {
 
         Long viewerId = UserContextHolder.getUserId();
 
+        // findFeed dùng nativeQuery nên phải truyền String (.name()) thay vì Enum trực tiếp
         Page<PostFlatProjection> flatPage =
                 postRepository.findFeed(
                         viewerId,
-                        Status.ACTIVE,
-                        PostType.POST,
-                        ReportStatus.APPROVED,
-                        FriendshipStatus.ACCEPTED,
-                        Visibility.PUBLIC,
-                        Visibility.FRIEND,
+                        Status.ACTIVE.name(),
+                        PostType.POST.name(),
+                        ReportStatus.APPROVED.name(),
+                        FriendshipStatus.ACCEPTED.name(),
+                        Visibility.PUBLIC.name(),
+                        Visibility.FRIEND.name(),
                         pageable
                 );
 

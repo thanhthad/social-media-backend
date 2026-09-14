@@ -178,8 +178,8 @@ class ReelRepositoryTest {
 
             // Alice xem feed: có reel của mình và reel của bạn bob
             Page<ReelFlatProjection> feed = reelRepository.findReelFeed(
-                    alice.getId(), Status.ACTIVE, PostType.REEL, ReportStatus.APPROVED,
-                    FriendshipStatus.ACCEPTED, Visibility.PUBLIC, Visibility.FRIEND, PageRequest.of(0, 10));
+                    alice.getId(), Status.ACTIVE.name(), PostType.REEL.name(), ReportStatus.APPROVED.name(),
+                    FriendshipStatus.ACCEPTED.name(), Visibility.PUBLIC.name(), Visibility.FRIEND.name(), PageRequest.of(0, 10));
             assertThat(feed.getContent()).hasSize(2);
         }
 
