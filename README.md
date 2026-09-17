@@ -165,7 +165,7 @@ src/main/resources/db/migration/
 
 ### Entity Relationship Diagram (ERD):
 
-<img width="2604" height="1991" alt="DBdiagram" src="https://github.com/user-attachments/assets/098c984a-e939-475d-84c8-447ef2f3681d" />
+<img width="3090" height="2315" alt="SocialDb" src="https://github.com/user-attachments/assets/e505708e-1603-4fe0-85aa-8b38a71e3673" />
 
 ---
 
