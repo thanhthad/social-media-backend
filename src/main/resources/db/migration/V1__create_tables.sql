@@ -7,14 +7,49 @@ CREATE TABLE roles (
 
 CREATE TABLE users (
                        user_id BIGSERIAL PRIMARY KEY,
-                       username VARCHAR(50) UNIQUE NOT NULL,
+                       username VARCHAR(50) UNIQUE ,
                        email VARCHAR(255) UNIQUE NOT NULL,
-                       password_hash VARCHAR(255) NOT NULL,
+                       password_hash VARCHAR(255),
+                       provider VARCHAR(50) NOT NULL DEFAULT 'LOCAL',
+                       email_verified BOOLEAN NOT NULL DEFAULT FALSE,
                        status VARCHAR(50),
                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                        last_login_at TIMESTAMP WITH TIME ZONE,
-                       last_active_at TIMESTAMP WITH TIME ZONE
+                       last_active_at TIMESTAMP WITH TIME ZONE,
+                       failed_attempt INTEGER DEFAULT 0,
+                       lock_until TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE email_verification_tokens (
+                                           id BIGSERIAL PRIMARY KEY,
+                                           user_id BIGINT NOT NULL,
+                                           token VARCHAR(255) NOT NULL UNIQUE,
+                                           expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                                           used BOOLEAN NOT NULL DEFAULT FALSE,
+                                           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                           CONSTRAINT fk_email_verification_user
+                                               FOREIGN KEY (user_id)
+                                                   REFERENCES users(user_id)
+                                                   ON DELETE CASCADE
+);
+
+CREATE TABLE password_reset_tokens (
+
+                                       id BIGSERIAL PRIMARY KEY,
+
+                                       user_id BIGINT NOT NULL,
+
+                                       token VARCHAR(255) NOT NULL UNIQUE,
+
+                                       expires_at TIMESTAMP NOT NULL,
+
+                                       used BOOLEAN DEFAULT FALSE,
+
+                                       CONSTRAINT fk_password_reset_user
+                                           FOREIGN KEY(user_id)
+                                               REFERENCES users(user_id)
+                                               ON DELETE CASCADE
 );
 
 CREATE TABLE user_roles (
@@ -41,19 +76,44 @@ CREATE TABLE user_roles (
                                     REFERENCES users(user_id)
 );
 
-
 CREATE TABLE profiles (
                           id BIGSERIAL PRIMARY KEY,
                           user_id BIGINT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
                           full_name VARCHAR(100),
+
                           avatar_url VARCHAR(255),
                           avatar_public_id VARCHAR(255),
+
+                          bio TEXT,
+
+    -- Cover
                           cover_url VARCHAR(255),
-                          bio VARCHAR(255),
+                          cover_public_id VARCHAR(255),
+
+    -- Contact
                           phone VARCHAR(20),
+                          website VARCHAR(255),
+
+    -- Personal
                           date_of_birth DATE,
-                          gender VARCHAR(10),
-                          location VARCHAR(255),
+                          gender VARCHAR(20),
+
+    -- Work & Education
+                          occupation VARCHAR(100),
+                          company VARCHAR(100),
+                          education VARCHAR(150),
+
+    -- Location
+                          country VARCHAR(100),
+                          city VARCHAR(100),
+                          district VARCHAR(100),
+
+    -- Social links
+                          social_links JSONB DEFAULT '{}'::jsonb,
+
+    -- Privacy
+                          profile_visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
+
                           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -67,15 +127,23 @@ CREATE TABLE posts (
 
                        content TEXT,
 
+                       post_type VARCHAR(30) NOT NULL DEFAULT 'POST',
+
                        visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
 
                        comment_count BIGINT NOT NULL DEFAULT 0,
 
                        reaction_count BIGINT NOT NULL DEFAULT 0,
 
-                       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                       created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-                       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                       updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                       CONSTRAINT chk_posts_post_type
+                           CHECK (post_type IN ('POST', 'REEL')),
+
+                       CONSTRAINT chk_posts_visibility
+                           CHECK (visibility IN ('PUBLIC', 'FRIEND', 'PRIVATE'))
 );
 
 CREATE TABLE post_media (
@@ -116,11 +184,33 @@ CREATE TABLE reactions (
                                UNIQUE(user_id, post_id)
 );
 
-CREATE TABLE follows (
-                         follower_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
-                         following_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
-                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                         PRIMARY KEY (follower_id, following_id)
+CREATE TABLE friendships (
+                             friendship_id BIGSERIAL PRIMARY KEY,
+
+                             user_one_id BIGINT NOT NULL
+                                 REFERENCES users(user_id)
+                                     ON DELETE CASCADE,
+
+                             user_two_id BIGINT NOT NULL
+                                 REFERENCES users(user_id)
+                                     ON DELETE CASCADE,
+
+                             requester_id BIGINT NOT NULL
+                                 REFERENCES users(user_id)
+                                     ON DELETE CASCADE,
+
+                             status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+
+                             visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
+
+                             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                             CONSTRAINT uk_friendship_pair
+                                 UNIQUE (user_one_id, user_two_id),
+
+                             CONSTRAINT chk_friendship_different_users
+                                 CHECK (user_one_id <> user_two_id)
 );
 
 CREATE TABLE saved_posts (

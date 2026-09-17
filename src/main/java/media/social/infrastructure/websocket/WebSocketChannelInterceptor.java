@@ -1,7 +1,7 @@
 package media.social.infrastructure.websocket;
 
 import lombok.RequiredArgsConstructor;
-import media.social.modults.user.security.jwt.JwtUtil;
+import media.social.modules.auth.security.jwt.JwtUtil;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -33,20 +33,29 @@ public class WebSocketChannelInterceptor
                     accessor.getFirstNativeHeader(
                             "Authorization"
                     );
-            if(authHeader == null ||
-                    !authHeader.startsWith("Bearer ")) {
-                throw new IllegalArgumentException(
-                        "Missing websocket token"
-                );
+            if (authHeader == null) {
+                authHeader = accessor.getFirstNativeHeader("token");
             }
-            String token =
-                    authHeader.substring(7);
+            if (authHeader == null) {
+                authHeader = accessor.getFirstNativeHeader("access_token");
+            }
 
-            if(!jwtUtil.isValid(token)) {
+            if (authHeader == null) {
                 throw new IllegalArgumentException(
-                        "Invalid token"
+                        "Missing websocket authentication token"
                 );
             }
+
+            String token = authHeader.startsWith("Bearer ")
+                    ? authHeader.substring(7).trim()
+                    : authHeader.trim();
+
+            if (!jwtUtil.isValid(token)) {
+                throw new IllegalArgumentException(
+                        "Invalid websocket authentication token"
+                );
+            }
+
             Long userId =
                     jwtUtil.getUserId(token);
             accessor.setUser(

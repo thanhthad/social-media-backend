@@ -5,52 +5,79 @@ import lombok.extern.slf4j.Slf4j;
 import media.social.common.ratelimit.exception.TooManyRequestException;
 import media.social.common.response.ApiResponse;
 import media.social.common.response.ResponseData;
-import media.social.modults.conversation.exception.*;
-import media.social.modults.file.image.exception.CloudinaryDeleteException;
-import media.social.modults.file.image.exception.CloudinaryUploadException;
-import media.social.modults.file.image.exception.InvalidMediaException;
-import media.social.modults.notification.exception.NotificationAlreadyExistsException;
-import media.social.modults.notification.exception.NotificationNotFoundException;
-import media.social.modults.post.exception.comment.CanNotCommentYourself;
-import media.social.modults.post.exception.comment.CommentAlreadyExistsException;
-import media.social.modults.post.exception.comment.CommentNotFoundException;
-import media.social.modults.post.exception.post.*;
-import media.social.modults.post.exception.post_media.InvalidImageException;
-import media.social.modults.post.exception.post_media.MediaNotFoundException;
-import media.social.modults.post.exception.reaction.ReactionNotFoundException;
-import media.social.modults.post.exception.report.CannotReportOwnPostException;
-import media.social.modults.post.exception.report.ReportAlreadyExistsException;
-import media.social.modults.post.exception.report.ReportAlreadyReviewedException;
-import media.social.modults.post.exception.report.ReportNotFoundException;
-import media.social.modults.post.exception.saved_post.SavedPostAlreadyExistsException;
-import media.social.modults.post.exception.saved_post.SavedPostNotFoundException;
-import media.social.modults.user.exception.block.BlockAlreadyExistsException;
-import media.social.modults.user.exception.block.BlockNotFoundException;
-import media.social.modults.user.exception.block.UserBlockedException;
-import media.social.modults.user.exception.follow.FollowAlreadyExistsException;
-import media.social.modults.user.exception.follow.FollowNotFoundException;
-import media.social.modults.user.exception.profile.ProfileNotFoundException;
-import media.social.modults.user.exception.refreshtoken.InvalidRefreshTokenException;
-import media.social.modults.user.exception.refreshtoken.RefreshTokenExpiredException;
-import media.social.modults.user.exception.refreshtoken.RefreshTokenRevokedException;
-import media.social.modults.user.exception.role.RoleNotFoundException;
-import media.social.modults.user.exception.role.UserRoleAlreadyExistsException;
-import media.social.modults.user.exception.role.UserRoleNotFoundException;
-import media.social.modults.user.exception.user.UnauthorizedException;
-import media.social.modults.user.exception.user.UserAlreadyExistsException;
-import media.social.modults.user.exception.user.UserNotFoundException;
-import media.social.modults.user.security.context.UserContextHolder;
+import media.social.modules.auth.exception.password.AccountAlreadyLockedException;
+import media.social.modules.auth.exception.password.PasswordResetTokenExpiredException;
+import media.social.modules.auth.exception.password.PasswordResetTokenInvalidException;
+import media.social.modules.auth.exception.password.PasswordResetTokenUsedException;
+import media.social.modules.auth.exception.verification.*;
+import media.social.modules.conversation.exception.*;
+import media.social.modules.dating.exception.photo.*;
+import media.social.modules.dating.exception.preference.PreferenceNotFoundException;
+import media.social.modules.dating.exception.profile.BadRequestException;
+import media.social.modules.dating.exception.profile.CoordinatesNotFoundException;
+import media.social.modules.dating.exception.profile.DatingProfileNotFoundException;
+import media.social.modules.dating.exception.report.CannotReportOwnProfileException;
+import media.social.modules.dating.exception.report.DatingReportAlreadyExistsException;
+import media.social.modules.dating.exception.report.DatingReportAlreadyReviewedException;
+import media.social.modules.dating.exception.report.DatingReportNotFoundException;
+import media.social.modules.file.exception.CloudinaryDeleteException;
+import media.social.modules.file.exception.CloudinaryUploadException;
+import media.social.modules.file.exception.InvalidMediaException;
+import media.social.modules.notification.exception.NotificationAlreadyExistsException;
+import media.social.modules.notification.exception.NotificationNotFoundException;
+import media.social.modules.post.exception.comment.CanNotCommentYourself;
+import media.social.modules.post.exception.comment.CommentAlreadyExistsException;
+import media.social.modules.post.exception.comment.CommentNotFoundException;
+import media.social.modules.post.exception.post.*;
+import media.social.modules.post.exception.post_media.InvalidImageException;
+import media.social.modules.post.exception.post_media.MediaNotFoundException;
+import media.social.modules.post.exception.reaction.ReactionNotFoundException;
+import media.social.modules.post.exception.report.CannotReportOwnPostException;
+import media.social.modules.post.exception.report.ReportAlreadyExistsException;
+import media.social.modules.post.exception.report.ReportAlreadyReviewedException;
+import media.social.modules.post.exception.report.ReportNotFoundException;
+import media.social.modules.post.exception.saved_post.PostFriendsOnlyException;
+import media.social.modules.post.exception.saved_post.SavedPostAlreadyExistsException;
+import media.social.modules.post.exception.saved_post.SavedPostNotFoundException;
+import media.social.modules.story.exception.reaction.StoryReactionNotFoundException;
+import media.social.modules.story.exception.story.StoryAccessDeniedException;
+import media.social.modules.story.exception.story.StoryForbiddenException;
+import media.social.modules.story.exception.story.StoryNotFoundException;
+import media.social.modules.user.exception.block.BlockAlreadyExistsException;
+import media.social.modules.user.exception.block.BlockNotFoundException;
+import media.social.modules.user.exception.block.UserBlockedException;
+import media.social.modules.user.exception.profile.ProfileNotFoundException;
+import media.social.modules.auth.exception.refreshtoken.InvalidRefreshTokenException;
+import media.social.modules.auth.exception.refreshtoken.RefreshTokenExpiredException;
+import media.social.modules.auth.exception.refreshtoken.RefreshTokenRevokedException;
+import media.social.modules.user.exception.role.RoleNotFoundException;
+import media.social.modules.user.exception.role.UserRoleAlreadyExistsException;
+import media.social.modules.user.exception.role.UserRoleNotFoundException;
+import media.social.modules.user.exception.user.UnauthorizedException;
+import media.social.modules.user.exception.user.UserAlreadyExistsException;
+import media.social.modules.user.exception.user.UserNotFoundException;
+import media.social.modules.auth.security.context.UserContextHolder;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.apache.catalina.connector.ClientAbortException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+import media.social.modules.user.exception.user.ForbiddenException;
+import media.social.modules.reel.exception.ReelNotFoundException;
+import media.social.modules.reel.exception.ReelForbiddenException;
+import media.social.modules.reel.exception.ReelViewNotFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +86,328 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private Long getUserId(){
-        return UserContextHolder.getUserId();
+        try {
+            if (UserContextHolder.isAuthenticated()) {
+                return UserContextHolder.getUserId();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    // ======================= DATING PROFILE PHOTO =======================
+
+    @ExceptionHandler(DatingProfilePhotoAlreadyPrimaryException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoAlreadyPrimary(
+            DatingProfilePhotoAlreadyPrimaryException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingProfilePhotoLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoLimitExceeded(
+            DatingProfilePhotoLimitExceededException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingProfilePhotoNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfilePhotoNotFound(
+            DatingProfilePhotoNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(InvalidDatingProfilePhotoException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidDatingProfilePhoto(
+            InvalidDatingProfilePhotoException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(UnauthorizedDatingProfilePhotoException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorizedDatingProfilePhoto(
+            UnauthorizedDatingProfilePhotoException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    // ======================= STORY & REACTION =======================
+
+    @ExceptionHandler(StoryReactionNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryReactionNotFound(
+            StoryReactionNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(StoryAccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryAccessDenied(
+            StoryAccessDeniedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED
+        );
+    }
+
+    @ExceptionHandler(StoryForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryForbidden(
+            StoryForbiddenException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(StoryNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStoryNotFound(
+            StoryNotFoundException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    // ================= PREFERENCE =================
+    @ExceptionHandler(PreferenceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePreferenceNotFound(
+            PreferenceNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    // ================= PROFILE =================
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadRequest(
+            BadRequestException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(CoordinatesNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCoordinatesNotFound(
+            CoordinatesNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(DatingProfileNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingProfileNotFound(
+            DatingProfileNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    // ================= REPORT =================
+    @ExceptionHandler(CannotReportOwnProfileException.class)
+    public ResponseEntity<ApiResponse<Object>> handleCannotReportOwnProfile(
+            CannotReportOwnProfileException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingReportAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportAlreadyExists(
+            DatingReportAlreadyExistsException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(DatingReportAlreadyReviewedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportAlreadyReviewed(
+            DatingReportAlreadyReviewedException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(DatingReportNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDatingReportNotFound(
+            DatingReportNotFoundException ex
+    ){
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND
+        );
+    }
+
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConnectionError(
+            ResourceAccessException ex
+    ){
+
+        log.error("External service connection failed", ex);
+
+        return ResponseData.fail(
+                "Service unavailable. Please try again later.",
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    public ResponseEntity<ApiResponse<Object>> handleRedisConnectionFailure(
+            RedisConnectionFailureException ex
+    ){
+
+        log.error("Redis connection failed", ex);
+
+        return ResponseData.fail(
+                "System temporarily unavailable",
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+
+    // ================= PASSWORD RESET =================
+    @ExceptionHandler(PasswordResetTokenInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenInvalid(
+            PasswordResetTokenInvalidException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(PasswordResetTokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenExpired(
+            PasswordResetTokenExpiredException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(PasswordResetTokenUsedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handlePasswordResetTokenUsed(
+            PasswordResetTokenUsedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(AccountAlreadyLockedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handleAccountAlreadyLockedTokenUsed(
+            AccountAlreadyLockedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiResponse<Object>>
+    handleAccountLockedTokenUsed(
+            LockedException ex
+    ){
+
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    // ================= EMAIL VERIFICATION ===========================
+    @ExceptionHandler(EmailSendFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailSendFailException(
+            EmailSendFailedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailAlreadyVerifiedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailAlreadyVerifiedException(
+            EmailAlreadyVerifiedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+
+    @ExceptionHandler(EmailVerificationTokenInvalidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidVerificationToken(
+            EmailVerificationTokenInvalidException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailVerificationTokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>> handleExpiredVerificationToken(
+            EmailVerificationTokenExpiredException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(EmailVerificationTokenUsedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUsedVerificationToken(
+            EmailVerificationTokenUsedException ex
+    ) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.CONFLICT
+        );
     }
 
     // ================= REDIS_RATE_LIMIT ===========================
@@ -155,6 +503,13 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(PostFriendsOnlyException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePostFriendOnly(PostFriendsOnlyException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
+
+
     //==================BLOCK==================
     @ExceptionHandler(BlockNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleBlockNotFound(BlockNotFoundException ex) {
@@ -193,6 +548,11 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
@@ -207,6 +567,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleProfileNotFound(ProfileNotFoundException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserForbidden(ForbiddenException ex) {
+        return ResponseData.fail(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN
+        );
+    }
+
 
     //====================REPORT==================
     @ExceptionHandler(ReportNotFoundException.class)
@@ -252,10 +621,6 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(PostFollowersOnlyException.class)
-    public ResponseEntity<ApiResponse<Object>> handlePostFollowOnly(PostFollowersOnlyException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
 
     @ExceptionHandler(CannotSaveOwnPostException.class)
     public ResponseEntity<ApiResponse<Object>> handleSaveOwnPost(CannotSaveOwnPostException ex) {
@@ -272,18 +637,24 @@ public class GlobalExceptionHandler {
         return ResponseData.fail(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    //====================FOLLOW==================
-    @ExceptionHandler(FollowAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleFollowAlreadyExists(FollowAlreadyExistsException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
+    //====================REEL==================
+    @ExceptionHandler(ReelNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReelNotFound(ReelNotFoundException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(FollowNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleFollowNotFound(FollowNotFoundException ex) {
+    @ExceptionHandler(ReelForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReelForbidden(ReelForbiddenException ex) {
+        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(ReelViewNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleReelViewNotFound(ReelViewNotFoundException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     //====================COMMENT==================
+
     @ExceptionHandler(CommentAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleCommentAlreadyExists(CommentAlreadyExistsException ex) {
         return ResponseData.fail(ex.getMessage(), HttpStatus.CONFLICT);
@@ -403,15 +774,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    //===================FORBIDDEN=====================================
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ApiResponse<Object>> handleForbidden(ForbiddenException ex) {
-        return ResponseData.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
+    // ================= CLIENT DISCONNECT / ABORT =================
+    @ExceptionHandler({
+            ClientAbortException.class,
+            AsyncRequestNotUsableException.class
+    })
+    public void handleClientAbortException(Exception ex) {
+        log.warn("Client aborted connection | userId={} | msg={}",
+                getUserId(),
+                ex.getMessage()
+        );
     }
 
     // ================= FALLBACK (ONLY IMPORTANT LOG) =================
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {
+        if (isClientAbortException(ex)) {
+            log.warn("Client aborted connection (wrapped) | userId={} | msg={}",
+                    getUserId(),
+                    ex.getMessage()
+            );
+            return null;
+        }
 
         log.error("INTERNAL_SERVER_ERROR | userId={} | msg={}",
                 getUserId(),
@@ -423,5 +807,26 @@ public class GlobalExceptionHandler {
                 "Internal server error",
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
+    }
+
+    private boolean isClientAbortException(Throwable ex) {
+        Throwable cause = ex;
+        while (cause != null) {
+            if (cause instanceof ClientAbortException || cause instanceof AsyncRequestNotUsableException) {
+                return true;
+            }
+            String message = cause.getMessage();
+            if (message != null) {
+                String lower = message.toLowerCase();
+                if (lower.contains("broken pipe") ||
+                        lower.contains("connection reset") ||
+                        lower.contains("connection was aborted") ||
+                        lower.contains("forcibly closed by the remote host")) {
+                    return true;
+                }
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 }

@@ -3,10 +3,14 @@ version: "3.9"
 services:
 
   postgres:
-    image: postgres:17
+    image: postgis/postgis:17-3.5
     container_name: social-postgres
-
     restart: unless-stopped
+
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
 
     environment:
       POSTGRES_DB: social
@@ -29,7 +33,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: social-redis
-
     restart: unless-stopped
 
     ports:
@@ -52,22 +55,20 @@ services:
       dockerfile: Dockerfile
 
     container_name: social-backend
-
     restart: unless-stopped
 
     depends_on:
       postgres:
         condition: service_healthy
-
       redis:
         condition: service_healthy
-
+      kafka:
+        condition: service_started
 
     ports:
       - "8080:8080"
 
     environment:
-
       SPRING_PROFILES_ACTIVE: docker
 
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/social
@@ -77,8 +78,35 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
 
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: socialdb-kafka
+    ports:
+      - "9092:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+
+      KAFKA_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_HOST://:9094,CONTROLLER://:9093
+
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
 volumes:
-
   postgres_data:
-
   redis_data:
