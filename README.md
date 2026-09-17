@@ -9,319 +9,233 @@
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED.svg?style=flat-square&logo=docker)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-A high-performance, production-ready enterprise social networking and dating backend platform built with **Java 21**, **Spring Boot 3**, **PostgreSQL 17**, and **Redis**. Designed with modern software engineering principles: **Domain-Driven Design (DDD), Modular Monolith Architecture, STOMP WebSocket real-time pub/sub, JWT Dual-Token Security, Redis Caching & Distributed Rate Limiting**.
+Hệ thống Backend mạng xã hội & hẹn hò (Social Media & Matchmaking Dating Platform) hiệu năng cao, xây dựng trên nền tảng **Java 21**, **Spring Boot 3**, **PostgreSQL 17**, và **Redis**. Áp dụng các nguyên lý kỹ thuật phần mềm hiện đại: **Domain-Driven Design (DDD)**, **Modular Monolith Architecture**, **STOMP WebSocket Real-Time Pub/Sub**, **JWT Dual-Token Security**, và **Redis Distributed Rate Limiting**.
 
 ---
 
-## 📑 Table of Contents
+## 📑 Mục Lục
 
-- [🏛️ System Architecture](#️-system-architecture)
-- [✨ Key Features & Modules](#-key-features--modules)
-  - [1. Authentication & Security](#1-authentication--security)
-  - [2. User Profile & Social Graph](#2-user-profile--social-graph)
-  - [3. Posts & Feed Discovery](#3-posts--feed-discovery)
-  - [4. Multi-Entity Reaction Engine](#4-multi-entity-reaction-engine)
-  - [5. Threaded Comment System](#5-threaded-comment-system)
-  - [6. Reels & Video Ranking](#6-reels--video-ranking)
-  - [7. Ephemeral Stories & Viewer Tracking](#7-ephemeral-stories--viewer-tracking)
-  - [8. Dating & Matchmaking Engine](#8-dating--matchmaking-engine)
-  - [9. Real-Time Chat & STOMP Messaging](#9-real-time-chat--stomp-messaging)
-  - [10. Push Notification System](#10-push-notification-system)
-  - [11. Content Moderation & Administration](#11-content-moderation--administration)
-- [⚡ Redis Caching & Rate Limiting](#-redis-caching--rate-limiting)
-- [🗄️ Database Design & Migration](#️-database-design--migration)
-- [📡 WebSocket & STOMP Infrastructure](#-websocket--stomp-infrastructure)
-- [⚙️ Environment & Configuration](#️-environment--configuration)
-- [🚀 Quick Start & Installation](#-quick-start--installation)
-- [🧪 Testing & Quality Assurance](#-testing--quality-assurance)
-- [👨‍💻 Author & License](#-author--license)
+- [🏛️ Kiến Trúc Hệ Thống (System Architecture)](#️-kiến-trúc-hệ-thống-system-architecture)
+- [📖 Tài Liệu API & Swagger UI](#-tài-liệu-api--swagger-ui)
+- [🧭 Danh Mục 30 Controllers & 159 Endpoints](#-danh-mục-30-controllers--159-endpoints)
+- [🛡️ Xác Thực & Chế Độ Khách (Security & Guest Mode)](#️-xác-thực--chế-độ-khách-security--guest-mode)
+- [⚡ Redis Caching & Rate Limiting Phân Tán](#-redis-caching--rate-limiting-phân-tán)
+- [🗄️ Thiết Kế Cơ Sở Dữ Liệu & ERD](#️-thiết-kế-cơ-sở-dữ-liệu--erd)
+- [📡 Hạ Tầng Real-Time STOMP WebSocket](#-hạ-tầng-real-time-stomp-websocket)
+- [⚙️ Cấu Hình Môi Trường (Environment Config)](#️-cấu-hình-môi-trường-environment-config)
+- [🚀 Hướng Dẫn Cài Đặt & Chạy Ứng Dụng](#-hướng-dẫn-cài-đặt--chạy-ứng-dụng)
+- [🧪 Kiểm Thử & Đảm Bảo Chất Lượng](#-kiểm-thử--đảm-bảo-chất-lượng)
 
 ---
 
-## 🏛️ System Architecture
+## 🏛️ Kiến Trúc Hệ Thống (System Architecture)
 
-The backend adopts a **Modular Monolith** structure where each feature domain is self-contained with its own controllers, services, repositories, entities, and DTOs:
+Backend được tổ chức theo mô hình **Modular Monolith**, phân chia rõ ràng giữa tầng dùng chung (common), hạ tầng (infrastructure) và các miền nghiệp vụ (modules):
 
 ```
 media.social
-├── common                      # Global exception handlers, response wrappers, rate limiting
-│   ├── exception
-│   ├── ratelimit
-│   └── response
-├── infrastructure              # Cross-cutting infrastructure concerns
-│   ├── cloudinary              # Cloudinary media upload and storage service
-│   ├── redis                   # Redis template, serialization, caching configurations
-│   ├── security                # Security filter chain, JWT provider, UserContextHolder
-│   └── websocket               # WebSocket/STOMP config, ChannelInterceptor, Handshake handler
-└── modules                     # Domain Feature Modules
-    ├── auth                    # Login, register, token refresh, email verification, password reset
-    ├── user                    # User profile, friendships, follows, blocks, user statistics
-    ├── post                    # Feed, explore, saved posts, hashtags, violation reports
-    ├── conversation            # 1-on-1 & group chats, message reactions, read receipts
-    ├── dating                  # Dating profile, swipe algorithm, match detection, match management
-    ├── story                   # 24-hour stories, story views tracking, story reactions
-    └── notification            # Real-time event notifications & push delivery
+├── common                      # Xử lý lỗi toàn cục, response wrapper, rate limiting
+│   ├── exception               # GlobalExceptionHandler, AppExceptions
+│   ├── ratelimit               # AOP Annotation @RateLimit backed by Redis
+│   └── response                # Standardized ResponseData<T> wrapper
+├── infrastructure              # Cấu hình kỹ thuật nền tảng & tích hợp bên thứ ba
+│   ├── cloudinary              # Lưu trữ & xử lý media (ảnh, video)
+│   ├── redis                   # RedisTemplate, CacheManager, Key Generators
+│   ├── security                # SecurityFilterChain, JWT Token Provider, UserContextHolder
+│   └── websocket               # STOMP WebSocket, ChannelInterceptor, Handshake Handler
+└── modules                     # 7 Domain Nghiệp Vụ Chính
+    ├── auth                    # Đăng nhập, đăng ký, refresh token, OTP xác thực
+    ├── user                    # Hồ sơ người dùng, quan hệ bạn bè, follow, chặn, thống kê
+    ├── post                    # Bảng tin, bài viết, media, hashtags, báo cáo vi phạm
+    ├── conversation            # Chat 1-1, chat nhóm, cảm xúc tin nhắn, đã đọc
+    ├── dating                  # Hồ sơ hẹn hò, quẹt match, sở thích, bộ lọc cự ly/tuổi
+    ├── story                   # Tin 24h, theo dõi người xem, thả tim story
+    └── notification            # Thông báo thời gian thực & STOMP push
 ```
 
 ---
 
-## ✨ Key Features & Modules
+## 📖 Tài Liệu API & Swagger UI
 
-### 1. Authentication & Security
-* **JWT Dual-Token Workflow**: Access tokens (short-lived) + Refresh tokens (persisted with rotation).
-* **Token Blacklisting**: Logout instantly revokes tokens via Redis blocklist.
-* **Email Verification & Password Recovery**: OTP token generation with expiration limits.
-* **Role-Based Access Control (RBAC)**: Fine-grained permissions (`ROLE_USER`, `ROLE_ADMIN`).
-* **Interactive OpenAPI / Swagger Documentation**:
+Toàn bộ hệ thống cung cấp **159 REST Endpoints** được tài liệu hóa chi tiết qua SpringDoc OpenAPI 3:
 
 <img width="1902" height="868" alt="image" src="https://github.com/user-attachments/assets/91a7d0ab-b62a-4da6-abad-c3591117ba43" />
 
-```
-Client Request ──► JwtAuthenticationFilter ──► SecurityContext ──► UserContextHolder
-```
+* **Swagger UI Trực Quan**: `http://localhost:8080/swagger-ui/index.html`
+* **OpenAPI Schema (JSON)**: `http://localhost:8080/v3/api-docs`
 
 ---
 
-### 2. User Profile & Social Graph
-* **Comprehensive Profile Management**: Full name, username, bio, occupation, company, education, location, phone, and external social links.
-* **Social Connections**:
-  - **Friendships**: Send, Accept, Reject, Cancel request, and Unfriend.
-  - **Follows**: Follow/Unfollow any public user.
-  - **Blocks**: Two-way blocking prevents messaging, profile visibility, and post exposure.
-* **Mutual Friends Computation**: High-performance query to find and count mutual friends between users.
-* **User Statistics API (`UserStatsResponse`)**: Aggregates post count, follower count, following count, friend count, and mutual friends count.
+## 🧭 Danh Mục 30 Controllers & 159 Endpoints
+
+| Miền Nghiệp Vụ | Controller | Base Path | Mô Tả & Chức Năng Cốt Lõi |
+| :--- | :--- | :--- | :--- |
+| **Xác thực** | `AuthController` | `/api/auth` | Đăng ký, đăng nhập, refresh token, đăng xuất, gửi OTP xác thực email, đổi mật khẩu quên |
+| **Người dùng** | `UserController` | `/api/users` | CRUD thông tin cá nhân, cập nhật thông tin cơ bản/liên hệ/nghề nghiệp, đổi avatar/ảnh bìa, đổi username/password |
+| | `FriendshipController` | `/api/friends` | Gửi/chấp nhận/từ chối lời mời kết bạn, hủy kết bạn, danh sách lời mời chờ, đếm bạn chung |
+| | `FollowController` | `/api/follows` | Theo dõi, bỏ theo dõi người dùng, danh sách followers và following |
+| | `BlockController` | `/api/blocks` | Chặn, bỏ chặn, kiểm tra trạng thái chặn 2 chiều, danh sách bị chặn |
+| **Bài viết** | `PostController` | `/api/posts` | Bảng tin cá nhân, khám phá, bảng tin công khai cho khách, CRUD bài viết, thêm/xóa media |
+| | `PostReactionController` | `/api/posts` | 6 loại cảm xúc (`LIKE`, `LOVE`, `HAHA`, `WOW`, `SAD`, `ANGRY`), đếm lượt & danh sách người thả tim |
+| | `CommentController` | `/api/comments` | Bình luận gốc, phản hồi lồng nhau (tree), chỉnh sửa bình luận (`PATCH /{id}`), xóa bình luận |
+| | `CommentReactionController` | `/api/comments` | Thả cảm xúc trên bình luận, gỡ cảm xúc, danh sách người thả cảm xúc |
+| | `SavedPostController` | `/api/posts` | Lưu bài viết vào bộ sưu tập, bỏ lưu, kiểm tra trạng thái đã lưu |
+| | `HashtagController` | `/api/hashtags` | Xu hướng hashtag thịnh hành, tìm kiếm bài viết theo hashtag |
+| | `ReportController` | `/api/reports` | Báo cáo bài viết vi phạm tiêu chuẩn cộng đồng, Admin kiểm duyệt & ẩn bài |
+| **Reels Video** | `ReelController` | `/api/reels` | Feed Reels theo dõi/khám phá/công khai/của tôi, tải lên video dọc, sửa caption & quyền riêng tư (`PATCH /{id}`), tracking tiến độ xem & replay |
+| **Tin 24h** | `StoryController` | `/api/stories` | Đăng tin ảnh/video 24h, feed tin bạn bè/công khai, xem ai đã xem tin, thả tim tin, cập nhật quyền riêng tư (`PATCH /{id}/visibility`), xóa tin |
+| **Trò chuyện** | `ConversationController` | `/api/conversations` | Hội thoại 1-1, chat nhóm, đổi ảnh đại diện nhóm (`PUT`), đổi tên nhóm (`PUT`), xóa cuộc trò chuyện |
+| | `ConversationMemberController` | `/api/conversation-members` | Quản lý thành viên nhóm chat, thêm/xóa thành viên, cập nhật con trỏ tin nhắn đã đọc (`PUT`) |
+| | `MessageController` | `/api/messages` | Gửi tin nhắn văn bản & media, tải lịch sử hội thoại, xóa tin nhắn |
+| | `MessageReactionController` | `/api/message-reactions` | Thả cảm xúc tin nhắn thời gian thực, gỡ cảm xúc, danh sách người thả |
+| **Hẹn hò** | `DatingProfileController` | `/api/dating` | Tạo/xem/cập nhật hồ sơ hẹn hò, cập nhật tọa độ GPS, sửa từng trường riêng lẻ (`PATCH /profile/field`) |
+| | `DatingDiscoveryController` | `/api/dating` | Thuật toán khám phá đối tượng theo bán kính GPS (km), độ tuổi và giới tính |
+| | `DatingSwipeController` | `/api/dating` | Quẹt `LIKE` / `DISLIKE`, kiểm tra match tức thì, hoàn tác quẹt trước |
+| | `DatingMatchController` | `/api/dating` | Danh sách các cặp đã tương hợp (match), hủy tương hợp (unmatch) |
+| | `DatingPreferenceController` | `/api/dating` | Cài đặt tiêu chí: độ tuổi min-max, khoảng cách tối đa, giới tính ưu tiên (`PUT /preferences`) |
+| | `DatingInterestController` | `/api/dating` | Danh mục sở thích chuẩn, cập nhật sở thích người dùng (`PUT /interests`) |
+| | `DatingProfilePhotoController` | `/api/dating` | Tải lên bộ sưu tập ảnh hẹn hò, đặt ảnh đại diện chính (`PATCH /photos/{id}/primary`), xóa ảnh |
+| | `DatingReportController` | `/api/dating/reports` | Báo cáo hồ sơ hẹn hò vi phạm, kiểm duyệt & xử lý |
+| **Thông báo** | `NotificationController` | `/api/notifications` | Danh sách thông báo, lọc chưa đọc, đánh dấu đã đọc (`PATCH /{id}/read`), đọc tất cả (`PATCH /read-all`), xóa |
+| **Quản trị** | `AdminUserController` | `/api/admin/users` | Quản lý tài khoản, tìm kiếm, khóa/mở khóa/kích hoạt trạng thái (`PATCH /{id}/status`) |
+| | `AdminUserRoleController` | `/api/admin/users` | Phân quyền vai trò (`ROLE_ADMIN`, `ROLE_MODERATOR`, `ROLE_USER`), gỡ quyền |
 
 ---
 
-### 3. Posts & Feed Discovery
-* **Multi-Media Support**: Multi-image and video uploads processed via Cloudinary.
-* **Visibility Scopes**: `PUBLIC`, `FRIEND`, and `PRIVATE` visibility controls.
-* **Feed Algorithms**:
-  - **Friend Feed**: Chronological stream of friends and self-published posts.
-  - **Explore Feed**: Ranked discovery feed based on engagement hot scores and trending tags.
-* **Hashtag System**: Automated `#hashtag` extraction, indexing, and trending hashtag aggregation.
-* **Saved Posts**: Bookmark favorite posts with instant save/unsave APIs.
+## 🛡️ Xác Thực & Chế Độ Khách (Security & Guest Mode)
+
+* **Cơ Chế Token Kép (JWT Dual-Token)**:
+  * Access Token: thời hạn ngắn (24h), ký bảo mật HMAC-SHA256.
+  * Refresh Token: thời hạn 7 ngày, hỗ trợ cơ chế luân chuyển (token rotation).
+* **Thu Hồi Token Tức Thì (Token Blacklist)**: Khi đăng xuất, token được đưa vào Redis blocklist với TTL tự hủy.
+* **Chế Độ Khách Công Khai (Guest Public Access - `SecurityConfig.java`)**:
+  * Cho phép người dùng chưa đăng nhập tự do xem:
+    * `GET /api/posts/public/**` (Bảng tin bài viết công khai)
+    * `GET /api/reels/public/**` (Bảng tin video ngắn Reels công khai)
+    * `GET /api/hashtags/**` (Các hashtag đang thịnh hành)
+    * `GET /api/comments/post/**` & `GET /api/comments/*/replies` (Đọc bình luận công khai không bị lỗi 401)
+* **Ngữ Cảnh Luồng (Thread Context)**: `UserContextHolder` trích xuất an toàn `userId` và quyền hạn từ `SecurityContext`.
 
 ---
 
-### 4. Multi-Entity Reaction Engine
-* **Supported Entities**: Reactions on **Posts**, **Comments**, and **Chat Messages**.
-* **6 Rich Emotion Types**: `LIKE (👍)`, `LOVE (❤️)`, `HAHA (😆)`, `WOW (😮)`, `SAD (😢)`, `ANGRY (😡)`.
-* **Optimized Dynamic Aggregation**: Accurately counts real-time reactions and supports tabbed query filtering (`/api/posts/{id}/reactions?type=LOVE`).
-* **Reaction DTO (`UserReactionResponse`)**: Returns user identity, avatar, timestamp, and their specific `type` of reaction.
+## ⚡ Redis Caching & Rate Limiting Phân Tán
 
----
+### 1. Cơ Chế Bộ Nhớ Đệm (Caching)
+* Lưu trữ tạm các dữ liệu truy xuất tần suất cao: Thông tin User, chỉ số tương tác bài viết, danh sách người xem Story, điểm hot score Reels.
+* Tự động xóa cache tương ứng khi có thao tác ghi hoặc chỉnh sửa.
 
-### 5. Threaded Comment System
-* **Hierarchical Tree Structure**: Root-level comments and nested reply comments.
-* **Post-Author Tagging**: Identifies if a comment was written by the post creator.
-* **Reactions on Comments**: Full 6-emotion reaction support on individual comment bubbles.
-* **Real-Time Counter Synchronization**: Increment/decrement `commentCount` on the post entity upon creation/deletion.
-
----
-
-### 6. Reels & Video Ranking
-* **Vertical Short Video Engine**: Dedicated storage and metadata for Reels (`PostType.REEL`).
-* **Hot-Score Ranking**: Engagement-based algorithmic discovery scoring for explore streams.
-* **Interactive Reactions**: Quick one-tap love reaction and comment drawer support.
-
----
-
-### 7. Ephemeral Stories & Viewer Tracking
-* **24-Hour Expiration**: Automatic expiration handling for short-lived photo/video moments.
-* **Audience Analytics (`StoryViewResponse`)**: Tracks viewers, view timestamps, and viewer profiles for the story author.
-* **Story Reactions**: Quick emotion replies sent directly to the creator.
-
----
-
-### 8. Dating & Matchmaking Engine
-* **Discovery Algorithm**: Geo-distance filtering, age range matching, and gender preference scoring.
-* **Swipe Deck**: Record `LIKE` or `PASS` swipes per candidate.
-* **Mutual Match Detection**: Returns `isMatch: true` immediately when both users swipe right.
-* **Dating Match Management (`DatingMatchController`)**:
-  - `GET /api/dating/matches`: Retrieve all active mutual matches with direct chat triggers.
-  - `DELETE /api/dating/matches/{matchId}`: Unmatch connection cleanly.
-
----
-
-### 9. Real-Time Chat & STOMP Messaging
-* **Point-to-Point Messaging**: Delivers private messages instantly over `/user/{userId}/queue/messages`.
-* **Media & Emoji Reactions**: Attach photos/videos and react to messages with real-time sync over `/user/{userId}/queue/message-reactions`.
-* **Read Receipts & Delivery State**: Track `SENT`, `DELIVERED`, and `READ` message statuses.
-* **Conversation Optimization**: Pre-loads last message snippet and unread badges.
-
----
-
-### 10. Push Notification System
-* **Real-Time Event Dispatch**: Triggers push alerts over `/user/{userId}/queue/notifications` for:
-  - Post reactions & comment mentions
-  - Friend requests & acceptances
-  - Dating match celebrations
-  - Private messages
-* **Notification Management**: Mark read, mark all read, and delete notification by ID.
-
----
-
-### 11. Content Moderation & Administration
-* **Violation Reports**: Users can report suspicious posts, comments, or profiles.
-* **Admin Review API**: Review reports, Approve violation (auto-hides content), or Reject false reports.
-
----
-
-## ⚡ Redis Caching & Rate Limiting
-
-Redis provides multi-tier caching and distributed protection:
-
-### 1. Redis Caching Flow
-Caches frequently accessed entities (User profiles, post metadata, story views) with TTL:
-
-```
-Request ──► Redis Cache Hit? ──► Return Cached Object
-                 │
-                 ▼ Miss
-            PostgreSQL Query ──► Update Redis Cache ──► Return Result
-```
-
-### 2. Custom Distributed Rate Limiting
-Annotation-based rate limiting protects sensitive endpoints (Login, Register, OTP verification) against brute force:
+### 2. Giới Hạn Tần Suất Gọi Phân Tán (`@RateLimit`)
+Bảo vệ các endpoint nhạy cảm chống spam và tấn công brute-force bằng thuật toán Token Bucket lưu trên Redis:
 
 ```java
-@RateLimit(
-    name = "AUTH_LOGIN",
-    limit = 10,
-    windowSeconds = 60
-)
+@RateLimit(name = "AUTH_LOGIN", limit = 10, windowSeconds = 60)
 @PostMapping("/login")
-public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) { ... }
+public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) { ... }
 ```
 
 ---
 
-## 🗄️ Database Design & Migration
+## 🗄️ Thiết Kế Cơ Sở Dữ Liệu & ERD
 
-Database schema migrations are version-controlled using **Flyway**:
+Hệ thống quản lý phiên bản database bằng **Flyway Database Migration**:
 
 ```
 src/main/resources/db/migration/
-├── V1__create_tables.sql            # Core tables (users, posts, comments, reactions, friendships)
-├── V2__insert_roles.sql             # Default system roles (ROLE_USER, ROLE_ADMIN)
-├── V3__insert_fake_datas.sql        # Demo mock data
-├── V4__update_chat_fields.sql       # Messaging schemas and read status
-├── V5__create_dating_tables.sql     # Dating profiles, swipes, and matches
-├── V6__create_story_tables.sql      # Stories, views, and interactions
-└── V10__create_reel_details_table.sql # Reels metadata and engagement metrics
+├── V1__create_tables.sql              # Bảng cốt lõi: users, posts, comments, reactions, friendships
+├── V2__insert_roles.sql               # Quyền mặc định: ROLE_USER, ROLE_ADMIN, ROLE_MODERATOR
+├── V3__insert_fake_datas.sql          # Dữ liệu mẫu ban đầu
+├── V4__update_chat_fields.sql         # Hội thoại chat, tin nhắn, con trỏ đã đọc
+├── V5__create_dating_tables.sql       # Hồ sơ hẹn hò, swipes, matches, preferences
+├── V6__create_story_tables.sql        # Tin 24h, người xem, phản hồi story
+└── V10__create_reel_details_table.sql # Metadata video Reel, lượt xem, xếp hạng hot score
 ```
 
-### Entity Relationship Diagram (ERD):
+### Sơ Đồ Thực Thể Quan Hệ (ERD):
 
 <img width="2604" height="1991" alt="DBdiagram" src="https://github.com/user-attachments/assets/098c984a-e939-475d-84c8-447ef2f3681d" />
 
 ---
 
-## 📡 WebSocket & STOMP Infrastructure
+## 📡 Hạ Tầng Real-Time STOMP WebSocket
 
-Configured in `WebSocketConfig.java` with dual-mode support (Native WebSocket + SockJS Fallback):
+Được cấu hình trong `WebSocketConfig.java` với endpoint kết nối `/ws` (hỗ trợ SockJS fallback):
 
-```
-Frontend Client ──(SockJS / WebSocket Handshake)──► /ws
-                     │
-                     ▼ ChannelInterceptor
-             Validates JWT Bearer Token
-                     │
-                     ▼
-         Spring STOMP Message Broker
-         ├── /topic/system                 (Broadcasts)
-         └── /user/{id}/queue/messages     (Private Chat)
-         └── /user/{id}/queue/message-reactions
-         └── /user/{id}/queue/notifications (Push Notifications)
-```
+* **Bắt tay kết nối**: Xác thực JWT token từ connection headers trước khi cho phép vào kênh.
+* **Kênh gửi nhận tin nhắn (Destinations)**:
+  * `/user/{userId}/queue/messages` — Nhận tin nhắn chat riêng tư & chat nhóm tức thì
+  * `/user/{userId}/queue/message-reactions` — Đồng bộ thả/gỡ cảm xúc trên tin nhắn
+  * `/user/{userId}/queue/notifications` — Nhận thông báo đẩy (thả tim, bình luận, kết bạn, match hẹn hò)
+  * `/topic/system` — Thông báo phát sóng toàn hệ thống
 
 ---
 
-## ⚙️ Environment & Configuration
+## ⚙️ Cấu Hình Môi Trường (Environment Config)
 
-Configure `application.properties` or `application-local.properties`:
+Thiết lập trong `application.properties` hoặc biến môi trường hệ thống:
 
 ```properties
-# Server Port
 server.port=8080
 
-# PostgreSQL Database Configuration
+# PostgreSQL Database
 spring.datasource.url=jdbc:postgresql://localhost:5432/socialdb
 spring.datasource.username=postgres
 spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=validate
 spring.flyway.enabled=true
 
-# Redis Configuration
+# Redis Cache & Rate Limiting
 spring.data.redis.host=localhost
 spring.data.redis.port=6379
 
-# JWT Security
+# JWT Security (Secret tối thiểu 256 bits)
 jwt.secret=your_super_secret_jwt_key_at_least_256_bits_long
 jwt.access-token-expiration=86400000
 jwt.refresh-token-expiration=604800000
 
-# Cloudinary Storage
+# Cloudinary Multi-Media Storage
 cloudinary.cloud-name=your_cloud_name
 cloudinary.api-key=your_api_key
 cloudinary.api-secret=your_api_secret
-
-# Mail Service (Optional)
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your_email@gmail.com
-spring.mail.password=your_app_password
 ```
 
 ---
 
-## 🚀 Quick Start & Installation
+## 🚀 Hướng Dẫn Cài Đặt & Chạy Ứng Dụng
 
-### 1. Prerequisites
-* **Java**: OpenJDK 21 or Oracle JDK 21
+### 1. Yêu Cầu Môi Trường
+* **Java**: OpenJDK 21 hoặc Oracle JDK 21
 * **Database**: PostgreSQL 15+ & Redis 6+
-* **Build Tool**: Maven 3.8+
-* **Docker** (Optional, for instant infrastructure setup)
+* **Build Tool**: Maven 3.8+ (hoặc dùng sẵn wrapper `./mvnw`)
 
-### 2. Run Infrastructure with Docker Compose
+### 2. Khởi Động Database & Redis bằng Docker Compose
 ```bash
-# Start PostgreSQL and Redis containers
 docker compose up -d
 ```
 
-### 3. Build & Run Application
+### 3. Biên Dịch & Khởi Động Server
 ```bash
-# Compile and package application
+# Biên dịch mã nguồn
 ./mvnw clean compile
 
-# Run Spring Boot application
+# Chạy ứng dụng Spring Boot
 ./mvnw spring-boot:run
 ```
 
-The server will start at: `http://localhost:8080`
-
-### 4. Explore Interactive API Docs
-Open your browser and navigate to:
-```
-http://localhost:8080/swagger-ui/index.html
-```
+Server sẽ khởi chạy tại: `http://localhost:8080`.
 
 ---
 
-## 🧪 Testing & Quality Assurance
+## 🧪 Kiểm Thử & Đảm Bảo Chất Lượng
 
-The codebase includes automated unit and integration tests using **JUnit 5** and **Mockito**:
+Chạy toàn bộ unit tests và integration tests:
 
 ```bash
-# Run all unit tests
 ./mvnw test
 ```
 
 ---
 
-## 👨‍💻 Author & License
+## 👨‍💻 Tác Giả & Bản Quyền
 
-* **Developer**: Nguyễn Duy Thành
-* **Email**: contact / portfolio
-* **License**: Licensed under the **[MIT License](LICENSE)**.
+* **Tác giả**: Nguyễn Duy Thành
+* **Bản quyền**: Được phát hành theo giấy phép **[MIT License](LICENSE)**.
