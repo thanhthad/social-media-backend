@@ -6,6 +6,7 @@ import media.social.modules.auth.security.oauth.CustomOAuth2UserService;
 import media.social.modules.auth.security.oauth.OAuth2SuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -54,7 +55,12 @@ public class SecurityConfig {
                                 "/api/posts/public",
                                 "/api/posts/public/**",
                                 "/api/reels/public",
-                                "/api/reels/public/**"
+                                "/api/reels/public/**",
+                                "/api/hashtags/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/comments/post/**",
+                                "/api/comments/*/replies"
                         ).permitAll()
                         .requestMatchers(
                                 "/ws/**",

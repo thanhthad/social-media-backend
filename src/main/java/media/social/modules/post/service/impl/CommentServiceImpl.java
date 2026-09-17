@@ -169,7 +169,7 @@ public class CommentServiceImpl implements CommentService {
             Pageable pageable
     ) {
 
-        Long userId = UserContextHolder.getUserId();
+        Long userId = UserContextHolder.isAuthenticated() ? UserContextHolder.getUserId() : null;
 
         return commentRepository
                 .findRootComments(
@@ -200,7 +200,7 @@ public class CommentServiceImpl implements CommentService {
             Pageable pageable
     ) {
 
-        Long userId = UserContextHolder.getUserId();
+        Long userId = UserContextHolder.isAuthenticated() ? UserContextHolder.getUserId() : null;
 
         return commentRepository
                 .findReplies(
